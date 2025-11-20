@@ -1,0 +1,28 @@
+{
+  "name": "hr-api",
+  "version": "1.0.0",
+  "description": "HR Management API built with NestJS",
+  "main": "dist/main.js",
+  "scripts": {
+    "start": "node dist/main.js",
+    "start:dev": "nest start --watch",
+    "build": "tsc -p tsconfig.json",
+    "prestart": "npm run build",
+    "test": "echo \"No test specified\" && exit 0"
+  },
+  "dependencies": {
+    "@nestjs/config": "^4.0.2",
+    "@nestjs/platform-express": "^11.1.9",
+    "@nestjs/typeorm": "^11.0.0",
+    "class-transformer": "^0.5.1",
+    "class-validator": "^0.14.2",
+    "dotenv": "^17.2.3",
+    "pg": "^8.16.3",
+    "typeorm": "^0.3.27"
+  },
+  "devDependencies": {
+    "@nestjs/cli": "^11.0.12",
+    "@types/node": "^24.10.1",
+    "typescript": "^5.9.3"
+  }
+}
