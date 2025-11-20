@@ -8,7 +8,10 @@
     "start:dev": "nest start --watch",
     "build": "tsc -p tsconfig.json",
     "prestart": "npm run build",
-    "test": "echo \"No test specified\" && exit 0"
+    "test": "echo \"No test specified\" && exit 0",
+    "migration:run": "npm run build && npx typeorm migration:run -d dist/ormconfig.js",
+    "migration:generate": "npm run build && npx typeorm migration:generate -n $NAME -d dist/ormconfig.js",
+    "migration:create": "npx typeorm migration:create src/migrations/$NAME"
   },
   "dependencies": {
     "@nestjs/config": "^4.0.2",
