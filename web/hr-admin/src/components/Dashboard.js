@@ -95,15 +95,7 @@ const attendanceRows = [
     time: "09:29 AM",
     status: "On Time",
     avatar: "/avatar6.png",
-  },
-  {
-    name: "Jenny Wilson",
-    role: "React JS Developer",
-    type: "Remote",
-    time: "11:30 AM",
-    status: "Late",
-    avatar: "/avatar7.png",
-  },
+  }
 ];
 
 export default function DashboardPage() {
