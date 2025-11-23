@@ -5,6 +5,7 @@ import { EmpDepartments } from '../../models/emp_departments.entity';
 import { CreateEmpDepartmentDto } from './dto/create.dto';
 import { UpdateEmpDepartmentDto } from './dto/update.dto';
 
+
 @Injectable()
 export class EmpDepartmentsService {
   constructor(
@@ -12,13 +13,30 @@ export class EmpDepartmentsService {
     private readonly repo: Repository<EmpDepartments>,
   ) {}
 
-  create(createDto: CreateEmpDepartmentDto) {
+  async create(createDto: CreateEmpDepartmentDto) {
+    const exists = await this.repo.findOneBy({ name: createDto.name });
+    if (exists) {
+      return {
+        message: 'A department with this name already exists.',
+        data: exists,
+        status: 'duplicate',
+      };
+    }
     const department = this.repo.create(createDto);
-    return this.repo.save(department);
+    const saved = await this.repo.save(department);
+    return {
+      message: 'Department created successfully.',
+      data: saved,
+      status: 'success',
+    };
   }
 
-  findAll() {
-    return this.repo.find();
+  async findAll() {
+    const data = await this.repo.find();
+    return {
+      message: data.length > 0 ? 'Departments fetched successfully.' : 'No departments found.',
+      data,
+    };
   }
 
   findOne(id: number) {
