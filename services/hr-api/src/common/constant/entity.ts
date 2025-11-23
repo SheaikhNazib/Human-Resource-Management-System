@@ -3,4 +3,5 @@ export enum ENTITY_NAME {
     EMP_ATTENDANCES = 'emp_attendances',
     EMP_DEPARTMENTS = 'emp_departments',
     EMP_JOB_TITLES = 'emp_job_titles',
+    EMPLOYEES = 'employees',
 }
