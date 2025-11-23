@@ -17,12 +17,27 @@ export class EmpJobTitlesService {
     return this.repo.save(jobTitle);
   }
 
-  findAll() {
-    return this.repo.find();
+  async findAll() {
+    const data = await this.repo.find();
+    return {
+      message: data.length > 0 ? 'Job titles fetched successfully.' : 'No job titles found.',
+      data,
+    };
   }
 
-  findOne(id: number) {
-    return this.repo.findOneBy({ id });
+  async findOne(id: number) {
+    const data = await this.repo.findOneBy({ id });
+    if (data) {
+      return {
+        message: 'Job title fetched successfully.',
+        data,
+      };
+    } else {
+      return {
+        message: 'Job title not found.',
+        data: null,
+      };
+    }
   }
 
   async update(id: number, updateDto: UpdateEmpJobTitleDto) {
