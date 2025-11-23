@@ -25,11 +25,36 @@ export class EmpJobTitlesService {
     return this.repo.findOneBy({ id });
   }
 
-  update(id: number, updateDto: UpdateEmpJobTitleDto) {
-    return this.repo.update(id, updateDto);
+  async update(id: number, updateDto: UpdateEmpJobTitleDto) {
+    const result = await this.repo.update(id, updateDto);
+    if (result.affected && result.affected > 0) {
+      const updated = await this.repo.findOneBy({ id });
+      return {
+        message: 'Job title updated successfully.',
+        data: updated,
+      };
+    } else {
+      return {
+        message: 'Job title not found or not updated.',
+        data: null,
+      };
+    }
   }
 
-  remove(id: number) {
-    return this.repo.delete(id);
+  async remove(id: number) {
+    const result = await this.repo.delete(id);
+    if (result.affected && result.affected > 0) {
+      return {
+        message: 'Job title deleted successfully.',
+        id,
+        status: 'success',
+      };
+    } else {
+      return {
+        message: 'Job title not found.',
+        id,
+        status: 'not_found',
+      };
+    }
   }
 }
