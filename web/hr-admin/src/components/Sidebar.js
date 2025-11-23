@@ -32,11 +32,9 @@ export default function Sidebar({ open, onClose }) {
   ];
   return (
     <aside
-      className={`fixed z-30 inset-y-0 left-0 transform ${
-        open ? "translate-x-0" : "-translate-x-full"
-      } transition-transform duration-200 ease-in-out ${
-        collapsed ? "w-20" : "w-64"
-      } bg-white dark:bg-zinc-950 border-r border-zinc-200 dark:border-zinc-800 flex flex-col p-4 lg:static lg:translate-x-0`}
+      className={`fixed z-30 inset-y-0 left-0 transform ${open ? "translate-x-0" : "-translate-x-full"
+        } transition-transform duration-200 ease-in-out ${collapsed ? "w-20" : "w-64"
+        } bg-white dark:bg-zinc-950 border-r border-zinc-200 dark:border-zinc-800 flex flex-col p-4 lg:static lg:translate-x-0`}
     >
       <Link href="/" className="flex items-center gap-2 mb-8 px-1 group">
         <div className="w-7 h-7 rounded bg-gradient-to-br from-blue-600 to-purple-500 flex items-center justify-center group-hover:scale-105 transition-transform">
@@ -51,17 +49,15 @@ export default function Sidebar({ open, onClose }) {
           <a
             key={href}
             href={href}
-            className={`flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors text-zinc-700 hover:bg-blue-50 hover:text-blue-700 ${
-              currentPath === href
+            className={`flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors text-zinc-700 hover:bg-blue-50 hover:text-blue-700 ${currentPath === href
                 ? "bg-blue-50 text-blue-700 border-l-4 border-blue-500"
                 : ""
-            }`}
+              }`}
             title={label}
           >
             <Icon
-              className={`w-5 h-5 ${
-                currentPath === href ? "text-blue-600" : "text-zinc-400"
-              }`}
+              className={`w-5 h-5 ${currentPath === href ? "text-blue-600" : "text-zinc-400"
+                }`}
             />
             {label}
           </a>
@@ -82,9 +78,9 @@ export default function Sidebar({ open, onClose }) {
           </div>
         )}
         <button
-          className={`w-full flex items-center gap-2 text-left text-zinc-500 hover:text-red-500 transition-colors ${
-            collapsed ? "justify-center" : ""
-          }`}
+          href="/login"
+          className={`w-full flex items-center gap-2 text-left text-zinc-500 hover:text-red-500 transition-colors ${collapsed ? "justify-center" : ""
+            }`}
         >
           <LogOut className="w-5 h-5" />
           {!collapsed && "Logout"}
