@@ -28,7 +28,7 @@ export default function Sidebar({ open, onClose }) {
     { href: "/payroll", label: "Payroll", icon: Wallet },
     { href: "/leaves", label: "Leaves", icon: FileText },
     { href: "/holidays", label: "Holidays", icon: Calendar },
-    { href: "/settings", label: "Settings", icon: Settings },
+    // { href: "/settings", label: "Settings", icon: Settings },
   ];
   return (
     <aside
