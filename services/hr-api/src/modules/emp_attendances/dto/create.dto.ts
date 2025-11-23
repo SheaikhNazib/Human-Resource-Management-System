@@ -1,4 +1,4 @@
-import { IsDateString, IsEnum, IsInt, IsNotEmpty, IsOptional, IsString } from 'class-validator';
+import { IsDateString, IsInt, IsNotEmpty, IsOptional, IsString, IsBoolean } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 export class CreateEmpAttendanceDto {
@@ -21,6 +21,7 @@ export class CreateEmpAttendanceDto {
   remarks?: string;
 
   @ApiProperty({ type: Boolean, example: true, description: 'true for onsite, false for remote' })
+  @IsBoolean()
   onsite_or_remote: boolean;
 
   @ApiPropertyOptional({ example: '192.168.1.1' })

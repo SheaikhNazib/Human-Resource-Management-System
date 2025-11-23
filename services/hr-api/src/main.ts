@@ -24,8 +24,15 @@ async function bootstrap() {
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api-docs', app, document);
 
-  await app.listen(port);
-  console.log(`🚀 Server is running on port ${port}`);
+  try {
+    await app.listen(port);
+    const baseUrl = `http://localhost:${port}`;
+    console.log('');
+    console.log(`🚀 Server is running:     ${baseUrl}`);
+    console.log('✅ Database connection is okay');
+  } catch (err) {
+    console.error('❌ Failed to start server or connect to database:', err);
+  }
 }
 
 bootstrap();
