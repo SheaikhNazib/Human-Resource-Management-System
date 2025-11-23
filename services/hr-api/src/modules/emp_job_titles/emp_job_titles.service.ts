@@ -41,7 +41,20 @@ export class EmpJobTitlesService {
     }
   }
 
-  remove(id: number) {
-    return this.repo.delete(id);
+  async remove(id: number) {
+    const result = await this.repo.delete(id);
+    if (result.affected && result.affected > 0) {
+      return {
+        message: 'Job title deleted successfully.',
+        id,
+        status: 'success',
+      };
+    } else {
+      return {
+        message: 'Job title not found.',
+        id,
+        status: 'not_found',
+      };
+    }
   }
 }
