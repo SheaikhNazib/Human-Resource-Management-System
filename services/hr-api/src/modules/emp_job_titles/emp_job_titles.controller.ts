@@ -1,5 +1,5 @@
 
-import { Controller, Get, Post, Body, Param, Put, Delete } from '@nestjs/common';
+import { Controller, Get, Post, Body, Param, Delete, Patch } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBody, ApiParam } from '@nestjs/swagger';
 import { EmpJobTitlesService } from './emp_job_titles.service';
 import { CreateEmpJobTitleDto } from './dto/create.dto';
@@ -33,7 +33,7 @@ export class EmpJobTitlesController {
     return this.empJobTitlesService.findOne(id);
   }
 
-  @Put(':id')
+  @Patch(':id')
   @ApiOperation({ summary: 'Update job title by id' })
   @ApiParam({ name: 'id', type: Number })
   @ApiBody({ type: UpdateEmpJobTitleDto })
