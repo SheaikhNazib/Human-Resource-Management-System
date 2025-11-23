@@ -5,6 +5,7 @@ import { TypeOrmModule } from "@nestjs/typeorm";
 import appConfig from "./config/app.config";
 import databaseConfig from "./config/database.config";
 import { AppRolesModule } from "./modules/app_roles/app_roles.module";
+import { EmpAttendancesModule } from "./modules/emp_attendances/emp_attendances.module";
 
 @Module({
   imports: [
@@ -27,6 +28,7 @@ import { AppRolesModule } from "./modules/app_roles/app_roles.module";
       }),
     }),
     AppRolesModule,
+    EmpAttendancesModule,
   ],
 })
 export class AppModule {}

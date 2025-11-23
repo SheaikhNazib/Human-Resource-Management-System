@@ -16,8 +16,8 @@ export class EmpAttendances extends BaseEntity {
   @Column({ type: "text", nullable: true })
   remarks?: string;
 
-  @Column({ type: "enum", enum: ["onsite", "remote"], default: "onsite" })
-  onsite_or_remote: "onsite" | "remote";
+  @Column({ type: "boolean", default: true })
+  onsite_or_remote: boolean;
 
   @Column({ type: "varchar", length: 45, nullable: true })
   check_in_ip?: string;
