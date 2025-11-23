@@ -7,6 +7,7 @@ import databaseConfig from "./config/database.config";
 import { AppRolesModule } from "./modules/app_roles/app_roles.module";
 import { EmpAttendancesModule } from "./modules/emp_attendances/emp_attendances.module";
 import { EmpDepartmentsModule } from "./modules/emp_departments/emp_departments.module";
+import { EmpJobTitlesModule } from "./modules/emp_job_titles/emp_job_titles.module";
 
 @Module({
   imports: [
@@ -31,6 +32,7 @@ import { EmpDepartmentsModule } from "./modules/emp_departments/emp_departments.
     AppRolesModule,
     EmpAttendancesModule,
     EmpDepartmentsModule,
+    EmpJobTitlesModule,
   ],
 })
 export class AppModule {}
