@@ -12,5 +12,5 @@ export default new DataSource({
   entities: ["dist/**/*.entity.js"],
   migrations: ["dist/migrations/*.js"],
   synchronize: false, // NEVER TRUE IN PRODUCTION
-  logging: true,
+  logging: false, // Reduce logging for faster startup
 });
