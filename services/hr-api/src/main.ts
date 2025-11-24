@@ -13,6 +13,7 @@ async function bootstrap() {
     logger: false, // Suppress all NestJS logs except custom logs
   });
 
+  app.setGlobalPrefix('api/v1');
   app.useGlobalPipes(new ValidationPipe({ whitelist: true }));
   app.useGlobalInterceptors(new LoggingInterceptor(), new ResponseInterceptor());
 
