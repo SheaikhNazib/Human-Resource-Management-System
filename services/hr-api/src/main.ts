@@ -1,6 +1,7 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { ValidationPipe } from '@nestjs/common';
+import { LoggingInterceptor } from './common/logging.interceptor';
 import { ConfigService } from '@nestjs/config';
 
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
@@ -8,9 +9,11 @@ import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, {
     cors: true,
+    logger: false, // Suppress all NestJS logs except custom logs
   });
 
   app.useGlobalPipes(new ValidationPipe({ whitelist: true }));
+  app.useGlobalInterceptors(new LoggingInterceptor());
 
   const configService = app.get(ConfigService);
   const port = configService.get('app.port') || 5000;
@@ -27,9 +30,10 @@ async function bootstrap() {
   try {
     await app.listen(port);
     const baseUrl = `http://localhost:${port}`;
-    console.log('');
-    console.log(`🚀 Server is running:     ${baseUrl}`);
-    console.log('✅ Database connection is okay');
+    // Colorful logs using ANSI escape codes
+    console.log('\x1b[36m%s\x1b[0m', '');
+    console.log('\x1b[32m%s\x1b[0m', `🚀 Server is running:     ${baseUrl}`);
+    console.log('\x1b[36m%s\x1b[0m', '✅ Database connection is okay');
   } catch (err) {
     console.error('❌ Failed to start server or connect to database:', err);
   }

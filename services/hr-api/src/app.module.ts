@@ -12,6 +12,7 @@ import { EmployeesModule } from "./modules/employees/employees.module";
 import { EmpJobTitlesModule } from "./modules/emp_job_titles/emp_job_titles.module";
 import { TasksModule } from "./modules/tasks/tasks.module";
 import { TaskStatusesModule } from "./modules/task_statuses/task_statuses.module";
+import { TaskWorkItemsModule } from "./modules/task_work_items/task_work_items.module";
 
 @Module({
   imports: [
@@ -40,6 +41,7 @@ import { TaskStatusesModule } from "./modules/task_statuses/task_statuses.module
     EmployeesModule,
     TasksModule,
     TaskStatusesModule,
+    TaskWorkItemsModule,
   ],
 })
 export class AppModule {}
