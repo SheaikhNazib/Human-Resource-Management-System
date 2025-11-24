@@ -1,4 +1,4 @@
-import { Injectable } from "@nestjs/common";
+import { Injectable, BadRequestException } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import { Repository } from "typeorm";
 import { AppRoles } from "../../models/app_roles.entity";
@@ -13,6 +13,13 @@ export class AppRolesService {
   ) {}
 
   async create(createAppRoleDto: CreateAppRoleDto): Promise<AppRoles> {
+    if (!createAppRoleDto.name) {
+      throw new BadRequestException('Role name is required.');
+    }
+    const exists = await this.appRolesRepository.findOneBy({ name: createAppRoleDto.name });
+    if (exists) {
+      throw new BadRequestException('A role with this name already exists.');
+    }
     const appRole = this.appRolesRepository.create(createAppRoleDto);
     return this.appRolesRepository.save(appRole);
   }
