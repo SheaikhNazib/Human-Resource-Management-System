@@ -12,8 +12,21 @@ export class EmpJobTitlesService {
     private readonly repo: Repository<EmpJobTitles>,
   ) {}
 
-  create(createDto: CreateEmpJobTitleDto) {
-    const jobTitle = this.repo.create(createDto);
+  async create(createDto: CreateEmpJobTitleDto) {
+    // Validate emp_department exists
+    const departmentRepo = this.repo.manager.getRepository('emp_departments');
+    const department = await departmentRepo.findOneBy({ id: createDto.emp_department });
+    if (!department) {
+      return {
+        statusCode: 400,
+        message: `emp_department with id ${createDto.emp_department} does not exist`,
+        error: 'Bad Request'
+      };
+    }
+    const jobTitle = this.repo.create({
+      ...createDto,
+      emp_department: { id: createDto.emp_department },
+    });
     return this.repo.save(jobTitle);
   }
 
@@ -41,7 +54,20 @@ export class EmpJobTitlesService {
   }
 
   async update(id: number, updateDto: UpdateEmpJobTitleDto) {
-    const result = await this.repo.update(id, updateDto);
+    // If emp_department is being updated, validate it exists
+    let updateData: any = { ...updateDto };
+    if (updateDto.emp_department) {
+      const departmentRepo = this.repo.manager.getRepository('emp_departments');
+      const department = await departmentRepo.findOneBy({ id: updateDto.emp_department });
+      if (!department) {
+        return {
+          message: `emp_department with id ${updateDto.emp_department} does not exist`,
+          data: null,
+        };
+      }
+      updateData.emp_department = { id: updateDto.emp_department };
+    }
+    const result = await this.repo.update(id, updateData);
     if (result.affected && result.affected > 0) {
       const updated = await this.repo.findOneBy({ id });
       return {
