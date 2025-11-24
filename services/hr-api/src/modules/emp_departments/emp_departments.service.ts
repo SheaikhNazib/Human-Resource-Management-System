@@ -47,7 +47,11 @@ export class EmpDepartmentsService {
     return this.repo.update(id, updateDto);
   }
 
-  remove(id: number) {
-    return this.repo.delete(id);
+  async remove(id: number) {
+    const result = await this.repo.softDelete(id);
+    return {
+      message: result.affected ? 'Department deleted.' : 'Department not found.',
+      affected: result.affected,
+    };
   }
 }
