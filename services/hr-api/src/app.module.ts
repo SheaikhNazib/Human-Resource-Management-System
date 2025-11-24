@@ -10,6 +10,7 @@ import { EmpDepartmentsModule } from "./modules/emp_departments/emp_departments.
 
 import { EmployeesModule } from "./modules/employees/employees.module";
 import { EmpJobTitlesModule } from "./modules/emp_job_titles/emp_job_titles.module";
+import { TasksModule } from "./modules/tasks/tasks.module";
 
 @Module({
   imports: [
@@ -36,6 +37,7 @@ import { EmpJobTitlesModule } from "./modules/emp_job_titles/emp_job_titles.modu
     EmpDepartmentsModule,
     EmpJobTitlesModule,
     EmployeesModule,
+    TasksModule,
   ],
 })
 export class AppModule {}
