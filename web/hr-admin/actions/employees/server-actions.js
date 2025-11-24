@@ -6,16 +6,12 @@ import { Api_path } from '@/constant/api-path';
 export async function getEmployeesList() {
   try {
     const response = await fetchFromApi(Api_path.EMPLOYEE.LIST);
-    // Log raw response on server to help debugging
     console.log('Raw employees response from backend:', JSON.stringify(response));
 
-    // Normalize shape: backend returns { message, data }
-    const rawList = response?.data ?? response ?? [];
+    const rawList = response?.data?.data ?? response?.data ?? response ?? [];
 
-    // Map various possible field names (including Swagger example names) to a consistent frontend shape
     const data = Array.isArray(rawList)
       ? rawList.map((item) => {
-          // Normalize emails: prefer work_email, then workEmail, then personal_email, then generic email
           const email = item.work_email ?? item.workEmail ?? item.personal_email ?? item.personalEmail ?? item.email ?? item.email_address ?? item.emailAddress ?? '';
 
           // Job & department may be objects (with name) or ids
