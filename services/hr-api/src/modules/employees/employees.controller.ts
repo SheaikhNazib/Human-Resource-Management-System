@@ -22,8 +22,12 @@ export class EmployeesController {
   @Get()
   @ApiOperation({ summary: 'Get all employees' })
   @ApiResponse({ status: 200, description: 'List of employees.' })
-  findAll() {
-    return this.employeesService.findAll();
+  async findAll() {
+    const data = await this.employeesService.findAll();
+    return {
+      message: data.length ? 'Employees fetched successfully.' : 'No employees found.',
+      data
+    };
   }
 
 
