@@ -14,12 +14,47 @@ export class EmployeesService {
     private readonly repo: Repository<Employees>,
   ) {}
 
-  create(createDto: CreateEmployeeDto) {
-    const createData: any = { ...createDto };
-    if (createDto.emp_department) {
-      createData.emp_department = { id: createDto.emp_department } as EmpDepartments;
+  async create(createDto: CreateEmployeeDto) {
+    if (!createDto.emp_department) {
+      return {
+        statusCode: 400,
+        message: 'emp_department_id is required',
+        error: 'Bad Request'
+      };
     }
+    if (!createDto.emp_job_title) {
+      return {
+        statusCode: 400,
+        message: 'emp_job_title_id is required',
+        error: 'Bad Request'
+      };
+    }
+    // Check if emp_department exists
+    const departmentRepo = this.repo.manager.getRepository(EmpDepartments);
+    const department = await departmentRepo.findOneBy({ id: createDto.emp_department });
+    if (!department) {
+      return {
+        statusCode: 400,
+        message: `emp_department with id ${createDto.emp_department} does not exist`,
+        error: 'Bad Request'
+      };
+    }
+    // Check if emp_job_title exists (if provided)
+    let jobTitle: EmpJobTitles | null = null;
     if (createDto.emp_job_title) {
+      const jobTitleRepo = this.repo.manager.getRepository(EmpJobTitles);
+      jobTitle = await jobTitleRepo.findOneBy({ id: createDto.emp_job_title });
+      if (!jobTitle) {
+        return {
+          statusCode: 400,
+          message: `emp_job_title with id ${createDto.emp_job_title} does not exist`,
+          error: 'Bad Request'
+        };
+      }
+    }
+    const createData: any = { ...createDto };
+    createData.emp_department = { id: createDto.emp_department } as EmpDepartments;
+    if (jobTitle) {
       createData.emp_job_title = { id: createDto.emp_job_title } as EmpJobTitles;
     }
     const employee = this.repo.create(createData);
