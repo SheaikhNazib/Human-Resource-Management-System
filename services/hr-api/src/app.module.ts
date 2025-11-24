@@ -10,6 +10,8 @@ import { EmpDepartmentsModule } from "./modules/emp_departments/emp_departments.
 
 import { EmployeesModule } from "./modules/employees/employees.module";
 import { EmpJobTitlesModule } from "./modules/emp_job_titles/emp_job_titles.module";
+import { TasksModule } from "./modules/tasks/tasks.module";
+import { TaskStatusesModule } from "./modules/task_statuses/task_statuses.module";
 
 @Module({
   imports: [
@@ -28,7 +30,7 @@ import { EmpJobTitlesModule } from "./modules/emp_job_titles/emp_job_titles.modu
         password: config.get("database.password"),
         database: config.get("database.dbName"),
         autoLoadEntities: true,
-        synchronize: true, // don't use true in production
+        synchronize: false, // don't use true in production
       }),
     }),
     AppRolesModule,
@@ -36,6 +38,8 @@ import { EmpJobTitlesModule } from "./modules/emp_job_titles/emp_job_titles.modu
     EmpDepartmentsModule,
     EmpJobTitlesModule,
     EmployeesModule,
+    TasksModule,
+    TaskStatusesModule,
   ],
 })
 export class AppModule {}

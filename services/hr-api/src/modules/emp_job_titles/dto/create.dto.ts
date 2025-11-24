@@ -1,4 +1,4 @@
-import { IsNotEmpty, IsOptional, IsString } from 'class-validator';
+import { IsNotEmpty, IsOptional, IsString, IsInt } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 export class CreateEmpJobTitleDto {
@@ -11,4 +11,9 @@ export class CreateEmpJobTitleDto {
   @IsString()
   @IsOptional()
   description?: string;
+
+  @ApiProperty({ example: 1 })
+  @IsInt()
+  @IsNotEmpty()
+  emp_department: number;
 }
