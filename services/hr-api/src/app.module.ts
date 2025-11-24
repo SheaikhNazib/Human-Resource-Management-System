@@ -28,7 +28,7 @@ import { EmpJobTitlesModule } from "./modules/emp_job_titles/emp_job_titles.modu
         password: config.get("database.password"),
         database: config.get("database.dbName"),
         autoLoadEntities: true,
-        synchronize: true, // don't use true in production
+        synchronize: false, // don't use true in production
       }),
     }),
     AppRolesModule,
