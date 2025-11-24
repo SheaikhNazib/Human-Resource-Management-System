@@ -1,7 +1,8 @@
-import { Entity, Column, ManyToMany, JoinTable } from "typeorm";
+import { Entity, Column, ManyToMany, JoinTable, ManyToOne, JoinColumn } from "typeorm";
 import { BaseEntity } from "./base.entity";
 import { ENTITY_NAME } from "../common/constant/entity";
 import { Employees } from "./employees.entity";
+import { TaskStatuses } from "./task_statuses.entity";
 
 @Entity({ name: 'tasks' })
 export class Tasks extends BaseEntity {
@@ -27,4 +28,8 @@ export class Tasks extends BaseEntity {
     inverseJoinColumn: { name: 'employee_id', referencedColumnName: 'id' },
   })
   assigned_employees: Employees[];
+
+  @ManyToOne(() => TaskStatuses, { nullable: true })
+  @JoinColumn({ name: 'task_status_id' })
+  task_status: TaskStatuses;
 }
