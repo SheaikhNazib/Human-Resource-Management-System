@@ -40,7 +40,13 @@ export class AppRolesService {
     return this.findOne(id);
   }
 
-  async remove(id: number): Promise<void> {
+  async remove(id: number): Promise<{ success: boolean; id: number; message: string }> {
+    const found = await this.appRolesRepository.findOneBy({ id });
     await this.appRolesRepository.delete(id);
+    if (found) {
+      return { success: true, id, message: `Role '${found.name}' deleted successfully.` };
+    } else {
+      return { success: false, id, message: 'Role not found or already deleted.' };
+    }
   }
 }
