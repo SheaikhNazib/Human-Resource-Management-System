@@ -77,7 +77,19 @@ export class EmployeesService {
     if (updateDto.emp_job_title) {
       updateData.emp_job_title = { id: updateDto.emp_job_title } as EmpJobTitles;
     }
-    return this.repo.update(id, updateData);
+    const result = await this.repo.update(id, updateData);
+    if (result.affected && result.affected > 0) {
+      const updated = await this.repo.findOne({ where: { id }, relations: ['emp_department', 'emp_job_title'] });
+      return {
+        message: 'Employee updated successfully.',
+        data: updated,
+      };
+    } else {
+      return {
+        message: 'Employee not found or not updated.',
+        data: null,
+      };
+    }
   }
 
   remove(id: number) {
