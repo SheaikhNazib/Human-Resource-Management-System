@@ -14,14 +14,14 @@ const geistMono = Geist_Mono({
 
 export const metadata = {
   title: "HRMS Admin Panel",
-  description:
-    "A modern HRMS admin dashboard for managing employees.",
+  description: "A modern HRMS admin dashboard for managing employees.",
 };
 
 export default function RootLayout({ children }) {
   return (
     <html lang="en">
       <body
+        suppressHydrationWarning
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         {children}
