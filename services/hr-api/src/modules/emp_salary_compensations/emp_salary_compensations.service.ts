@@ -16,8 +16,8 @@ export class EmpSalaryCompensationsService {
   ) {}
 
   async create(dto: CreateEmpSalaryCompensationDto) {
-    const employee = await this.empRepo.findOne({ where: { id: dto.employeeId } });
-    if (!employee) throw new NotFoundException('Employee not found');
+    const employee = await this.empRepo.findOne({ where: { id: dto.employee } });
+    if (!employee) throw new NotFoundException('Employee id does not exist');
     const entity = this.repo.create({ ...dto, employee });
     return this.repo.save(entity);
   }
@@ -33,9 +33,9 @@ export class EmpSalaryCompensationsService {
   async update(id: number, dto: UpdateEmpSalaryCompensationDto) {
     const entity = await this.repo.findOne({ where: { id } });
     if (!entity) throw new NotFoundException('Compensation not found');
-    if (dto.employeeId) {
-      const employee = await this.empRepo.findOne({ where: { id: dto.employeeId } });
-      if (!employee) throw new NotFoundException('Employee not found');
+    if (dto.employee) {
+      const employee = await this.empRepo.findOne({ where: { id: dto.employee } });
+      if (!employee) throw new NotFoundException('Employee id does not exist');
       entity.employee = employee;
     }
     Object.assign(entity, dto);

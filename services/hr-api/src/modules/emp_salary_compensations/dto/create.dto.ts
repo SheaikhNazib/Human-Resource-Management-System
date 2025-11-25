@@ -38,5 +38,5 @@ export class CreateEmpSalaryCompensationDto {
 
   @ApiProperty({ example: 1 })
   @IsNumber()
-  employeeId: number;
+  employee: number;
 }
