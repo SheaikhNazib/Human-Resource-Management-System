@@ -6,30 +6,68 @@ import {
   FileText,
   LayoutDashboard,
   LogOut,
-  Settings,
   Users,
   Wallet,
+  ChevronDown,
 } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { usePathname } from "next/navigation";
+import { IdCardLanyard } from 'lucide-react';
 
 export default function Sidebar({ open, onClose }) {
   const [collapsed, setCollapsed] = useState(false);
-  const [currentPath, setCurrentPath] = useState("");
-  // Set currentPath only on client to avoid hydration mismatch
+  const [openMenus, setOpenMenus] = useState({});
+  const pathname = usePathname();
+
+  // Auto-open the parent menu if the current path matches one of its children
   useEffect(() => {
-    setCurrentPath(window.location.pathname);
-  }, []);
+    if (!pathname) return;
+    const newOpen = {};
+    navLinks.forEach((item) => {
+      if (item.children && item.children.some((c) => c.href === pathname)) {
+        newOpen[item.label] = true;
+      }
+    });
+    // Merge so manual toggles are preserved for other menus
+    setOpenMenus((s) => ({ ...s, ...newOpen }));
+  }, [pathname]);
   const navLinks = [
-    { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
-    { href: "/employees", label: "All Employees", icon: Users },
-    { href: "/departments", label: "All Departments", icon: Building2 },
-    { href: "/attendance", label: "Attendance", icon: CalendarCheck },
-    { href: "/payroll", label: "Payroll", icon: Wallet },
-    { href: "/leaves", label: "Leaves", icon: FileText },
-    { href: "/holidays", label: "Holidays", icon: Calendar },
-    // { href: "/settings", label: "Settings", icon: Settings },
+    {
+      href: "/dashboard",
+      label: "Dashboard",
+      icon: LayoutDashboard,
+    },
+
+    {
+      href: "/departments",
+      label: "All Departments",
+      icon: Building2,
+    },
+    
+    {
+      label: "Employee Management",
+      icon: IdCardLanyard,
+      children: [
+        { href: "/employees", label: "Employee list", icon: Users },
+        { href: "/attendance", label: "Employee Attendance", icon: CalendarCheck },        
+        { href: "/leaves", label: "Leaves", icon: FileText },
+      ],
+    },
+
+    {
+      href: "/tasks",
+      label: "Tasks",
+      icon: Calendar,
+    },
+
+    
   ];
+
+  // Shared classes for consistency between top-level and nested items
+  const baseItemClass = "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors text-zinc-700 hover:bg-blue-50 hover:text-blue-700";
+  const activeClass = "bg-blue-50 text-blue-700 border-l-4 border-blue-500";
+
   return (
     <aside
       className={`fixed z-30 inset-y-0 left-0 transform ${open ? "translate-x-0" : "-translate-x-full"
@@ -45,23 +83,62 @@ export default function Sidebar({ open, onClose }) {
         </span>
       </Link>
       <nav className="flex flex-col gap-1">
-        {navLinks.map(({ href, label, icon: Icon }) => (
-          <a
-            key={href}
-            href={href}
-            className={`flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors text-zinc-700 hover:bg-blue-50 hover:text-blue-700 ${currentPath === href
-                ? "bg-blue-50 text-blue-700 border-l-4 border-blue-500"
-                : ""
-              }`}
-            title={label}
-          >
-            <Icon
-              className={`w-5 h-5 ${currentPath === href ? "text-blue-600" : "text-zinc-400"
-                }`}
-            />
-            {label}
-          </a>
-        ))}
+        {navLinks.map((item) => {
+          const { href, label, icon: Icon, children } = item;
+          const hasActiveChild = children ? children.some((c) => c.href === pathname) : false;
+
+          if (children) {
+            const isOpen = !!openMenus[label];
+            const parentActive = (href && href === pathname) || (isOpen && hasActiveChild);
+            return (
+              <div key={label}>
+                <button
+                  type="button"
+                  onClick={() => setOpenMenus((s) => ({ ...s, [label]: !s[label] }))}
+                  className={`${baseItemClass} w-full justify-between ${parentActive ? activeClass : ""}`}
+                  title={label}
+                  aria-expanded={isOpen}
+                >
+                  <div className="flex items-center gap-3">
+                    <Icon className={`w-5 h-5 ${parentActive ? "text-blue-600" : "text-zinc-400"}`} />
+                    <span className="text-sm flex-1 truncate">{label}</span>
+                  </div>
+                  <span className={`transition-transform ${isOpen ? "rotate-180" : "rotate-0"}`}>
+                    <ChevronDown className="w-4 h-4 text-zinc-400" />
+                  </span>
+                </button>
+
+                {isOpen && (
+                  <div className="flex flex-col mt-1">
+                    {children.map(({ href: chHref, label: chLabel, icon: ChIcon }) => (
+                      <Link
+                        key={chHref}
+                        href={chHref}
+                        className={`${baseItemClass} pl-10 ${pathname === chHref ? activeClass : ""}`}
+                        title={chLabel}
+                      >
+                        <ChIcon className={`w-4 h-4 ${pathname === chHref ? "text-blue-600" : "text-zinc-400"}`} />
+                        <span className="flex-1 truncate">{chLabel}</span>
+                      </Link>
+                    ))}
+                  </div>
+                )}
+              </div>
+            );
+          }
+
+          return (
+            <Link
+              key={href ?? label}
+              href={href}
+              className={`${baseItemClass} ${pathname === href ? activeClass : ""}`}
+              title={label}
+            >
+              <Icon className={`w-5 h-5 ${pathname === href ? "text-blue-600" : "text-zinc-400"}`} />
+              <span className="flex-1 truncate">{label}</span>
+            </Link>
+          );
+        })}
       </nav>
       <div className="mt-auto pt-8 border-t border-zinc-200 dark:border-zinc-800 flex flex-col items-center">
         {/* Profile section */}
