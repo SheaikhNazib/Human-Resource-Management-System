@@ -5,7 +5,7 @@ import { TaskWorkItemsService } from './task_work_items.service';
 import { CreateTaskWorkItemDto } from './dto/create.dto';
 import { UpdateTaskWorkItemDto } from './dto/update.dto';
 
-@ApiTags('Task Work Items')
+@ApiTags('TaskWorkItems')
 @Controller('task-work-items')
 export class TaskWorkItemsController {
   constructor(private readonly service: TaskWorkItemsService) {}

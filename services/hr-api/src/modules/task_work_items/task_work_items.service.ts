@@ -12,19 +12,44 @@ export class TaskWorkItemsService {
     private readonly repo: Repository<TaskWorkItems>,
   ) {}
 
-  create(dto: CreateTaskWorkItemDto) {
+  async create(dto: CreateTaskWorkItemDto) {
+    // Validate existence of related entities
+    const { task, employee, task_status } = dto;
+    const errors = [];
+
+    if (task !== undefined) {
+      const taskExists = await this.repo.manager.findOne('tasks', { where: { id: task } });
+      if (!taskExists) errors.push('task id does not exist');
+    }
+    if (employee !== undefined) {
+      const employeeExists = await this.repo.manager.findOne('employees', { where: { id: employee } });
+      if (!employeeExists) errors.push('employee id does not exist');
+    }
+    if (task_status !== undefined) {
+      const statusExists = await this.repo.manager.findOne('task_statuses', { where: { id: task_status } });
+      if (!statusExists) errors.push('task_status id does not exist');
+    }
+    if (errors.length > 0) {
+      return { statusCode: 400, message: errors.join(', ') };
+    }
+
     // Map numeric IDs to entity references for relations
     const createData: any = { ...dto };
-    if (dto.task !== undefined) {
-      createData.task = { id: dto.task };
+    if (task !== undefined) {
+      createData.task = { id: task };
     }
-    if (dto.employee !== undefined) {
-      createData.employee = { id: dto.employee };
+    if (employee !== undefined) {
+      createData.employee = { id: employee };
     }
-    if (dto.task_status !== undefined) {
-      createData.task_status = { id: dto.task_status };
+    if (task_status !== undefined) {
+      createData.task_status = { id: task_status };
     }
-    return this.repo.save(createData);
+    try {
+      return await this.repo.save(createData);
+    } catch (error) {
+      const errMsg = (error instanceof Error) ? error.message : 'Internal server error';
+      return { statusCode: 500, message: errMsg };
+    }
   }
 
   findAll() {
