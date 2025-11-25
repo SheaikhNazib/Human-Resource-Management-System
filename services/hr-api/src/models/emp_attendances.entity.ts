@@ -1,6 +1,7 @@
 import { Entity, Column, ManyToOne, JoinColumn } from "typeorm";
 import { ENTITY_NAME } from "../common/constant/entity";
 import { BaseEntity } from "./base.entity";
+import { Employees } from "./employees.entity";
 
 @Entity({ name: ENTITY_NAME.EMP_ATTENDANCES })
 export class EmpAttendances extends BaseEntity {
@@ -24,4 +25,8 @@ export class EmpAttendances extends BaseEntity {
 
   @Column({ type: "varchar", length: 45, nullable: true })
   check_out_ip?: string;
+  
+  @ManyToOne(() => Employees, { nullable: false })
+  @JoinColumn({ name: 'employee_id' })
+  employee: Employees;
 }
