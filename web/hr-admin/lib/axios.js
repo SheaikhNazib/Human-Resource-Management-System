@@ -24,13 +24,11 @@ export { instance as axiosInstance };
 
 export async function fetchFromApi(endpoint, options = {}) {
   const method = (options.method || 'GET').toLowerCase();
-  const headers = { 'Content-Type': 'application/json', ...options.headers };
+  const headers = options.headers || {};
   const params = options.params;
   const data = options.body ?? options.data;
 
   try {
-    console.log(`[fetchFromApi] ${method.toUpperCase()} ${endpoint}`, { data, headers });
-    
     const response = await instance.request({
       url: endpoint,
       method,
@@ -49,7 +47,6 @@ export async function fetchFromApi(endpoint, options = {}) {
       plainHeaders = Object.fromEntries(Object.entries(plainHeaders));
     }
 
-    console.log(`[fetchFromApi] Response status:`, response.status);
     return { data: response.data, status: response.status, headers: plainHeaders };
   } catch (err) {
     if (err && err.response) {
