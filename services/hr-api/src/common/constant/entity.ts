@@ -6,4 +6,5 @@ export enum ENTITY_NAME {
     EMPLOYEES = 'employees',
     TASKS = 'tasks',
     EMP_LEAVES = 'emp_leaves',
+    EMP_SALARY_COMPENSATIONS = 'emp_salary_compensations',
 }
