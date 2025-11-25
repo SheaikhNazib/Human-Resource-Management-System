@@ -21,7 +21,7 @@ export default function TasksListPage() {
   }, [tasks, query]);
 
   function handleView(id) {
-    router.push(`/tasks/${id}`);
+    router.push(`/tasks/${id}/view`);
   }
 
   function handleEdit(id) {
