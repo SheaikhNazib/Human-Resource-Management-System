@@ -13,6 +13,7 @@ import { EmpJobTitlesModule } from "./modules/emp_job_titles/emp_job_titles.modu
 import { TasksModule } from "./modules/tasks/tasks.module";
 import { TaskStatusesModule } from "./modules/task_statuses/task_statuses.module";
 import { TaskWorkItemsModule } from "./modules/task_work_items/task_work_items.module";
+import { EmpLeavesModule } from "./modules/emp_leaves/emp_leaves.module";
 
 @Module({
   imports: [
@@ -42,6 +43,7 @@ import { TaskWorkItemsModule } from "./modules/task_work_items/task_work_items.m
     TasksModule,
     TaskStatusesModule,
     TaskWorkItemsModule,
+    EmpLeavesModule,
   ],
 })
 export class AppModule {}
