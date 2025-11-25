@@ -30,5 +30,5 @@ export class CreateEmpPerformanceDto {
   @ApiProperty({ type: Number, description: 'Employee ID' })
   @IsInt()
   @IsNotEmpty()
-  employee_id: number;
+  employee: number;
 }
