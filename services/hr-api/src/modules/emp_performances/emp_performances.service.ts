@@ -1,5 +1,5 @@
 
-import { Injectable } from '@nestjs/common';
+import { Injectable, HttpException, HttpStatus } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { EmpPerformances } from '../../models/emp_performances.entity';
@@ -19,11 +19,12 @@ export class EmpPerformancesService {
 		const employeeRepo = this.repo.manager.getRepository(Employees);
 		const employee = await employeeRepo.findOneBy({ id: createDto.employee_id });
 		if (!employee) {
-			return {
-				statusCode: 400,
-				message: `Employee with id ${createDto.employee_id} does not exist`,
-				error: 'Bad Request',
-			};
+			throw new HttpException(
+				{
+					message: `Employee with id ${createDto.employee_id} does not exist`,
+				},
+				HttpStatus.BAD_REQUEST,
+			);
 		}
 		const performance = this.repo.create({
 			...createDto,
