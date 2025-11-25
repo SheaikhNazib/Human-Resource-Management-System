@@ -17,18 +17,18 @@ export class EmpPerformancesService {
 	async create(createDto: CreateEmpPerformanceDto) {
 		// Validate employee exists
 		const employeeRepo = this.repo.manager.getRepository(Employees);
-		const employee = await employeeRepo.findOneBy({ id: createDto.employee_id });
+		const employee = await employeeRepo.findOneBy({ id: createDto.employee });
 		if (!employee) {
 			throw new HttpException(
 				{
-					message: `Employee with id ${createDto.employee_id} does not exist`,
+					message: `Employee with id ${createDto.employee} does not exist`,
 				},
 				HttpStatus.BAD_REQUEST,
 			);
 		}
 		const performance = this.repo.create({
 			...createDto,
-			employee: { id: createDto.employee_id } as Employees,
+			employee: { id: createDto.employee } as Employees,
 		});
 		return this.repo.save(performance);
 	}
@@ -43,8 +43,8 @@ export class EmpPerformancesService {
 
 	async update(id: number, updateDto: UpdateEmpPerformanceDto) {
 		const updateData: any = { ...updateDto };
-		if (updateDto.employee_id) {
-			updateData.employee = { id: updateDto.employee_id } as Employees;
+		if (updateDto.employee) {
+			updateData.employee = { id: updateDto.employee } as Employees;
 		}
 		const result = await this.repo.update(id, updateData);
 		if (result.affected && result.affected > 0) {
