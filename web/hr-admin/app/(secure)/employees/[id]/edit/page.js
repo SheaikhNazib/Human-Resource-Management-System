@@ -715,14 +715,14 @@ const EditEmployeePage = () => {
                       <button
                         type="button"
                         onClick={() => router.push(`/employees/${params.id}/view`)}
-                        className="flex-1 sm:flex-none px-8 py-3 border-2 border-gray-300 rounded-lg text-gray-700 font-semibold hover:bg-gray-50 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="flex-1 sm:flex-none px-4 py-2 border-2 border-gray-300 rounded-lg text-gray-700 font-semibold hover:bg-gray-50 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
                         disabled={isSubmitting || formikSubmitting}
                       >
                         Cancel
                       </button>
                       <button
                         type="submit"
-                        className="flex-1 sm:flex-none px-8 py-3 bg-blue-600 text-white rounded-lg font-semibold transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
+                        className="flex-1 sm:flex-none px-4 py-2 bg-blue-600 text-white rounded-lg font-semibold transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
                         disabled={isSubmitting || formikSubmitting}
                       >
                         {isSubmitting || formikSubmitting ? (
