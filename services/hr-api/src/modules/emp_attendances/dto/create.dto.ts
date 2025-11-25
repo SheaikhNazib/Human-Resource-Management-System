@@ -33,4 +33,8 @@ export class CreateEmpAttendanceDto {
   @IsString()
   @IsOptional()
   check_out_ip?: string;
+
+  @ApiProperty({ example: 1, description: 'Employee ID' })
+  @IsInt()
+  employee: number;
 }

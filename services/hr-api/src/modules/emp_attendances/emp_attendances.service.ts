@@ -13,7 +13,11 @@ export class EmpAttendancesService {
   ) {}
 
   create(createDto: CreateEmpAttendanceDto) {
-    const attendance = this.repo.create(createDto);
+    // Map employee id to relation
+    const attendance: any = { ...createDto };
+    if (createDto.employee !== undefined) {
+      attendance.employee = { id: createDto.employee };
+    }
     return this.repo.save(attendance);
   }
 
@@ -44,7 +48,12 @@ export class EmpAttendancesService {
 
 
   async update(id: number, updateDto: UpdateEmpAttendanceDto) {
-    const result = await this.repo.update(id, updateDto);
+    // Map employee id to relation
+    const updateData: any = { ...updateDto };
+    if (updateDto.employee !== undefined) {
+      updateData.employee = { id: updateDto.employee };
+    }
+    const result = await this.repo.update(id, updateData);
     if (result.affected && result.affected > 0) {
       const updated = await this.repo.findOneBy({ id });
       return {
