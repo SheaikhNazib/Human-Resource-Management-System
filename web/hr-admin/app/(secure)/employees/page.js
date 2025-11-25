@@ -10,7 +10,7 @@ export default function EmployeesPage() {
     const router = useRouter();
 
     function handleView(id) {
-        router.push(`/employees/${id}`);
+        router.push(`/employees/${id}/view`);
     }
 
     function handleEdit(id) {
@@ -47,6 +47,7 @@ export default function EmployeesPage() {
                 const fullName = `${first} ${last}`.trim() || emp.name || emp.raw?.name || '—';
                 const email = emp.email ?? emp.raw?.email ?? emp.raw?.email_address ?? emp.raw?.emailAddress ?? '—';
                 const initials = (first?.[0] || fullName?.[0] || '').toUpperCase() + (last?.[0] || '').toUpperCase();
+                const id = emp.id ?? emp.raw?.id ?? '';
 
                 return (
                     <div className="flex items-center gap-3">
@@ -54,8 +55,13 @@ export default function EmployeesPage() {
                             {initials || '—'}
                         </div>
                         <div>
-                            <div className="font-medium text-zinc-900 dark:text-zinc-100">{fullName}</div>
-                            <div className="text-xs text-zinc-500">{email}</div>
+                            <button
+                                type="button"
+                                onClick={() => handleView(id)}
+                                className="font-medium text-zinc-900 dark:text-zinc-100 text-left hover:underline focus:outline-none cursor-pointer"
+                            >
+                                {fullName}
+                            </button>
                         </div>
                     </div>
                 );
