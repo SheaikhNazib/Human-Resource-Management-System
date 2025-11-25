@@ -47,9 +47,15 @@ export async function getEmployeesList() {
 export async function createEmployee(employeeData) {
   try {
     console.log("Creating employee with data:", JSON.stringify(employeeData, null, 2));
+    // Ensure `name` is always a string (API expects a string)
+    const payload = { ...employeeData };
+    if (payload.name === undefined || payload.name === null) {
+      payload.name = "";
+    }
+
     const response = await fetchFromApi(Api_path.EMPLOYEE.CREATE, {
       method: "POST",
-      body: employeeData,
+      body: payload,
     });
     
     console.log("Raw API response:", JSON.stringify(response, null, 2));
@@ -90,6 +96,26 @@ export async function createEmployee(employeeData) {
     }
     
     return { success: false, error: errorMsg };
+  }
+}
+
+// Get a single employee by ID
+export async function getEmployeeById(id) {
+  try {
+    const response = await fetchFromApi(Api_path.EMPLOYEE.GET_ONE(id));
+    console.log("Raw employee detail response:", JSON.stringify(response));
+
+    const body = response?.data ?? response;
+    const employeeData = body?.data ?? body;
+
+    if (!employeeData || !employeeData.id) {
+      return { success: false, error: "Employee not found" };
+    }
+
+    return { success: true, data: employeeData };
+  } catch (error) {
+    console.error("Error fetching employee:", error);
+    return { success: false, error: error.message };
   }
 }
 

@@ -18,6 +18,7 @@ const AddEmployeePage = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const validationSchema = Yup.object({
+    name: Yup.string(),
     first_name: Yup.string().required("First name is required"),
     last_name: Yup.string(),
     personal_email: Yup.string()
@@ -61,6 +62,7 @@ const AddEmployeePage = () => {
   });
 
   const initialValues = {
+    name: "",
     first_name: "",
     last_name: "",
     personal_email: "",
