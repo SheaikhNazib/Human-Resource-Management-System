@@ -1,4 +1,4 @@
-import { Module } from "@nestjs/common";
+import { MiddlewareConsumer, Module, NestModule } from "@nestjs/common";
 import { ConfigModule, ConfigService } from "@nestjs/config";
 import { TypeOrmModule } from "@nestjs/typeorm";
 
@@ -13,6 +13,8 @@ import { EmpJobTitlesModule } from "./modules/emp_job_titles/emp_job_titles.modu
 import { TasksModule } from "./modules/tasks/tasks.module";
 import { TaskStatusesModule } from "./modules/task_statuses/task_statuses.module";
 import { TaskWorkItemsModule } from "./modules/task_work_items/task_work_items.module";
+import { SqlInjectionDetectorMiddleware } from "./common/middleware/sql-injection-detector.middleware";
+import { XssProtectionMiddleware } from "./common/middleware/xss-protection.middleware";
 
 @Module({
   imports: [
@@ -44,4 +46,11 @@ import { TaskWorkItemsModule } from "./modules/task_work_items/task_work_items.m
     TaskWorkItemsModule,
   ],
 })
-export class AppModule {}
+export class AppModule implements NestModule {
+  configure(consumer: MiddlewareConsumer) {
+    // Apply security middlewares to all routes
+    consumer
+      .apply(SqlInjectionDetectorMiddleware, XssProtectionMiddleware)
+      .forRoutes('*');
+  }
+}
