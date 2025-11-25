@@ -17,6 +17,9 @@ import { EmpLeavesModule } from "./modules/emp_leaves/emp_leaves.module";
 import { SqlInjectionDetectorMiddleware } from "./common/middleware/sql-injection-detector.middleware";
 import { XssProtectionMiddleware } from "./common/middleware/xss-protection.middleware";
 
+import { EmpSalaryCompensationsModule } from "./modules/emp_salary_compensations/emp_salary_compensations.module";
+import { EmpPerformancesModule } from "./modules/emp_performances/emp_performances.module";
+
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -46,6 +49,8 @@ import { XssProtectionMiddleware } from "./common/middleware/xss-protection.midd
     TaskStatusesModule,
     TaskWorkItemsModule,
     EmpLeavesModule,
+    EmpSalaryCompensationsModule,
+    EmpPerformancesModule,
   ],
 })
 export class AppModule implements NestModule {

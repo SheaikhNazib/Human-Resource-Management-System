@@ -12,7 +12,7 @@ import * as express from 'express';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, {
     cors: true,
-    logger: false, // Suppress all NestJS logs except custom logs
+    logger: false, 
   });
 
   app.use(helmet({
