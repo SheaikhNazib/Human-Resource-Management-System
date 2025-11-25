@@ -1,6 +1,5 @@
 "use client";
 import React, { useState, useMemo } from "react";
-import { MoreHorizontal, Eye, Edit, Trash } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEmployees } from "@/actions/employees/business";
 import TableArchive from "@/components/core/TableArchive";
@@ -8,24 +7,17 @@ import TableArchive from "@/components/core/TableArchive";
 export default function EmployeesPage() {
     const { employees, loading, error, refetch, deleteEmployee } = useEmployees();
     const [query, setQuery] = useState("");
-    const [openMenuId, setOpenMenuId] = useState(null);
     const router = useRouter();
 
     function handleView(id) {
-        setOpenMenuId(null);
         router.push(`/employees/${id}`);
     }
 
     function handleEdit(id) {
-        setOpenMenuId(null);
         router.push(`/employees/${id}/edit`);
     }
 
     async function handleDelete(id) {
-        setOpenMenuId(null);
-        const ok = window.confirm("Delete this employee? This action cannot be undone.");
-        if (!ok) return;
-        
         const result = await deleteEmployee(id);
         if (!result.success) {
             alert(result.error || "Delete failed");
@@ -104,40 +96,16 @@ export default function EmployeesPage() {
         const id = emp.id ?? emp.raw?.id ?? '';
         
         return (
-            <div className="relative">
-                <button
-                    onClick={() => setOpenMenuId(openMenuId === id ? null : id)}
-                    className="p-1 rounded hover:bg-zinc-100 dark:hover:bg-zinc-800"
-                    aria-haspopup="true"
-                    aria-expanded={openMenuId === id}
-                    aria-label="Actions"
-                >
-                    <MoreHorizontal className="w-4 h-4 text-zinc-500" />
-                </button>
-
-                {openMenuId === id && (
-                    <div className="absolute right-0 mt-2 w-40 bg-white dark:bg-zinc-900 rounded shadow-lg border border-zinc-200 dark:border-zinc-800 z-50">
-                        <button 
-                            onClick={() => handleView(id)} 
-                            className="w-full text-left px-3 py-2 text-sm hover:bg-zinc-50 dark:hover:bg-zinc-800 flex items-center gap-2"
-                        >
-                            <Eye className="w-4 h-4 text-zinc-500" /> View
-                        </button>
-                        <button 
-                            onClick={() => handleEdit(id)} 
-                            className="w-full text-left px-3 py-2 text-sm hover:bg-zinc-50 dark:hover:bg-zinc-800 flex items-center gap-2"
-                        >
-                            <Edit className="w-4 h-4 text-zinc-500" /> Edit
-                        </button>
-                        <button 
-                            onClick={() => handleDelete(id)} 
-                            className="w-full text-left px-3 py-2 text-sm hover:bg-zinc-50 dark:hover:bg-zinc-800 flex items-center gap-2 text-red-600"
-                        >
-                            <Trash className="w-4 h-4" /> Delete
-                        </button>
-                    </div>
-                )}
-            </div>
+            <TableArchive.Actions
+                row={emp}
+                onView={() => handleView(id)}
+                onEdit={() => handleEdit(id)}
+                onDelete={() => handleDelete(id)}
+                hasViewPermission={true}
+                hasEditPermission={true}
+                hasDeletePermission={true}
+                deleteConfirmMessage="Delete this employee? This action cannot be undone."
+            />
         );
     };
 

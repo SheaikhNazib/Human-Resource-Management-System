@@ -1,6 +1,7 @@
 "use client";
 import React, { useState } from "react";
 import Link from "next/link";
+import { MoreVertical } from "lucide-react";
 
 /**
  * TableArchive - A reusable table component with built-in features like search, pagination, 
@@ -19,6 +20,250 @@ import Link from "next/link";
  *   createButtonHref="/employees/new"
  * />
  */
+
+/**
+ * Actions - Built-in actions component for table rows with View, Edit, Delete, Download options
+ * 
+ * @example
+ * <TableArchive.Actions
+ *   row={employee}
+ *   onView={(row) => router.push(`/employees/${row.id}`)}
+ *   onEdit={(row) => router.push(`/employees/${row.id}/edit`)}
+ *   onDelete={async (row) => await deleteEmployee(row.id)}
+ *   hasViewPermission={true}
+ *   hasEditPermission={true}
+ *   hasDeletePermission={true}
+ * />
+ */
+export function Actions({
+  row,
+  onView,
+  onEdit,
+  onDelete,
+  onDownload,
+  viewHref,
+  editHref,
+  hasViewPermission = true,
+  hasEditPermission = true,
+  hasDeletePermission = true,
+  hasDownloadPermission = false,
+  extraActions = [],
+  deleteConfirmMessage = "Are you sure you want to delete this item? This action cannot be undone.",
+}) {
+  const [openMenu, setOpenMenu] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [menuPosition, setMenuPosition] = useState({ top: 0, left: 0 });
+
+  const handleDelete = async () => {
+    if (!onDelete) return;
+    
+    setIsDeleting(true);
+    try {
+      await onDelete(row);
+      setShowDeleteConfirm(false);
+      setOpenMenu(false);
+    } catch (error) {
+      console.error("Delete failed:", error);
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
+  const handleView = () => {
+    setOpenMenu(false);
+    if (onView) onView(row);
+  };
+
+  const handleEdit = () => {
+    setOpenMenu(false);
+    if (onEdit) onEdit(row);
+  };
+
+  const handleDownload = () => {
+    setOpenMenu(false);
+    if (onDownload) onDownload(row);
+  };
+
+  const handleButtonClick = (e) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    setMenuPosition({
+      top: rect.bottom + window.scrollY + 4,
+      left: rect.right + window.scrollX - 176, // 176px = w-44 (11rem * 16px)
+    });
+    setOpenMenu(!openMenu);
+  };
+
+  return (
+    <>
+      <button
+        onClick={handleButtonClick}
+        className="p-2 rounded-full hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-all duration-200 relative"
+        aria-label="Actions"
+      >
+        <MoreVertical className="w-4 h-4 text-zinc-500" />
+      </button>
+
+      {openMenu && (
+        <>
+          {/* Backdrop to close menu */}
+          <div 
+            className="fixed inset-0" 
+            style={{ zIndex: 1000 }}
+            onClick={() => setOpenMenu(false)}
+          />
+          
+          <div className="fixed bg-white dark:bg-zinc-900 rounded-md shadow-xl border border-zinc-200 dark:border-zinc-800 py-1 w-44 opacity-0 scale-95 animate-[fadeIn_0.2s_ease-out_forwards]" style={{ animation: 'fadeIn 0.15s ease-out forwards', zIndex: 1001, top: `${menuPosition.top}px`, left: `${menuPosition.left}px` }}>
+              {/* View Option */}
+              {hasViewPermission && (onView || viewHref) && (
+                <>
+                  {viewHref ? (
+                    <Link
+                      href={viewHref}
+                      onClick={() => setOpenMenu(false)}
+                      className="w-full text-left px-3 py-2 text-sm hover:bg-zinc-50 dark:hover:bg-zinc-800 flex items-center gap-2 text-zinc-700 dark:text-zinc-300 transition-colors duration-150"
+                    >
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                      </svg>
+                      View
+                    </Link>
+                  ) : (
+                    <button
+                      onClick={handleView}
+                      className="w-full text-left px-3 py-2 text-sm hover:bg-zinc-50 dark:hover:bg-zinc-800 flex items-center gap-2 text-zinc-700 dark:text-zinc-300 transition-colors duration-150"
+                    >
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                      </svg>
+                      View
+                    </button>
+                  )}
+                </>
+              )}
+
+              {/* Download Option */}
+              {hasDownloadPermission && onDownload && (
+                <button
+                  onClick={handleDownload}
+                  className="w-full text-left px-3 py-2 text-sm hover:bg-zinc-50 dark:hover:bg-zinc-800 flex items-center gap-2 text-zinc-700 dark:text-zinc-300 transition-colors duration-150"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                  </svg>
+                  Download
+                </button>
+              )}
+
+              {/* Edit Option */}
+              {hasEditPermission && (onEdit || editHref) && (
+                <>
+                  {editHref ? (
+                    <Link
+                      href={editHref}
+                      onClick={() => setOpenMenu(false)}
+                      className="w-full text-left px-3 py-2 text-sm hover:bg-zinc-50 dark:hover:bg-zinc-800 flex items-center gap-2 text-zinc-700 dark:text-zinc-300 transition-colors duration-150"
+                    >
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                      </svg>
+                      Edit
+                    </Link>
+                  ) : (
+                    <button
+                      onClick={handleEdit}
+                      className="w-full text-left px-3 py-2 text-sm hover:bg-zinc-50 dark:hover:bg-zinc-800 flex items-center gap-2 text-zinc-700 dark:text-zinc-300 transition-colors duration-150"
+                    >
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                      </svg>
+                      Edit
+                    </button>
+                  )}
+                </>
+              )}
+
+              {/* Extra Actions */}
+              {extraActions.map((action, idx) => (
+                <button
+                  key={idx}
+                  onClick={() => {
+                    setOpenMenu(false);
+                    action.onClick(row);
+                  }}
+                  className={`w-full text-left px-3 py-2 text-sm hover:bg-zinc-50 dark:hover:bg-zinc-800 flex items-center gap-2 transition-colors duration-150 ${action.className || 'text-zinc-700 dark:text-zinc-300'}`}
+                  disabled={action.disabled}
+                >
+                  {action.icon && <span className="w-4 h-4">{action.icon}</span>}
+                  {action.label}
+                </button>
+              ))}
+
+              {/* Delete Option */}
+              {hasDeletePermission && onDelete && (
+                <>
+                  {(hasViewPermission || hasEditPermission || hasDownloadPermission || extraActions.length > 0) && (
+                    <div className="border-t border-zinc-200 dark:border-zinc-800 my-1" />
+                  )}
+                  <button
+                    onClick={() => {
+                      setOpenMenu(false);
+                      setShowDeleteConfirm(true);
+                    }}
+                    disabled={isDeleting}
+                    className="w-full text-left px-3 py-2 text-sm hover:bg-red-50 dark:hover:bg-red-900/20 flex items-center gap-2 text-red-600 dark:text-red-400 transition-colors duration-150 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                    </svg>
+                    {isDeleting ? "Deleting..." : "Delete"}
+                  </button>
+                </>
+              )}
+            </div>
+          </>
+        )}
+
+      {/* Delete Confirmation Dialog */}
+      {showDeleteConfirm && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm opacity-0 animate-[fadeIn_0.2s_ease-out_forwards]" style={{ animation: 'fadeIn 0.2s ease-out forwards' }}>
+          <div className="bg-white dark:bg-zinc-900 rounded-lg shadow-2xl max-w-md w-full mx-4 p-6 opacity-0 scale-95 animate-[scaleIn_0.2s_ease-out_forwards]" style={{ animation: 'scaleIn 0.2s ease-out forwards' }}>
+            <h3 className="text-lg font-semibold text-zinc-900 dark:text-zinc-100 mb-2">
+              Confirm Deletion
+            </h3>
+            <p className="text-sm text-zinc-600 dark:text-zinc-400 mb-6">
+              {deleteConfirmMessage}
+            </p>
+            <div className="flex justify-end gap-3">
+              <button
+                onClick={() => setShowDeleteConfirm(false)}
+                className="px-4 py-2 text-sm border border-zinc-200 dark:border-zinc-700 rounded-lg hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-all duration-200"
+                disabled={isDeleting}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleDelete}
+                disabled={isDeleting}
+                className="px-4 py-2 text-sm bg-red-600 text-white rounded-lg hover:bg-red-700 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+              >
+                {isDeleting && (
+                  <svg className="w-4 h-4 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                  </svg>
+                )}
+                {isDeleting ? "Deleting..." : "Delete"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </>
+  );
+}
+
 export default function TableArchive({
   title = "",
   columns = [],
@@ -191,7 +436,7 @@ export default function TableArchive({
       )}
 
       {/* Table Section */}
-      <div className="bg-white dark:bg-zinc-950 rounded-xl shadow overflow-hidden">
+      <div className="bg-white dark:bg-zinc-950 rounded-xl shadow">
         <div className="overflow-x-auto">
           <table className="min-w-full text-sm">
             <thead className="bg-zinc-50 dark:bg-zinc-900">
@@ -333,3 +578,6 @@ export default function TableArchive({
     </div>
   );
 }
+
+// Attach Actions as a property of TableArchive for easy import
+TableArchive.Actions = Actions;
