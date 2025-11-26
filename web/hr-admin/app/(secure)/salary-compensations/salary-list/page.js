@@ -21,6 +21,8 @@ export default function SalaryCompensationsPage() {
   const [attendances, setAttendances] = useState([]);
   const [isCalculating, setIsCalculating] = useState(false);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [selectedMonth, setSelectedMonth] = useState("");
+  const [selectedYear, setSelectedYear] = useState("");
   const router = useRouter();
 
   // Fetch leaves and attendances on component mount
@@ -167,16 +169,32 @@ export default function SalaryCompensationsPage() {
   }
 
   const filtered = useMemo(() => {
-    if (!query) return items;
-    const q = query.toLowerCase();
-    return items.filter(
-      (item) =>
-        (item.employeeName || "").toLowerCase().includes(q) ||
-        (item.remarks || "").toLowerCase().includes(q) ||
-        (item.baseSalary?.toString() || "").includes(q) ||
-        (item.netSalary?.toString() || "").includes(q)
-    );
-  }, [items, query]);
+    let result = items;
+
+    // Filter by month/year if selected
+    if (selectedMonth && selectedYear) {
+      result = result.filter((item) => {
+        if (!item.effectiveDate) return false;
+        const date = new Date(item.effectiveDate);
+        return date.getMonth() + 1 === parseInt(selectedMonth) && 
+               date.getFullYear() === parseInt(selectedYear);
+      });
+    }
+
+    // Filter by search query
+    if (query) {
+      const q = query.toLowerCase();
+      result = result.filter(
+        (item) =>
+          (item.employeeName || "").toLowerCase().includes(q) ||
+          (item.remarks || "").toLowerCase().includes(q) ||
+          (item.baseSalary?.toString() || "").includes(q) ||
+          (item.netSalary?.toString() || "").includes(q)
+      );
+    }
+
+    return result;
+  }, [items, query, selectedMonth, selectedYear]);
 
   const formatCurrency = (amount) => {
     if (!amount && amount !== 0) return "—";
@@ -373,12 +391,84 @@ export default function SalaryCompensationsPage() {
     );
   }, [items]);
 
+  // Get unique months and years from items for filter options
+  const availableMonthsYears = useMemo(() => {
+    if (!items || items.length === 0) return { months: [], years: [] };
+
+    const monthsSet = new Set();
+    const yearsSet = new Set();
+
+    items.forEach((item) => {
+      if (item.effectiveDate) {
+        const date = new Date(item.effectiveDate);
+        monthsSet.add(date.getMonth() + 1);
+        yearsSet.add(date.getFullYear());
+      }
+    });
+
+    return {
+      months: Array.from(monthsSet).sort((a, b) => a - b),
+      years: Array.from(yearsSet).sort((a, b) => b - a),
+    };
+  }, [items]);
+
+  const monthNames = [
+    "January", "February", "March", "April", "May", "June",
+    "July", "August", "September", "October", "November", "December"
+  ];
+
   return (
     <div className="max-w-full">
       {summaryStats}
       
-      {/* Auto-Calculate Button */}
-      <div className="mb-4 flex justify-end">
+      {/* Filters and Auto-Calculate Button */}
+      <div className="mb-4 flex flex-col sm:flex-row gap-3 justify-between items-start sm:items-center">
+        {/* Month/Year Filter */}
+        <div className="flex gap-2 items-center">
+          <select
+            value={selectedYear}
+            onChange={(e) => {
+              setSelectedYear(e.target.value);
+              if (!e.target.value) setSelectedMonth("");
+            }}
+            className="px-3 py-2 border border-zinc-300 dark:border-zinc-600 rounded-lg bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-purple-500"
+          >
+            <option value="">All Years</option>
+            {availableMonthsYears.years.map((year) => (
+              <option key={year} value={year}>
+                {year}
+              </option>
+            ))}
+          </select>
+
+          <select
+            value={selectedMonth}
+            onChange={(e) => setSelectedMonth(e.target.value)}
+            disabled={!selectedYear}
+            className="px-3 py-2 border border-zinc-300 dark:border-zinc-600 rounded-lg bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-purple-500 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            <option value="">All Months</option>
+            {availableMonthsYears.months.map((month) => (
+              <option key={month} value={month}>
+                {monthNames[month - 1]}
+              </option>
+            ))}
+          </select>
+
+          {(selectedMonth || selectedYear) && (
+            <button
+              onClick={() => {
+                setSelectedMonth("");
+                setSelectedYear("");
+              }}
+              className="px-3 py-2 text-sm text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 transition-colors"
+            >
+              ✕ Clear
+            </button>
+          )}
+        </div>
+
+        {/* Auto-Calculate Button */}
         <button
           onClick={handleAutoCalculateAll}
           disabled={isCalculating || !items || items.length === 0}
