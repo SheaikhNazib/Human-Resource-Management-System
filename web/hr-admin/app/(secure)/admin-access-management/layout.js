@@ -15,16 +15,20 @@ export default function AdminAccessLayout({ children }) {
 
     // If not authenticated, redirect to login
     if (!isAuthenticated) {
-      router.push("/login");
+      if (typeof window !== 'undefined') {
+        window.location.href = '/login';
+      }
       return;
     }
 
     // If authenticated but not super_admin, deny access
     if (user && user.role !== "super_admin") {
       toast.error("Access denied. This section is only available to Super Admins.");
-      router.push("/dashboard");
+      if (typeof window !== 'undefined') {
+        window.location.href = '/dashboard';
+      }
     }
-  }, [user, loading, isAuthenticated, router]);
+  }, [user, loading, isAuthenticated]);
 
   // Show loading state while checking authentication
   if (loading) {
