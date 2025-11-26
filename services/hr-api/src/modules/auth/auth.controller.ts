@@ -26,10 +26,15 @@ export class AuthController {
     try {
       let user: any;
       if (loginDto.role !== Roles.EMPLOYEE) {
-        user = await this.usersService.findOneByEmail(loginDto.email);
+        user = await this.usersService.findOneByEmailAndRole(loginDto.email, loginDto.role);
         if (!user) {
           return res.status(HttpStatus.NOT_FOUND).json({
             success: false, data: null, message: 'User not found!'
+          });
+        }
+        if(!user.isActive) {
+          return res.status(HttpStatus.UNAUTHORIZED).json({
+            success: false, data: null, message: 'User is not activated!'
           });
         }
       } else {
@@ -46,16 +51,12 @@ export class AuthController {
           success: false, data: null, message: 'Invalid credentials!'
         });
       } 
-      const access_token = this.jwtService.sign({ id: user.id, role: loginDto.role });
-      const userResponse = {
-        id: user.id,
-        email: user.email, 
-        role: user.role
-      };
+      const userResponse = { id: user.id, email: user.email, role: user.role };
+      const access_token = this.jwtService.sign({ id: user.id, role: user.role });
+
       return res.status(HttpStatus.OK).json({
         success: true, data: { access_token, user: userResponse }, message: 'Logged in successfully!'
       });
-
     } catch (error) {
       console.error(error);
       return res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({
