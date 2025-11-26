@@ -28,6 +28,10 @@ export async function getEmployeesList() {
           firstName: item.first_name,
           lastName: item.last_name,
           name: item.name,
+          displayName: `${
+            item.name ||
+            `${item.first_name || ""} ${item.last_name || ""}`.trim()
+          } (ID: ${item.id})`,
           email: item.work_email || item.personal_email,
           jobTitle: item.emp_job_title?.name || "",
           department: item.emp_department?.name || "",
@@ -51,19 +55,25 @@ export async function createEmployee(employeeData) {
       method: "POST",
       body: payload,
     });
-    
+
     const responseData = response?.data?.data ?? response?.data ?? response;
-    
+
     if (responseData?.statusCode >= 400) {
-      return { success: false, error: responseData?.message || 'Failed to create employee' };
+      return {
+        success: false,
+        error: responseData?.message || "Failed to create employee",
+      };
     }
     if (!responseData?.id) {
-      return { success: false, error: 'Employee created but no ID returned' };
+      return { success: false, error: "Employee created but no ID returned" };
     }
-    
+
     return { success: true, data: responseData };
   } catch (error) {
-    return { success: false, error: error.message || 'Failed to create employee' };
+    return {
+      success: false,
+      error: error.message || "Failed to create employee",
+    };
   }
 }
 
@@ -95,16 +105,22 @@ export async function updateEmployee(id, employeeData) {
       method: "PATCH",
       body: payload,
     });
-    
+
     const responseData = response?.data?.data ?? response?.data ?? response;
-    
+
     if (responseData?.statusCode >= 400) {
-      return { success: false, error: responseData?.message || 'Failed to update employee' };
+      return {
+        success: false,
+        error: responseData?.message || "Failed to update employee",
+      };
     }
-    
+
     return { success: true, data: responseData };
   } catch (error) {
-    return { success: false, error: error.message || 'Failed to update employee' };
+    return {
+      success: false,
+      error: error.message || "Failed to update employee",
+    };
   }
 }
 
