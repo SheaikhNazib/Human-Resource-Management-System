@@ -3,7 +3,14 @@
 import React, { useEffect, useState } from "react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { getEmployeeById } from "@/actions/employees/server-actions";
-import { AlertCircle, User, Briefcase, Calendar } from "lucide-react";
+import {
+  AlertCircle,
+  User,
+  Briefcase,
+  Calendar,
+  Edit,
+  ChevronLeft,
+} from "lucide-react";
 import Loader from "@/components/ui/Loader";
 import { toMessage } from "@/lib/utils";
 import { toast } from "sonner";
@@ -144,18 +151,26 @@ const EmployeeDetailsPage = () => {
                 </span>
               </div>
             </div>
-            <div className="flex space-x-3">
-              <button
-                onClick={() => router.push(`/employees/${employee.id}/edit`)}
-                className="px-6 py-2 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition-all shadow-md"
-              >
-                Edit
-              </button>
+            <div className="flex items-center gap-3 flex-wrap">
               <button
                 onClick={() => router.push("/employees")}
-                className="px-6 py-2 bg-gray-100 text-gray-700 rounded-lg font-semibold hover:bg-gray-200 transition-all shadow-md"
+                className="inline-flex items-center gap-2 h-10 px-3 bg-transparent border border-zinc-200 dark:border-zinc-700 text-zinc-700 dark:text-zinc-200 rounded-md hover:bg-zinc-50 dark:hover:bg-zinc-800 transition"
+                aria-label="Back to employees list"
+                title="Back to employees"
               >
-                Back
+                <ChevronLeft className="w-4 h-4" />
+                <span className="text-sm">Back to List</span>
+              </button>
+
+              <button
+                onClick={() => router.push(`/employees/${employee.id}/edit`)}
+                className="inline-flex items-center gap-2 h-10 px-4 bg-blue-600 text-white rounded-md font-semibold hover:bg-blue-700 transition-shadow shadow-md"
+                aria-label="Edit employee profile"
+                title="Edit profile"
+              >
+                <span className="sr-only">Edit employee</span>
+                <Edit className="w-4 h-4" />
+                <span className="text-sm">Edit Profile</span>
               </button>
             </div>
           </div>

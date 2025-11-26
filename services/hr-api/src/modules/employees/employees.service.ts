@@ -17,72 +17,14 @@ export class EmployeesService {
 
   async create(createDto: CreateEmployeeDto) {
     try {
-      if (!createDto.emp_department) {
-        return {
-          statusCode: 400,
-          message: 'emp_department_id is required',
-          error: 'Bad Request'
-        };
-      }
-      if (!createDto.emp_job_title) {
-        return {
-          statusCode: 400,
-          message: 'emp_job_title_id is required',
-          error: 'Bad Request'
-        };
-      }
-      // Check if emp_department exists
-      const departmentRepo = this.repo.manager.getRepository(EmpDepartments);
-      const department = await departmentRepo.findOneBy({ id: createDto.emp_department });
-      if (!department) {
-        return {
-          statusCode: 400,
-          message: `emp_department with id ${createDto.emp_department} does not exist`,
-          error: 'Bad Request'
-        };
-      }
-      // Check if emp_job_title exists (if provided)
-      let jobTitle: EmpJobTitles | null = null;
-      if (createDto.emp_job_title) {
-        const jobTitleRepo = this.repo.manager.getRepository(EmpJobTitles);
-        jobTitle = await jobTitleRepo.findOneBy({ id: createDto.emp_job_title });
-        if (!jobTitle) {
-          return {
-            statusCode: 400,
-            message: `emp_job_title with id ${createDto.emp_job_title} does not exist`,
-            error: 'Bad Request'
-          };
-        }
-      }
-      const createData: any = { ...createDto };
-      createData.emp_department = { id: createDto.emp_department } as EmpDepartments;
-      if (jobTitle) {
-        createData.emp_job_title = { id: createDto.emp_job_title } as EmpJobTitles;
-      }
-      if (createData.password) {
-        createData.password = await bcrypt.hash(createData.password, 10);
-      } else {
-        createData.password = await bcrypt.hash('123456', 10); // Default password is 123456
-      }
-      const employee = this.repo.create(createData);
+      const employee = this.repo.create({
+        ...createDto,
+        emp_department: { id: createDto.emp_department },
+        emp_job_title: { id: createDto.emp_job_title },
+      });
       return await this.repo.save(employee);
     } catch (error: any) {
-      if (error.code === '23505') {
-        // Unique violation
-        const detail = error.detail || '';
-        let field = 'unique field';
-        let value = '';
-        const fieldMatch = detail.match(/\(([^)]+)\)=/);
-        const valueMatch = detail.match(/=\(([^)]+)\)/);
-        if (fieldMatch && fieldMatch[1]) field = fieldMatch[1];
-        if (valueMatch && valueMatch[1]) value = valueMatch[1];
-        return {
-          statusCode: 400,
-          message: `${field} must be unique. Duplicate value: ${value}`,
-          error: 'Bad Request'
-        };
-      }
-      throw error;
+      return null;
     }
   }
 

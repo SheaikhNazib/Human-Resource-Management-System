@@ -8,5 +8,6 @@ import { EmpJobTitlesController } from './emp_job_titles.controller';
   imports: [TypeOrmModule.forFeature([EmpJobTitles])],
   controllers: [EmpJobTitlesController],
   providers: [EmpJobTitlesService],
+  exports: [EmpJobTitlesService],
 })
 export class EmpJobTitlesModule {}
