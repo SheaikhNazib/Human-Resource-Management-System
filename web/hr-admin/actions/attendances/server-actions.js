@@ -238,15 +238,21 @@ export async function deleteAttendance(id) {
 // Get employees with their attendance for today
 export async function getEmployeesWithTodayAttendance() {
   try {
-    // Get current date
+    // Get current date in local timezone to avoid timezone issues
     const now = new Date();
     const currentTime = now.toTimeString().slice(0, 5);
-    const currentDate = now.toISOString().split('T')[0];
+    // Format date as YYYY-MM-DD in local timezone
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const day = String(now.getDate()).padStart(2, '0');
+    const currentDate = `${year}-${month}-${day}`;
 
-    // Fetch employees and today's attendance in parallel
+    console.log('Fetching attendance for date:', currentDate);
+
+    // Fetch employees and ALL attendance records
     const [employeesResponse, attendanceResponse] = await Promise.all([
       fetchFromApi(Api_path.EMPLOYEE.LIST),
-      fetchFromApi(`${Api_path.ATTENDANCE.LIST}?date=${currentDate}`)
+      fetchFromApi(Api_path.ATTENDANCE.LIST)
     ]);
 
     // Parse employees
@@ -272,12 +278,46 @@ export async function getEmployeesWithTodayAttendance() {
         attendanceRecords = attendanceBody.data.data;
       }
     } catch (err) {
-      console.log('No attendance records found for today:', err.message);
+      console.log('No attendance records found:', err.message);
     }
 
-    // Create a map of attendance records by employee ID
+    console.log('Total attendance records fetched:', attendanceRecords.length);
+    
+    // Helper to normalize date from various formats to YYYY-MM-DD
+    const normalizeDate = (dateStr) => {
+      if (!dateStr) return null;
+      try {
+        // If already in YYYY-MM-DD format
+        if (/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) return dateStr;
+        
+        // Parse and format to YYYY-MM-DD
+        const d = new Date(dateStr);
+        if (isNaN(d.getTime())) return null;
+        
+        const y = d.getFullYear();
+        const m = String(d.getMonth() + 1).padStart(2, '0');
+        const day = String(d.getDate()).padStart(2, '0');
+        return `${y}-${m}-${day}`;
+      } catch (e) {
+        return null;
+      }
+    };
+
+    // Filter records to only today's date
+    const todayRecords = attendanceRecords.filter(record => {
+      const recordDate = normalizeDate(record.date);
+      const isToday = recordDate === currentDate;
+      if (recordDate) {
+        console.log(`Record date: ${recordDate}, Current date: ${currentDate}, Match: ${isToday}`);
+      }
+      return isToday;
+    });
+
+    console.log('Attendance records for today:', todayRecords.length);
+
+    // Create a map of attendance records by employee ID (only for today)
     const attendanceMap = new Map();
-    attendanceRecords.forEach(record => {
+    todayRecords.forEach(record => {
       const empId = record.employee?.id || record.employee;
       if (empId) {
         attendanceMap.set(empId, {
@@ -291,7 +331,7 @@ export async function getEmployeesWithTodayAttendance() {
 
     // Helper to format time from various formats
     const formatTime = (timeStr) => {
-      if (!timeStr) return currentTime;
+      if (!timeStr) return '';
       // If time includes date (ISO format), extract time part
       if (timeStr.includes('T')) {
         const date = new Date(timeStr);
@@ -303,6 +343,8 @@ export async function getEmployeesWithTodayAttendance() {
       }
       return timeStr;
     };
+
+
 
     // Merge employees with their attendance
     const data = employeesList.map(emp => {

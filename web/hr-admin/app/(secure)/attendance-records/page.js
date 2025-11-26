@@ -10,6 +10,15 @@ export default function AttendancePage() {
     const [selectedDate, setSelectedDate] = useState("");
     const router = useRouter();
 
+    // Convert 24-hour time to 12-hour format with AM/PM
+    const formatTime12 = (time) => {
+        if (!time) return '—';
+        const [h, m] = time.split(':').map(Number);
+        const period = h >= 12 ? 'PM' : 'AM';
+        const hour12 = h % 12 || 12;
+        return `${hour12}:${m.toString().padStart(2, '0')} ${period}`;
+    };
+
     function handleView(id) {
         router.push(`/attendance-records/${id}/view`);
     }
@@ -69,12 +78,12 @@ export default function AttendancePage() {
         {
             header: "Check In",
             accessor: "checkIn",
-            render: (att) => att.checkIn ?? att.raw?.checkIn ?? '—'
+            render: (att) => formatTime12(att.checkIn ?? att.raw?.checkIn)
         },
         {
             header: "Check Out",
             accessor: "checkOut",
-            render: (att) => att.checkOut ?? att.raw?.checkOut ?? '—'
+            render: (att) => formatTime12(att.checkOut ?? att.raw?.checkOut)
         },
         {
             header: "Location",
