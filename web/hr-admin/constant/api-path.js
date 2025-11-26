@@ -25,6 +25,13 @@ export const Api_path = {
     DELETE: (itemId) => `/api/v1/task-work-items/${itemId}`,
     GET_ONE: (itemId) => `/api/v1/task-work-items/${itemId}`,
   },
+  EMPLOYEE_PERFORMANCE: {
+    LIST: "/api/v1/emp-performances",
+    CREATE: "/api/v1/emp-performances",
+    GET_ONE: (id) => `/api/v1/emp-performances/${id}`,
+    UPDATE: (id) => `/api/v1/emp-performances/${id}`,
+    DELETE: (id) => `/api/v1/emp-performances/${id}`,
+  },
   DEPARTMENT: {
     LIST: "/api/v1/emp-departments",
     GET_ONE: (id) => `/api/v1/emp-departments/${id}`,

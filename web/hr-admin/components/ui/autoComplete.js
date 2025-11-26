@@ -25,21 +25,31 @@ const AutoComplete = (props = {}) => {
   // Auto-detect keys for objects
   const getKeys = () => {
     if (!options.length) return { display: "label", value: "value" };
-    
+
     const firstOption = options[0];
     if (typeof firstOption !== "object") return { display: null, value: null };
 
-    // Custom display key provided
-    if (displayKey) return { display: displayKey, value: displayKey };
-
-    // Auto-detect common patterns
     const keys = Object.keys(firstOption);
-    const displayKey = keys.find(k => ["name", "label", "title"].includes(k.toLowerCase())) || 
-                       keys.find(k => typeof firstOption[k] === "string") ||
-                       keys[0];
-    const valueKey = keys.find(k => ["id", "value", "code"].includes(k.toLowerCase())) || displayKey;
 
-    return { display: displayKey, value: valueKey };
+    // Detect a good display key (name-like string)
+    const detectedDisplayKey =
+      displayKey && keys.includes(displayKey)
+        ? displayKey
+        : keys.find((k) =>
+            ["name", "label", "title"].includes(k.toLowerCase())
+          ) ||
+          keys.find((k) => typeof firstOption[k] === "string") ||
+          keys[0];
+
+    // Detect a sensible value key (id/number-like) distinct from display
+    const detectedValueKey =
+      keys.find((k) => ["id", "value", "code"].includes(k.toLowerCase())) ||
+      keys.find((k) => typeof firstOption[k] === "number") ||
+      // fallback to a different key than display if possible
+      keys.find((k) => k !== detectedDisplayKey) ||
+      detectedDisplayKey;
+
+    return { display: detectedDisplayKey, value: detectedValueKey };
   };
 
   const { display: displayKeyAuto, value: valueKeyAuto } = getKeys();
@@ -52,14 +62,17 @@ const AutoComplete = (props = {}) => {
     return {
       _display: option[displayKeyAuto],
       _value: option[valueKeyAuto],
-      _original: option
+      _original: option,
     };
   });
 
   // Filter options
   const filteredOptions = searchTerm
     ? normalizedOptions.filter((option) =>
-        option._display?.toString().toLowerCase().includes(searchTerm.toLowerCase())
+        option._display
+          ?.toString()
+          .toLowerCase()
+          .includes(searchTerm.toLowerCase())
       )
     : normalizedOptions;
 
@@ -165,7 +178,11 @@ const AutoComplete = (props = {}) => {
           className={`
             relative flex items-center w-full border rounded-lg bg-white
             transition-all duration-200
-            ${disabled ? "bg-gray-100 cursor-not-allowed opacity-60" : "cursor-pointer"}
+            ${
+              disabled
+                ? "bg-gray-100 cursor-not-allowed opacity-60"
+                : "cursor-pointer"
+            }
             ${error ? "border-red-500" : "border-gray-300"}
             ${isOpen && !error ? "ring-2 ring-blue-500 border-blue-500" : ""}
             ${!disabled && !error ? "hover:border-gray-400" : ""}
@@ -213,12 +230,20 @@ const AutoComplete = (props = {}) => {
               {filteredOptions.length > 0 ? (
                 filteredOptions.map((option, index) => (
                   <div
-                    key={option._value || index}
+                    key={`${option._value}-${index}`}
                     onClick={() => handleSelect(option)}
                     className={`
                       px-4 py-2 cursor-pointer text-sm
-                      ${option._value === value ? "bg-blue-50 text-blue-700 font-medium" : "text-gray-700"}
-                      ${highlightedIndex === index ? "bg-gray-100" : "hover:bg-gray-50"}
+                      ${
+                        option._value === value
+                          ? "bg-blue-50 text-blue-700 font-medium"
+                          : "text-gray-700"
+                      }
+                      ${
+                        highlightedIndex === index
+                          ? "bg-gray-100"
+                          : "hover:bg-gray-50"
+                      }
                     `}
                   >
                     {option._display}
