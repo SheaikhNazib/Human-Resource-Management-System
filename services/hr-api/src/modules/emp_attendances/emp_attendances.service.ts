@@ -24,7 +24,7 @@ export class EmpAttendancesService {
 
 
   async findAll() {
-    const data = await this.repo.find();
+    const data = await this.repo.find({ relations: ['employee'] });
     return {
       data,
       count: data.length,
@@ -33,7 +33,7 @@ export class EmpAttendancesService {
 
 
   async findOne(id: number) {
-    const data = await this.repo.findOneBy({ id });
+    const data = await this.repo.findOne({ where: { id }, relations: ['employee'] });
     if (data) {
       return {
         message: 'Attendance found',
@@ -56,7 +56,7 @@ export class EmpAttendancesService {
     }
     const result = await this.repo.update(id, updateData);
     if (result.affected && result.affected > 0) {
-      const updated = await this.repo.findOneBy({ id });
+      const updated = await this.repo.findOne({ where: { id }, relations: ['employee'] });
       return {
         message: 'Attendance updated successfully',
         id,
