@@ -20,6 +20,7 @@ import { XssProtectionMiddleware } from "./common/middleware/xss-protection.midd
 
 import { EmpSalaryCompensationsModule } from "./modules/emp_salary_compensations/emp_salary_compensations.module";
 import { EmpPerformancesModule } from "./modules/emp_performances/emp_performances.module";
+import { UsersModule } from "./modules/users/users.module";
 
 @Module({
   imports: [
@@ -53,6 +54,7 @@ import { EmpPerformancesModule } from "./modules/emp_performances/emp_performanc
     EmpLeavesModule,
     EmpSalaryCompensationsModule,
     EmpPerformancesModule,
+    UsersModule,
   ],
 })
 export class AppModule implements NestModule {
