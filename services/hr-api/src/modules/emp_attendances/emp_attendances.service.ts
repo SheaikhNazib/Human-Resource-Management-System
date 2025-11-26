@@ -12,13 +12,14 @@ export class EmpAttendancesService {
     private readonly repo: Repository<EmpAttendances>,
   ) {}
 
-  create(createDto: CreateEmpAttendanceDto) {
-    // Map employee id to relation
-    const attendance: any = { ...createDto };
-    if (createDto.employee !== undefined) {
-      attendance.employee = { id: createDto.employee };
+  async create(createDto: CreateEmpAttendanceDto) {
+    const attendance = this.repo.create({ ...createDto, employee: { id: createDto.employee } });
+    try {
+      return await this.repo.save(attendance);
+    } catch (error) {
+      const errMsg = (error instanceof Error) ? error.message : 'Internal server error';
+      return { statusCode: 500, message: errMsg };
     }
-    return this.repo.save(attendance);
   }
 
 

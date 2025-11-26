@@ -6,6 +6,13 @@ export const Api_path = {
     DELETE: (id) => `/api/v1/employees/${id}`,
     GET_ONE: (id) => `/api/v1/employees/${id}`,
   },
+  DEPARTMENT: {
+    LIST: "/api/v1/emp-departments",
+    GET_ONE: (id) => `/api/v1/emp-departments/${id}`,
+    DELETE: (id) => `/api/v1/emp-departments/${id}`,
+    CREATE: "/api/v1/emp-departments",
+    UPDATE: (id) => `/api/v1/emp-departments/${id}`,
+  },
 
   ATTENDANCE: {
     LIST: "/api/v1/emp-attendances",
@@ -34,14 +41,30 @@ export const Api_path = {
     DELETE: (itemId) => `/api/v1/task-work-items/${itemId}`,
     GET_ONE: (itemId) => `/api/v1/task-work-items/${itemId}`,
   },
-};
-export const Department_path = {
-  LIST: "/api/v1/emp-departments",
-  // Additional helpers for convenience
-  GET_ONE: (id) => `/api/v1/emp-departments/${id}`,
-  DELETE: (id) => `/api/v1/emp-departments/${id}`,
-  CREATE: "/api/v1/emp-departments",
-  UPDATE: (id) => `/api/v1/emp-departments/${id}`,
+
+  EMPLOYEE_LEAVE: {
+    LIST: "/api/v1/emp-leaves",
+    CREATE: "/api/v1/emp-leaves",
+    UPDATE: (id) => `/api/v1/emp-leaves/${id}`,
+    DELETE: (id) => `/api/v1/emp-leaves/${id}`,
+    GET_ONE: (id) => `/api/v1/emp-leaves/${id}`,
+  },
+  EMPLOYEE_PERFORMANCE: {
+    LIST: "/api/v1/emp-performances",
+    CREATE: "/api/v1/emp-performances",
+    UPDATE: (id) => `/api/v1/emp-performances/${id}`,
+    DELETE: (id) => `/api/v1/emp-performances/${id}`,
+    GET_ONE: (id) => `/api/v1/emp-performances/${id}`,
+  },
+  DEPARTMENT: {
+    LIST: "/api/v1/emp-departments",
+    GET_ONE: (id) => `/api/v1/emp-departments/${id}`,
+    DELETE: (id) => `/api/v1/emp-departments/${id}`,
+    CREATE: "/api/v1/emp-departments",
+    UPDATE: (id) => `/api/v1/emp-departments/${id}`,
+  }
+
+  
 };
 
 // Note: `Department_path` contains all department endpoint helpers.

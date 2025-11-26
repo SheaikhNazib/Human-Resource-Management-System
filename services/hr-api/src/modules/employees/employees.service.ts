@@ -88,6 +88,15 @@ export class EmployeesService {
     return this.repo.findOne({ where: { id }, relations: ['emp_department', 'emp_job_title'] });
   }
 
+  findOneByEmail(email: string) {
+    return this.repo.findOne({ where: { work_email: email }});
+  }
+
+  async findOneById(id: number) {
+    const employee = await this.repo.findOneBy({ id });
+    return employee;
+  }
+
   async update(id: number, updateDto: UpdateEmployeeDto) {
     const updateData: any = { ...updateDto };
     if (updateDto.emp_department) {

@@ -3,17 +3,19 @@ import { ApiTags, ApiOperation, ApiResponse, ApiBody, ApiParam } from '@nestjs/s
 import { CreateEmpAttendanceDto } from './dto/create.dto';
 import { UpdateEmpAttendanceDto } from './dto/update.dto';
 import { EmpAttendancesService } from './emp_attendances.service';
+import { EmployeesService } from '../employees/employees.service';
 
 @ApiTags('EmployeeAttendances')
 @Controller('emp-attendances')
 export class EmpAttendancesController {
-  constructor(private readonly empAttendancesService: EmpAttendancesService) {}
+  constructor(private readonly empAttendancesService: EmpAttendancesService, private readonly employeesService: EmployeesService) {}
 
   @Post()
   @ApiOperation({ summary: 'Create employee attendance' })
   @ApiBody({ type: CreateEmpAttendanceDto })
   @ApiResponse({ status: 201, description: 'Attendance created' })
-  create(@Body() createDto: CreateEmpAttendanceDto) {
+  async create(@Body() createDto: CreateEmpAttendanceDto) {
+    const getEmployee = await this.employeesService.findOneById(createDto.employee);
     return this.empAttendancesService.create(createDto);
   }
 
