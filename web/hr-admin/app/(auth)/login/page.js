@@ -167,7 +167,7 @@ export default function LoginPage() {
             </div>
 
             {/* Remember Me & Forgot Password */}
-            <div className="flex items-center justify-between">
+            {/* <div className="flex items-center justify-between">
               <label className="flex items-center gap-2 cursor-pointer">
                 <input
                   type="checkbox"
@@ -184,7 +184,7 @@ export default function LoginPage() {
               >
                 Forgot Password?
               </Link>
-            </div>
+            </div> */}
 
             {/* Submit Button */}
             <button
@@ -198,7 +198,7 @@ export default function LoginPage() {
           </form>
 
           {/* Divider */}
-          <div className="relative my-6">
+          {/* <div className="relative my-6">
             <div className="absolute inset-0 flex items-center">
               <div className="w-full border-t border-zinc-200"></div>
             </div>
@@ -207,17 +207,17 @@ export default function LoginPage() {
                 Don&apos;t have an account?
               </span>
             </div>
-          </div>
+          </div> */}
 
           {/* Sign Up Link */}
-          <div className="text-center">
+          {/* <div className="text-center">
             <Link
               href="/register"
               className="text-blue-600 hover:text-blue-700 font-medium text-sm transition-colors"
             >
               Create an account
             </Link>
-          </div>
+          </div> */}
         </div>
 
         {/* Footer */}

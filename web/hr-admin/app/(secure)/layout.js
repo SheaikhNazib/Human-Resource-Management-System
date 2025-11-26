@@ -10,11 +10,16 @@ function SecureLayoutContent({ children }) {
   const { isAuthenticated, loading } = useAuthContext();
   const router = useRouter();
 
+  // Redirect to login if not authenticated
   useEffect(() => {
     if (!loading && !isAuthenticated) {
-      router.push("/login");
+      console.log("User not authenticated, redirecting to login");
+      // Use window.location for immediate redirect
+      if (typeof window !== 'undefined') {
+        window.location.href = '/login';
+      }
     }
-  }, [isAuthenticated, loading, router]);
+  }, [isAuthenticated, loading]);
 
   if (loading) {
     return (
