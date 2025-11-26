@@ -1,8 +1,26 @@
 "use client";
 import Link from "next/link";
-import { ChevronDown, Menu, Search } from "lucide-react";
+import { useState } from "react";
+import { ChevronDown, Menu, LogOut, User } from "lucide-react";
+import { useAuthContext } from "@/contexts/AuthContext";
+import { toast } from "sonner";
 
-export default function Header({ onOpen, user = null }) {
+export default function Header({ onOpen }) {
+  const { user, logout } = useAuthContext();
+  const [showDropdown, setShowDropdown] = useState(false);
+
+  const handleLogout = async () => {
+    setShowDropdown(false); // Close dropdown immediately
+    toast.loading("Logging out...");
+    try {
+      await logout();
+      toast.dismiss();
+      toast.success("Logged out successfully");
+    } catch (error) {
+      toast.dismiss();
+      toast.error("Failed to logout");
+    }
+  };
   return (
     <header className="h-16 bg-white dark:bg-zinc-950 border-b border-zinc-200 dark:border-zinc-800 flex items-center px-4 lg:px-8 justify-between sticky top-0 z-20">
       <div className="flex items-center gap-2 w-full">
@@ -24,16 +42,49 @@ export default function Header({ onOpen, user = null }) {
         {user ? (
           <>
             <span className="text-zinc-500 dark:text-zinc-400 text-sm hidden sm:block">
-              {user.email}
+              {user.email || user.work_email || user.personal_email}
             </span>
-            <button className="flex items-center gap-1 group">
-              <img
-                src={user.avatar || "/avatar.png"}
-                alt="Admin Avatar"
-                className="w-8 h-8 rounded-full border border-zinc-300 dark:border-zinc-700"
-              />
-              <ChevronDown className="w-4 h-4 text-zinc-400 group-hover:text-zinc-700" />
-            </button>
+            <div className="relative">
+              <button
+                onClick={() => setShowDropdown(!showDropdown)}
+                className="flex items-center gap-1 group"
+              >
+                <img
+                  src={user.avatar || "/avatar.png"}
+                  alt="User Avatar"
+                  className="w-8 h-8 rounded-full border border-zinc-300 dark:border-zinc-700"
+                />
+                <ChevronDown className="w-4 h-4 text-zinc-400 group-hover:text-zinc-700" />
+              </button>
+
+              {showDropdown && (
+                <>
+                  <div
+                    className="fixed inset-0 z-30"
+                    onClick={() => setShowDropdown(false)}
+                  />
+                  <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-zinc-800 rounded-lg shadow-lg border border-zinc-200 dark:border-zinc-700 py-2 z-40">
+                    <div className="px-4 py-2 border-b border-zinc-200 dark:border-zinc-700">
+                      <p className="text-sm font-medium text-zinc-900 dark:text-zinc-100">
+                        {user.first_name && user.last_name
+                          ? `${user.first_name} ${user.last_name}`
+                          : user.name || "User"}
+                      </p>
+                      <p className="text-xs text-zinc-500 dark:text-zinc-400 truncate">
+                        {user.email || user.work_email || user.personal_email}
+                      </p>
+                    </div>
+                    <button
+                      onClick={handleLogout}
+                      className="w-full text-left px-4 py-2 text-sm text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-700 flex items-center gap-2"
+                    >
+                      <LogOut className="w-4 h-4" />
+                      Logout
+                    </button>
+                  </div>
+                </>
+              )}
+            </div>
           </>
         ) : (
           <Link

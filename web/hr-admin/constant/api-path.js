@@ -1,4 +1,11 @@
 export const Api_path = {
+  AUTH: {
+    LOGIN: "/api/v1/auth/login",
+    REGISTER: "/api/v1/auth/register",
+    LOGOUT: "/api/v1/auth/logout",
+    ME: "/api/v1/auth/me",
+    REFRESH: "/api/v1/auth/refresh",
+  },
   EMPLOYEE: {
     LIST: "/api/v1/employees",
     CREATE: "/api/v1/employees",

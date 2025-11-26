@@ -1,10 +1,35 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import Sidebar from "../../components/Sidebar";
 import Header from "../../components/Header";
+import { AuthProvider, useAuthContext } from "@/contexts/AuthContext";
 
-export default function SecureLayout({ children }) {
+function SecureLayoutContent({ children }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const { isAuthenticated, loading } = useAuthContext();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (!loading && !isAuthenticated) {
+      router.push("/login");
+    }
+  }, [isAuthenticated, loading, router]);
+
+  if (loading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-zinc-50 dark:bg-zinc-900">
+        <div className="text-center">
+          <div className="w-16 h-16 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-zinc-600 dark:text-zinc-400">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!isAuthenticated) {
+    return null;
+  }
   
   return (
     <div className="flex min-h-screen bg-zinc-50 dark:bg-zinc-900">
@@ -20,5 +45,13 @@ export default function SecureLayout({ children }) {
         </main>
       </div>
     </div>
+  );
+}
+
+export default function SecureLayout({ children }) {
+  return (
+    <AuthProvider>
+      <SecureLayoutContent>{children}</SecureLayoutContent>
+    </AuthProvider>
   );
 }
