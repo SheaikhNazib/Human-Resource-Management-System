@@ -1,11 +1,15 @@
-import { Controller, Get, Post, Body, Param, Put, Delete, Patch, Query, Res, HttpStatus } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiBody, ApiParam, ApiQuery } from '@nestjs/swagger';
+import { Controller, Get, Post, Body, Param, Put, Delete, Patch, Query, Res, HttpStatus, UseGuards } from '@nestjs/common';
+import { ApiTags, ApiOperation, ApiResponse, ApiBody, ApiParam, ApiQuery, ApiBearerAuth } from '@nestjs/swagger';
 import { EmpDepartmentsService } from './emp_departments.service';
 import { CreateEmpDepartmentDto } from './dto/create.dto';
 import { UpdateEmpDepartmentDto } from './dto/update.dto';
 import { Response } from 'express';
+import { RolesGuard } from 'src/common/guards/roles.guard';
+import { JwtAuthGuard } from 'src/common/guards/jwt-auth.guard';
 
 @ApiTags('EmployeeDepartments')
+@UseGuards(JwtAuthGuard, RolesGuard)
+@ApiBearerAuth('JWT-auth')
 @Controller('emp-departments')
 export class EmpDepartmentsController {
   constructor(private readonly empDepartmentsService: EmpDepartmentsService) {}
