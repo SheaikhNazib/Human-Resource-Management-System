@@ -8,5 +8,6 @@ import { EmpDepartmentsController } from './emp_departments.controller';
   imports: [TypeOrmModule.forFeature([EmpDepartments])],
   controllers: [EmpDepartmentsController],
   providers: [EmpDepartmentsService],
+  exports: [EmpDepartmentsService],
 })
 export class EmpDepartmentsModule {}

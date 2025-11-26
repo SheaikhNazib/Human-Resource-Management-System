@@ -7,13 +7,20 @@ import { QueryEmployeeDto } from './dto/query.dto';
 import { JwtAuthGuard } from 'src/common/guards/jwt-auth.guard';
 import { RolesGuard } from 'src/common/guards/roles.guard';
 import { Response } from 'express';
+import * as bcrypt from 'bcrypt';
+import { EmpDepartmentsService } from '../emp_departments/emp_departments.service';
+import { EmpJobTitlesService } from '../emp_job_titles/emp_job_titles.service';
 
 @ApiTags('Employees')
 @UseGuards(JwtAuthGuard, RolesGuard)
 @ApiBearerAuth('JWT-auth')
 @Controller('employees')
 export class EmployeesController {
-  constructor(private readonly employeesService: EmployeesService) { }
+  constructor(
+    private readonly employeesService: EmployeesService,
+    private readonly empDepartmentsService: EmpDepartmentsService,
+    private readonly empJobTitlesService: EmpJobTitlesService,
+  ) { }
 
   @Post()
   @ApiOperation({ summary: 'Create employee' })
@@ -21,11 +28,45 @@ export class EmployeesController {
   @ApiResponse({ status: 201, description: 'Employee created successfully.' })
   async create(@Body() createDto: CreateEmployeeDto, @Res() res: Response) {
     try {
-      const employee = await this.employeesService.create(createDto);
+      const [getWorkEmailEmployee, getPersonalEmailEmployee] = await Promise.all([
+        this.employeesService.findOneByEmail(createDto.work_email),
+        this.employeesService.findOneByEmail(createDto.personal_email)
+      ]);      
+
+      if(getWorkEmailEmployee || getPersonalEmailEmployee) {
+        return res.status(HttpStatus.BAD_REQUEST).json({
+          success: false, data: null, message: `Employee with this [${getWorkEmailEmployee ? 'Work Email' : 'Personal Email'}] already exists!`
+        });
+      }
+      const [getDepartment, getJobTitle] = await Promise.all([
+        this.empDepartmentsService.findOne(createDto.emp_department),
+        this.empJobTitlesService.findOne(createDto.emp_job_title)
+      ]);
+      if(!getDepartment) {
+        return res.status(HttpStatus.BAD_REQUEST).json({
+          success: false, data: null, message: `Department with id ${createDto.emp_department} does not exist!`
+        });
+      }
+      if(!getJobTitle) {
+        return res.status(HttpStatus.BAD_REQUEST).json({
+          success: false, data: null, message: `Job title with id ${createDto.emp_job_title} does not exist!`
+        });
+      }
+
+      if (createDto.password) createDto.password = await bcrypt.hash(createDto.password, 10);
+      else createDto.password = await bcrypt.hash('123456', 10); // Default password is 123456
+      
+      const createdEmployee = await this.employeesService.create(createDto);
+      if(!createdEmployee) {
+        return res.status(HttpStatus.BAD_REQUEST).json({
+          success: false, data: null, message: 'Employee not created! Please try again later!'
+        });
+      }
       return res.status(HttpStatus.CREATED).json({
-        success: true, data: employee, message: 'Employee created successfully!'
+        success: true, data: createdEmployee, message: 'Employee created successfully!'
       });
     } catch (error) {
+      console.error(error);
       return res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({
         success: false, data: null, message: 'Internal server error occurred. Please try again later!'
       });
