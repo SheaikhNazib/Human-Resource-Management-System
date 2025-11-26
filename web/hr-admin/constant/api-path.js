@@ -70,6 +70,13 @@ export const Api_path = {
     DELETE: (id) => `/api/v1/emp-performances/${id}`,
     GET_ONE: (id) => `/api/v1/emp-performances/${id}`,
   },
+  EMPLOYEE_SALARY_COMPENSATIONS: {
+    LIST: "/api/v1/emp-salary-compensations",
+    CREATE: "/api/v1/emp-salary-compensations",
+    UPDATE: (id) => `/api/v1/emp-salary-compensations/${id}`,
+    DELETE: (id) => `/api/v1/emp-salary-compensations/${id}`,
+    GET_ONE: (id) => `/api/v1/emp-salary-compensations/${id}`,
+  },
   DEPARTMENT: {
     LIST: "/api/v1/emp-departments",
     GET_ONE: (id) => `/api/v1/emp-departments/${id}`,

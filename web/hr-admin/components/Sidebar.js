@@ -3,11 +3,14 @@ import {
   Building2,
   Calendar,
   CalendarCheck,
+  CalendarDays,
   FileText,
   LayoutDashboard,
   LogOut,
   Users,
   Wallet,
+  DollarSign,
+  CreditCard,
   ChevronDown,
 } from "lucide-react";
 import Link from "next/link";
@@ -32,8 +35,8 @@ export default function Sidebar({ open, onClose }) {
         newOpen[item.label] = true;
       }
     });
-    // Merge so manual toggles are preserved for other menus
-    setOpenMenus((s) => ({ ...s, ...newOpen }));
+    // Set only the matching parent menu open (ensure single-open behavior)
+    setOpenMenus(newOpen);
   }, [pathname]);
   const navLinks = [
     {
@@ -57,10 +60,22 @@ export default function Sidebar({ open, onClose }) {
         {
           href: "/attendance-records",
           label: "Attendance Records",
-          icon: CalendarCheck,
+          icon: CalendarDays,
         },
         { href: "/leaves", label: "Leaves", icon: FileText },
         { href: "/performance", label: "Performance", icon: Wallet },
+      ],
+    },
+
+    {
+      label: "Salary Compensation",
+      icon: DollarSign,
+      children: [
+        {
+          href: "/salary-compensations/salary-list",
+          label: "Salary List",
+          icon: CreditCard,
+        },
       ],
     },
 
@@ -105,7 +120,7 @@ export default function Sidebar({ open, onClose }) {
         open ? "translate-x-0" : "-translate-x-full"
       } transition-transform duration-200 ease-in-out ${
         collapsed ? "w-20" : "w-64"
-      } bg-white dark:bg-zinc-950 border-r border-zinc-200 dark:border-zinc-800 flex flex-col p-4 lg:static lg:translate-x-0`}
+      } bg-white dark:bg-zinc-950 border-r border-zinc-200 dark:border-zinc-800 flex flex-col p-4 lg:sticky lg:top-0 lg:h-screen lg:overflow-hidden lg:translate-x-0`}
     >
       <Link href="/" className="flex items-center gap-2 mb-8 px-1 group">
         <div className="w-7 h-7 rounded bg-linear-to-br from-blue-600 to-purple-500 flex items-center justify-center group-hover:scale-105 transition-transform">
@@ -131,7 +146,10 @@ export default function Sidebar({ open, onClose }) {
                 <button
                   type="button"
                   onClick={() =>
-                    setOpenMenus((s) => ({ ...s, [label]: !s[label] }))
+                    setOpenMenus((s) => {
+                      const currentlyOpen = !!s[label];
+                      return currentlyOpen ? {} : { [label]: true };
+                    })
                   }
                   className={`${baseItemClass} w-full justify-between ${
                     parentActive ? activeClass : ""
@@ -208,8 +226,7 @@ export default function Sidebar({ open, onClose }) {
           );
         })}
       </nav>
-      <div className="mt-auto pt-8 border-t border-zinc-200 dark:border-zinc-800 flex flex-col items-center">
-        {/* Profile section */}
+      {/* <div className="mt-auto pt-8 border-t border-zinc-200 dark:border-zinc-800 flex flex-col items-center">
         {!collapsed && user && (
           <div className="flex flex-col items-center mb-4">
             <img
@@ -244,7 +261,7 @@ export default function Sidebar({ open, onClose }) {
           <LogOut className="w-5 h-5" />
           {!collapsed && "Logout"}
         </button>
-      </div>
+      </div> */}
     </aside>
   );
 }
