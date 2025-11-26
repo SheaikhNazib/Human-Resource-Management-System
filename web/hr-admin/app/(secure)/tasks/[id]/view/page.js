@@ -7,6 +7,7 @@ import { getEmployeesList } from "@/actions/employees";
 import { useTaskStatuses } from "@/actions/task-statuses";
 import { useTaskWorkItems } from "@/actions/task-work-items";
 import Loader from "@/components/ui/Loader";
+import { toMessage } from "@/lib/utils";
 
 export default function TaskViewPage() {
   const params = useParams();
@@ -34,6 +35,8 @@ export default function TaskViewPage() {
   const [notification, setNotification] = useState(null);
 
   const { statuses } = useTaskStatuses();
+  const [selectedStatus, setSelectedStatus] = useState(null);
+  const [statusSaving, setStatusSaving] = useState(false);
   const {
     workItems,
     loading: workItemsLoading,
@@ -52,6 +55,14 @@ export default function TaskViewPage() {
   );
 
   useEffect(() => {
+    // Initialize selected status when task is loaded
+    if (task) {
+      setSelectedStatus(
+        typeof task.task_status === "object"
+          ? task.task_status.id
+          : task.task_status
+      );
+    }
     async function fetchData() {
       if (!taskId) return;
 
@@ -86,6 +97,55 @@ export default function TaskViewPage() {
 
     fetchData();
   }, [taskId]);
+
+  // Save status handler (accepts an optional statusId to save immediately)
+  const handleSaveStatus = async (statusId = null) => {
+    const statusToSave = Number(statusId ?? selectedStatus);
+    if (!task || !statusToSave) return;
+    // optimistic UI: show selected status immediately
+    setSelectedStatus(statusToSave);
+    setStatusSaving(true);
+    try {
+      const assignedEmployeesArray = Array.isArray(task.assigned_employees)
+        ? task.assigned_employees.map((id) => Number(id))
+        : [];
+
+      const formatDateForAPI = (dateStr) => {
+        if (!dateStr) return null;
+        if (dateStr.includes("T")) return dateStr.split("T")[0];
+        return dateStr;
+      };
+
+      const payload = {
+        title: task.title,
+        description: task.description,
+        start_date_time: formatDateForAPI(task.start_date_time),
+        end_date_time: formatDateForAPI(task.end_date_time),
+        estimated_time: task.estimated_time,
+        assigned_employees: assignedEmployeesArray,
+        task_status: statusToSave,
+      };
+
+      const result = await updateTaskClient(taskId, payload);
+      if (result.success) {
+        const taskRes = await getTaskByIdClient(taskId);
+        if (taskRes.success) {
+          setTask(taskRes.data);
+          setNotification({ type: "success", message: "Task status updated." });
+        }
+      } else {
+        const msg = toMessage(result.error || result);
+        setNotification({
+          type: "error",
+          message: msg || "Failed to update task status",
+        });
+      }
+    } catch (err) {
+      setNotification({ type: "error", message: toMessage(err) });
+    } finally {
+      setStatusSaving(false);
+    }
+  };
 
   // Auto-dismiss notification after a short time
   useEffect(() => {
@@ -290,7 +350,9 @@ export default function TaskViewPage() {
           <h2 className="text-2xl font-bold text-gray-800 mb-2">
             Error Loading Task
           </h2>
-          <p className="text-gray-600 mb-4">{error || "Task not found"}</p>
+          <p className="text-gray-600 mb-4">
+            {toMessage(error) || "Task not found"}
+          </p>
           <button
             onClick={() => router.push("/tasks")}
             className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
@@ -398,11 +460,6 @@ export default function TaskViewPage() {
                 <h2 className="text-xl sm:text-2xl lg:text-3xl font-bold text-slate-900 flex-1 leading-tight tracking-tight">
                   {task.title}
                 </h2>
-                <span
-                  className={`shrink-0 ${statusInfo.color} text-white px-3 py-1 rounded-full text-xs font-semibold shadow-sm`}
-                >
-                  {statusInfo.name}
-                </span>
               </div>
               <div className="prose max-w-none">
                 <h3 className="text-xs sm:text-sm lg:text-base font-bold text-slate-700 uppercase tracking-wider mb-3 lg:mb-4 flex items-center gap-2">
@@ -608,43 +665,40 @@ export default function TaskViewPage() {
           <div className="space-y-4 sm:space-y-6 lg:space-y-8">
             {/* Status Card */}
             <div className="bg-white rounded-xl sm:rounded-2xl shadow-sm hover:shadow-md transition-shadow p-4 sm:p-6 lg:p-8 border border-slate-200">
-              <h3 className="text-base sm:text-lg lg:text-xl font-bold text-slate-900 mb-4 lg:mb-6 flex items-center gap-2 lg:gap-3">
-                <svg
-                  className="w-5 h-5 text-blue-600"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+              <div className="flex items-center justify-between mb-4 lg:mb-6">
+                <h3 className="text-base sm:text-lg lg:text-xl font-bold text-slate-900 flex items-center gap-2 lg:gap-3">
+                  <svg
+                    className="w-5 h-5 text-blue-600"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                    />
+                  </svg>
+                  <span>Task Status</span>
+                </h3>
+
+                <div className="relative ml-4">
+                  <StatusDropdown
+                    statuses={statuses}
+                    current={
+                      selectedStatus ??
+                      (typeof task.task_status === "object"
+                        ? task.task_status.id
+                        : task.task_status)
+                    }
+                    onSelect={(id) => handleSaveStatus(id)}
+                    loading={statusSaving}
                   />
-                </svg>
-                Task Status
-              </h3>
-              <div className="flex items-center justify-center mb-6 lg:mb-8">
-                <span
-                  className={`${statusInfo.color} text-white px-6 lg:px-8 py-2.5 lg:py-3 rounded-full font-bold text-base lg:text-lg shadow-lg`}
-                >
-                  {statusInfo.name}
-                </span>
+                </div>
               </div>
 
               <div className="space-y-3 lg:space-y-3.5">
-                <div className="flex items-center gap-3 lg:gap-4 p-2.5 lg:p-3 bg-slate-50 rounded-lg">
-                  <div className="w-2 h-2 lg:w-2.5 lg:h-2.5 bg-green-500 rounded-full shrink-0"></div>
-                  <span className="text-xs sm:text-sm lg:text-base text-slate-600 font-semibold">
-                    Priority
-                  </span>
-                  <span
-                    className={`ml-auto px-2.5 py-1 rounded-full text-xs font-semibold ${priorityInfo.color}`}
-                  >
-                    {priorityInfo.label}
-                  </span>
-                </div>
-
                 <div className="flex items-center gap-3 p-2.5 bg-slate-50 rounded-lg">
                   <div className="w-2 h-2 bg-blue-500 rounded-full shrink-0"></div>
                   <span className="text-xs sm:text-sm text-slate-600 font-medium">
@@ -672,16 +726,6 @@ export default function TaskViewPage() {
                   </span>
                   <span className="ml-auto text-xs sm:text-sm font-semibold text-slate-900 truncate">
                     {task.estimated_time || "Not set"}
-                  </span>
-                </div>
-
-                <div className="flex items-center gap-3 p-2.5 bg-slate-50 rounded-lg">
-                  <div className="w-2 h-2 bg-yellow-500 rounded-full shrink-0"></div>
-                  <span className="text-xs sm:text-sm text-slate-600 font-medium">
-                    Created by
-                  </span>
-                  <span className="ml-auto text-xs sm:text-sm font-semibold text-slate-900">
-                    Admin
                   </span>
                 </div>
               </div>
@@ -1138,7 +1182,7 @@ export default function TaskViewPage() {
               </svg>
             )}
             <div className="flex-1 font-medium text-sm">
-              {notification.message}
+              {toMessage(notification.message)}
             </div>
             <button
               type="button"
@@ -1152,6 +1196,128 @@ export default function TaskViewPage() {
       )}
     </div>
   );
+}
+
+// Animated status dropdown component
+function StatusDropdown({ statuses = [], current = null, onSelect, loading }) {
+  const [open, setOpen] = useState(false);
+  const rootRef = React.useRef(null);
+
+  React.useEffect(() => {
+    function onDoc(e) {
+      if (!rootRef.current) return;
+      if (!rootRef.current.contains(e.target)) setOpen(false);
+    }
+    document.addEventListener("click", onDoc);
+    return () => document.removeEventListener("click", onDoc);
+  }, []);
+
+  const currentObj = statuses.find((s) => s.id === current) || null;
+
+  return (
+    <div className="relative inline-block text-left" ref={rootRef}>
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        className={`inline-flex items-center gap-3 px-4 py-2 rounded-full font-semibold shadow-lg transform transition-all duration-300 ${
+          loading ? "opacity-90 cursor-wait animate-pulse" : "hover:scale-105"
+        } ${getStatusGradientClass(currentObj?.name)} text-white`}
+      >
+        <span className="flex items-center gap-2">
+          <span
+            className={`${getStatusColorClass(
+              currentObj?.name
+            )} w-3 h-3 rounded-full inline-block transition-colors duration-300 ring-2 ring-white/60 shadow-sm`}
+          />
+          <span className="text-sm transition-colors duration-300">
+            {currentObj?.name || "Unknown"}
+          </span>
+        </span>
+        <svg
+          className={`w-4 h-4 transition-transform ${open ? "rotate-180" : ""}`}
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M19 9l-7 7-7-7"
+          />
+        </svg>
+      </button>
+
+      {open && (
+        <div className="absolute right-0 mt-3 w-48 bg-white rounded-xl shadow-2xl p-2 animate-scaleIn border border-slate-200 z-50">
+          {statuses.map((s) => (
+            <button
+              key={s.id}
+              onClick={() => {
+                setOpen(false);
+                onSelect(s.id);
+              }}
+              className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-slate-50 transition-colors ${
+                s.id === current ? "bg-slate-100" : ""
+              }`}
+            >
+              <span
+                className={`${getStatusColorClass(
+                  s.name
+                )} w-3 h-3 rounded-full inline-block ring-2 ring-white/60 shadow-sm`}
+              />
+              <span className="flex-1 text-sm text-slate-700">{s.name}</span>
+              {s.id === current && (
+                <svg
+                  className="w-4 h-4 text-blue-600"
+                  fill="currentColor"
+                  viewBox="0 0 20 20"
+                >
+                  <path
+                    fillRule="evenodd"
+                    d="M16.707 5.293a1 1 0 010 1.414l-7 7a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L9 11.586l6.293-6.293a1 1 0 011.414 0z"
+                    clipRule="evenodd"
+                  />
+                </svg>
+              )}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// helper to map status name to color classes used in this file
+function getStatusColorClass(name) {
+  switch (name) {
+    case "Open":
+      return "bg-blue-500";
+    case "In Progress":
+      return "bg-yellow-500";
+    case "Completed":
+      return "bg-green-500";
+    case "Cancelled":
+      return "bg-red-500";
+    default:
+      return "bg-purple-500";
+  }
+}
+
+// Map status name to gradient background classes
+function getStatusGradientClass(name) {
+  switch (name) {
+    case "Open":
+      return "bg-linear-to-r from-blue-500 to-blue-600";
+    case "In Progress":
+      return "bg-linear-to-r from-yellow-400 to-orange-500 text-slate-900";
+    case "Completed":
+      return "bg-linear-to-r from-green-500 to-emerald-600";
+    case "Cancelled":
+      return "bg-linear-to-r from-red-500 to-rose-600";
+    default:
+      return "bg-linear-to-r from-purple-500 to-indigo-600";
+  }
 }
 
 // Employee selection component (same as in edit page)

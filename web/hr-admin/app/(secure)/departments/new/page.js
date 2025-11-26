@@ -2,6 +2,7 @@
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useDepartments } from "@/actions/departments/business";
+import { toMessage } from "@/lib/utils";
 
 export default function NewDepartmentPage() {
   const router = useRouter();

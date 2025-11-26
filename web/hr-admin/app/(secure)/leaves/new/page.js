@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import Loader from "@/components/ui/Loader";
 import AutoComplete from "@/components/ui/autoComplete";
+import { toMessage } from "@/lib/utils";
 
 export default function NewLeavePage() {
   const router = useRouter();
@@ -198,7 +199,9 @@ export default function NewLeavePage() {
                 clipRule="evenodd"
               />
             </svg>
-            <p className="text-sm text-red-700 dark:text-red-400">{error}</p>
+            <p className="text-sm text-red-700 dark:text-red-400">
+              {toMessage(error)}
+            </p>
           </div>
         )}
 

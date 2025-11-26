@@ -7,6 +7,7 @@ import LeaveStatusDropdown from "@/components/LeaveStatusDropdown";
 import { useLeaves } from "@/actions/leaves/business";
 import { AlertCircle, Calendar, Clock, FileText, User } from "lucide-react";
 import Loader from "@/components/ui/Loader";
+import { toMessage } from "@/lib/utils";
 
 const LeaveDetailPage = () => {
   const params = useParams();
@@ -75,7 +76,7 @@ const LeaveDetailPage = () => {
             Error
           </h2>
           <p className="text-gray-600 dark:text-zinc-400 mb-6">
-            {error || "Leave request not found"}
+            {toMessage(error) || "Leave request not found"}
           </p>
           <button
             onClick={() => router.push("/leaves")}

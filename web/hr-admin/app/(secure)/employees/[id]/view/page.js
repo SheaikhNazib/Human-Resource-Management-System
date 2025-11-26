@@ -5,6 +5,7 @@ import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { getEmployeeById } from "@/actions/employees/server-actions";
 import { AlertCircle, User, Briefcase, Calendar } from "lucide-react";
 import Loader from "@/components/ui/Loader";
+import { toMessage } from "@/lib/utils";
 import { toast } from "sonner";
 import TabBar from "@/components/employee/TabBar";
 import AboutPanel from "@/components/employee/AboutPanel";
