@@ -75,7 +75,7 @@ export default function Sidebar({ open, onClose }) {
         } bg-white dark:bg-zinc-950 border-r border-zinc-200 dark:border-zinc-800 flex flex-col p-4 lg:static lg:translate-x-0`}
     >
       <Link href="/" className="flex items-center gap-2 mb-8 px-1 group">
-        <div className="w-7 h-7 rounded bg-gradient-to-br from-blue-600 to-purple-500 flex items-center justify-center group-hover:scale-105 transition-transform">
+        <div className="w-7 h-7 rounded bg-linear-to-br from-blue-600 to-purple-500 flex items-center justify-center group-hover:scale-105 transition-transform">
           <div className="w-4 h-4 bg-white rounded shadow" />
         </div>
         <span className="font-bold text-lg tracking-tight text-zinc-900 group-hover:text-blue-700">
