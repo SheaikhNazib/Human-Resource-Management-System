@@ -511,7 +511,7 @@ export default function TableArchive({
             {/* Left side - Search */}
             <div className="flex items-center gap-2 w-full sm:w-auto">
               {showSearch && onSearchChange && (
-                <div className="relative flex-1 sm:w-[300px]">
+                <div className="relative flex-1 sm:w-[400px]">
                   <svg
                     className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-400"
                     fill="none"

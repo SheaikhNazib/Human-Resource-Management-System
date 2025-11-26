@@ -101,6 +101,19 @@ export default function SalaryCompensationsPage() {
 
           console.log(`Processing employee ${item.employeeId} (${item.employeeName}) for ${month}/${year}`);
 
+          // Calculate prorated base salary based on days worked
+          const effectiveDate = new Date(item.effectiveDate);
+          const payableDate = new Date(item.payableDate);
+          const diffTime = Math.abs(payableDate - effectiveDate);
+          const daysWorked = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
+          
+          const fullMonthSalary = parseFloat(item.baseSalary);
+          const proratedBaseSalary = daysWorked >= 30 ? fullMonthSalary : (fullMonthSalary / 30) * daysWorked;
+          
+          console.log(`  - Days worked: ${daysWorked}`);
+          console.log(`  - Full month salary: ${fullMonthSalary}`);
+          console.log(`  - Prorated base salary: ${proratedBaseSalary}`);
+
           // Get approved leave days for the employee in the specified month
           const leaveDays = getApprovedLeaveDays(leaves, item.employeeId, month, year);
           console.log(`  - Leave days: ${leaveDays}`);
@@ -109,13 +122,13 @@ export default function SalaryCompensationsPage() {
           const monthlyAttendance = getMonthlyAttendance(attendances, item.employeeId, month, year);
           console.log(`  - Monthly attendance records: ${monthlyAttendance.length}`);
 
-          // Calculate deductions
-          const deductions = calculateTotalDeduction(parseFloat(item.baseSalary), leaveDays, monthlyAttendance);
+          // Calculate deductions based on FULL MONTH salary for consistency
+          const deductions = calculateTotalDeduction(fullMonthSalary, leaveDays, monthlyAttendance);
           console.log(`  - Calculated deductions:`, deductions);
 
-          // Calculate new net salary
+          // Calculate new net salary using prorated base salary
           const newNetSalary = 
-            parseFloat(item.baseSalary) + 
+            proratedBaseSalary + 
             parseFloat(item.bonus || 0) + 
             parseFloat(item.allowance || 0) - 
             deductions.totalAutoDeduction;
@@ -249,11 +262,36 @@ export default function SalaryCompensationsPage() {
     {
       header: "Base Salary",
       accessor: "baseSalary",
-      render: (item) => (
-        <span className="font-semibold text-zinc-900 dark:text-zinc-100">
-          {formatCurrency(item.baseSalary)}
-        </span>
-      ),
+      render: (item) => {
+        // Calculate if prorated
+        if (item.effectiveDate && item.payableDate) {
+          const effectiveDate = new Date(item.effectiveDate);
+          const payableDate = new Date(item.payableDate);
+          const diffTime = Math.abs(payableDate - effectiveDate);
+          const daysWorked = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
+          const isProrated = daysWorked < 30;
+          const proratedSalary = isProrated ? (item.baseSalary / 30) * daysWorked : item.baseSalary;
+          
+          return (
+            <div>
+              <span className="font-semibold text-zinc-900 dark:text-zinc-100">
+                {formatCurrency(proratedSalary)}
+              </span>
+              {isProrated && (
+                <div className="text-xs text-amber-600 dark:text-amber-400 mt-0.5">
+                  {daysWorked}d prorated
+                </div>
+              )}
+            </div>
+          );
+        }
+        
+        return (
+          <span className="font-semibold text-zinc-900 dark:text-zinc-100">
+            {formatCurrency(item.baseSalary)}
+          </span>
+        );
+      },
     },
     {
       header: "Bonus",
@@ -419,8 +457,6 @@ export default function SalaryCompensationsPage() {
 
   return (
     <div className="max-w-full">
-      {summaryStats}
-      
       {/* Filters and Auto-Calculate Button */}
       <div className="mb-4 flex flex-col sm:flex-row gap-3 justify-between items-start sm:items-center">
         {/* Month/Year Filter */}
@@ -472,7 +508,7 @@ export default function SalaryCompensationsPage() {
         <button
           onClick={handleAutoCalculateAll}
           disabled={isCalculating || !items || items.length === 0}
-          className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-lg hover:from-purple-700 hover:to-blue-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-md hover:shadow-lg"
+          className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-md hover:shadow-lg"
         >
           {isCalculating ? (
             <>
@@ -489,7 +525,19 @@ export default function SalaryCompensationsPage() {
       </div>
 
       <TableArchive
-        title="Salary Compensations"
+        title={
+          <div className="rounded-lg w-full overflow-hidden">
+            <div className="px-4 bg-indigo-600 rounded-t-xl">
+              <div className="flex items-center justify-between w-full">
+                <span className="font-semibold text-white">Salary Compensations</span>
+                <span className="text-sm text-white/80"></span>
+              </div>
+            </div>
+            <div className="px-4 pt-2 bg-transparent">
+              {summaryStats}
+            </div>
+          </div>
+        }
         columns={columns}
         data={filtered}
         loading={loading}
@@ -497,7 +545,7 @@ export default function SalaryCompensationsPage() {
         emptyMessage="No salary compensation records found."
         searchTerm={query}
         onSearchChange={setQuery}
-        searchPlaceholder="Search by employee name, amount, or remarks..."
+        searchPlaceholder="Search by name, amount, or remarks..."
         createButtonText="Add Salary Compensation"
         createButtonHref="/salary-compensations/new"
         onRefresh={refetch}

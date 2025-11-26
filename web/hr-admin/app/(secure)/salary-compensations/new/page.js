@@ -184,14 +184,25 @@ const AddSalaryCompensationPage = () => {
   };
 
   return (
-    <div className="p-4 md:p-6 lg:p-8 max-w-4xl mx-auto">
+    <div className="pt-0 px-4 md:px-6 lg:px-8 max-w-4xl mx-auto">
       <div className="mb-6">
-        <h1 className="text-2xl md:text-3xl font-bold text-zinc-900 dark:text-zinc-100">
-          Add New Salary Compensation
-        </h1>
-        <p className="text-sm text-zinc-600 dark:text-zinc-400 mt-1">
-          Create a new salary compensation record for an employee
-        </p>
+        <div className="rounded-lg overflow-hidden">
+          <div className="p-4 bg-indigo-600 rounded-t-xl">
+            <div className="flex items-center justify-between gap-4">
+              <div>
+                <h1 className="text-2xl md:text-3xl font-bold text-white">
+                  Add New Salary Compensation
+                </h1>
+                <p className="text-sm text-white/80 mt-1">
+                  Create a new salary compensation record for an employee
+                </p>
+              </div>
+              <div className="text-sm text-white/90 hidden sm:block">
+                <div className="bg-white/10 px-3 py-1 rounded-full border border-white/10">Quick tip: Use Auto-Calculate to fill deductions</div>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
 
       <div className="bg-white dark:bg-zinc-800 rounded-lg shadow-md p-6">
@@ -201,8 +212,11 @@ const AddSalaryCompensationPage = () => {
           onSubmit={handleSubmit}
           enableReinitialize
         >
-          {({ values, setFieldValue, touched, errors, isSubmitting: formikSubmitting }) => (
-            <Form className="space-y-6">
+          {({ values, setFieldValue, touched, errors, isSubmitting: formikSubmitting }) => {
+            const selectedEmployee = employees.find(e => String(e.id) === String(values.employee) || e.id === values.employee);
+
+            return (
+              <Form className="space-y-6">
               {/* Employee Selection */}
               <div>
                 <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-2">
@@ -213,23 +227,37 @@ const AddSalaryCompensationPage = () => {
                     Loading employees...
                   </div>
                 ) : (
-                  <AutoComplete
-                    options={employees.map((emp) => {
-                      const firstName = emp.firstName || "";
-                      const lastName = emp.lastName || "";
-                      const fullName = `${firstName} ${lastName}`.trim();
-                      
-                      return {
-                        value: emp.id,
-                        label: fullName || `Employee ${emp.id}`,
-                        sublabel: emp.email || "",
-                      };
-                    })}
-                    value={values.employee}
-                    onChange={(value) => setFieldValue("employee", value)}
-                    placeholder="Select an employee"
-                    className="w-full"
-                  />
+                  <div>
+                    <AutoComplete
+                      options={employees.map((emp) => {
+                        const firstName = emp.firstName || "";
+                        const lastName = emp.lastName || "";
+                        const fullName = `${firstName} ${lastName}`.trim();
+                        
+                        return {
+                          value: emp.id,
+                          label: fullName || `Employee ${emp.id}`,
+                          sublabel: emp.email || "",
+                        };
+                      })}
+                      value={values.employee}
+                      onChange={(value) => setFieldValue("employee", value)}
+                      placeholder="Select an employee"
+                      className="w-full"
+                    />
+
+                    {selectedEmployee && (
+                      <div className="mt-2 flex items-center gap-3 text-sm text-zinc-600 dark:text-zinc-400">
+                        <div className="w-8 h-8 rounded-full bg-zinc-100 dark:bg-zinc-700 flex items-center justify-center text-xs font-semibold text-zinc-700 dark:text-zinc-200">
+                          {(selectedEmployee.firstName?.[0] || selectedEmployee.lastName?.[0] || '—').toUpperCase()
+                        }</div>
+                        <div>
+                          <div className="font-medium text-zinc-900 dark:text-zinc-100">{`${selectedEmployee.firstName || ''} ${selectedEmployee.lastName || ''}`.trim() || `Employee ${selectedEmployee.id}`}</div>
+                          <div className="text-xs text-zinc-500 dark:text-zinc-400">{selectedEmployee.email || 'No email'} • {selectedEmployee.jobTitle || 'No job title'}</div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
                 )}
                 <ErrorMessage
                   name="employee"
@@ -252,7 +280,7 @@ const AddSalaryCompensationPage = () => {
                       name="base_salary"
                       step="0.01"
                       min="0"
-                      className="w-full pl-8 px-4 py-2 border border-zinc-300 dark:border-zinc-600 rounded-lg bg-white dark:bg-zinc-700 text-zinc-900 dark:text-zinc-100 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      className="w-full pl-8 px-4 py-2 border border-zinc-300 dark:border-zinc-600 rounded-lg bg-white dark:bg-zinc-700 text-zinc-900 dark:text-zinc-100 focus:ring-2 focus:ring-blue-500 focus:border-transparent shadow-sm"
                       placeholder="50000.00"
                       onChange={(e) => {
                         setFieldValue("base_salary", e.target.value);
@@ -400,7 +428,7 @@ const AddSalaryCompensationPage = () => {
                       name="deduction"
                       step="0.01"
                       min="0"
-                      className="w-full pl-8 px-4 py-2 border border-zinc-300 dark:border-zinc-600 rounded-lg bg-white dark:bg-zinc-700 text-zinc-900 dark:text-zinc-100 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      className="w-full pl-8 px-4 py-2 border border-zinc-300 dark:border-zinc-600 rounded-lg bg-white dark:bg-zinc-700 text-zinc-900 dark:text-zinc-100 focus:ring-2 focus:ring-blue-500 focus:border-transparent shadow-sm"
                       placeholder="0.00"
                       onChange={(e) => {
                         setFieldValue("deduction", e.target.value);
@@ -415,22 +443,26 @@ const AddSalaryCompensationPage = () => {
                     />
                   </div>
                   {autoDeductions.totalAutoDeduction > 0 && (
-                    <div className="mt-2 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-900/30">
-                      <div className="text-xs font-medium text-blue-900 dark:text-blue-100 mb-2">
-                        Auto-Deduction Breakdown:
-                      </div>
-                      <div className="space-y-1 text-xs text-blue-700 dark:text-blue-300">
-                        <div className="flex justify-between">
-                          <span>Leave Deduction:</span>
-                          <span className="font-semibold">${autoDeductions.leaveDeduction.toFixed(2)}</span>
+                    <div className="mt-3 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-900/30">
+                      <div className="flex items-start justify-between">
+                        <div>
+                          <div className="text-xs font-medium text-blue-900 dark:text-blue-100 mb-2">
+                            Auto-Deduction Breakdown
+                          </div>
+                          <div className="space-y-1 text-xs text-blue-700 dark:text-blue-300">
+                            <div className="flex justify-between">
+                              <span>Leave Deduction</span>
+                              <span className="font-semibold">${autoDeductions.leaveDeduction.toFixed(2)}</span>
+                            </div>
+                            <div className="flex justify-between">
+                              <span>Attendance Late Deduction</span>
+                              <span className="font-semibold">${autoDeductions.attendanceDeduction.toFixed(2)}</span>
+                            </div>
+                          </div>
                         </div>
-                        <div className="flex justify-between">
-                          <span>Attendance Late Deduction:</span>
-                          <span className="font-semibold">${autoDeductions.attendanceDeduction.toFixed(2)}</span>
-                        </div>
-                        <div className="flex justify-between pt-1 border-t border-blue-300 dark:border-blue-700">
-                          <span className="font-semibold">Total Auto-Deduction:</span>
-                          <span className="font-bold">${autoDeductions.totalAutoDeduction.toFixed(2)}</span>
+                        <div className="text-right pl-4">
+                          <div className="text-xs text-zinc-500 dark:text-zinc-400">Total</div>
+                          <div className="text-lg font-bold text-blue-700 dark:text-blue-300">${autoDeductions.totalAutoDeduction.toFixed(2)}</div>
                         </div>
                       </div>
                       <div className="mt-2 text-xs text-blue-600 dark:text-blue-400">
@@ -553,7 +585,8 @@ const AddSalaryCompensationPage = () => {
                 </button>
               </div>
             </Form>
-          )}
+            );
+          }}
         </Formik>
       </div>
     </div>
