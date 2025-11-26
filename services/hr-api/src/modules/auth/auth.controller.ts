@@ -45,7 +45,7 @@ export class AuthController {
         return res.status(HttpStatus.UNAUTHORIZED).json({
           success: false, data: null, message: 'Invalid credentials!'
         });
-      }
+      } 
       const access_token = this.jwtService.sign({ id: user.id, role: loginDto.role });
       const userResponse = {
         id: user.id,
