@@ -6,6 +6,7 @@ import { EmpJobTitles } from '../../models/emp_job_titles.entity';
 import { Employees } from '../../models/employees.entity';
 import { UpdateEmployeeDto } from './dto/update.dto';
 import { CreateEmployeeDto } from './dto/create.dto';
+import { Roles } from 'src/common/guards/roles.enum';
 
 @Injectable()
 export class EmployeesService {
@@ -80,8 +81,124 @@ export class EmployeesService {
     }
   }
 
-  findAll() {
-    return this.repo.find({ relations: ['emp_department', 'emp_job_title'] });
+  async findAll(
+    page: number, 
+    limit: number, 
+    sortBy: string, 
+    sortOrder: string = 'asc',
+    filters?: {
+      first_name?: string;
+      last_name?: string;
+      personal_email?: string;
+      work_email?: string;
+      mobile?: string;
+      office_phone?: string;
+      hire_date?: string;
+      leave_date?: string;
+      current_or_former_emp?: boolean | string;
+      emp_department?: number | string;
+      emp_job_title?: number | string;
+    }
+  ): Promise<any> {
+    // Build base query with filtering first (before pagination and sorting)
+    // Use inner join since relations are required (nullable: false) - faster than left join
+    const queryBuilder = this.repo.createQueryBuilder('employee')
+      .innerJoinAndSelect('employee.emp_department', 'emp_department')
+      .innerJoinAndSelect('employee.emp_job_title', 'emp_job_title')
+      // Exclude soft-deleted records
+      .where('employee.deletedAt IS NULL');
+
+    // Build filter conditions efficiently
+    const filterParams: any = {};
+    const filterConditions: string[] = [];
+
+    if (filters) {
+      if (filters.first_name) {
+        filterConditions.push('employee.first_name ILIKE :first_name');
+        filterParams.first_name = `%${filters.first_name}%`;
+      }
+      if (filters.last_name) {
+        filterConditions.push('employee.last_name ILIKE :last_name');
+        filterParams.last_name = `%${filters.last_name}%`;
+      }
+      if (filters.personal_email) {
+        filterConditions.push('employee.personal_email ILIKE :personal_email');
+        filterParams.personal_email = `%${filters.personal_email}%`;
+      }
+      if (filters.work_email) {
+        filterConditions.push('employee.work_email ILIKE :work_email');
+        filterParams.work_email = `%${filters.work_email}%`;
+      }
+      if (filters.mobile) {
+        filterConditions.push('employee.mobile ILIKE :mobile');
+        filterParams.mobile = `%${filters.mobile}%`;
+      }
+      if (filters.office_phone) {
+        filterConditions.push('employee.office_phone ILIKE :office_phone');
+        filterParams.office_phone = `%${filters.office_phone}%`;
+      }
+      if (filters.hire_date) {
+        filterConditions.push('employee.hire_date = :hire_date');
+        filterParams.hire_date = filters.hire_date;
+      }
+      if (filters.leave_date) {
+        filterConditions.push('employee.leave_date = :leave_date');
+        filterParams.leave_date = filters.leave_date;
+      }
+      if (filters.current_or_former_emp !== undefined && filters.current_or_former_emp !== null && filters.current_or_former_emp !== '') {
+        const boolValue = filters.current_or_former_emp === 'true' || filters.current_or_former_emp === true;
+        filterConditions.push('employee.current_or_former_emp = :current_or_former_emp');
+        filterParams.current_or_former_emp = boolValue;
+      }
+      if (filters.emp_department) {
+        filterConditions.push('employee.emp_department_id = :emp_department');
+        filterParams.emp_department = Number(filters.emp_department);
+      }
+      if (filters.emp_job_title) {
+        filterConditions.push('employee.emp_job_title_id = :emp_job_title');
+        filterParams.emp_job_title = Number(filters.emp_job_title);
+      }
+    }
+
+    // Apply all filter conditions at once for better performance
+    if (filterConditions.length > 0) {
+      queryBuilder.andWhere(`(${filterConditions.join(' AND ')})`, filterParams);
+    }
+
+    // Optimize count query - use a separate lightweight query without joins/selects
+    const countQuery = this.repo.createQueryBuilder('employee')
+      .where('employee.deletedAt IS NULL');
+    
+    if (filterConditions.length > 0) {
+      countQuery.andWhere(`(${filterConditions.join(' AND ')})`, filterParams);
+    }
+
+    // Execute count and data queries in parallel for better performance
+    const [allTotal, data] = await Promise.all([
+      countQuery.getCount(),
+      (async () => {
+        // Apply sorting (ASC = newest first (DESC order), DESC = oldest first (ASC order))
+        const orderDirection = sortOrder.toLowerCase() === 'asc' ? 'DESC' : 'ASC';
+        queryBuilder.orderBy(`employee.${sortBy}`, orderDirection);
+        
+        // Apply pagination
+        queryBuilder.skip((page - 1) * limit).take(limit);
+        
+        return await queryBuilder.getMany();
+      })()
+    ]);
+
+    const totalPages = Math.ceil(allTotal / limit);
+    
+    return {
+      metaData: {
+        page: +page || 1,
+        limit: +limit || 10,
+        allTotal: +allTotal || 0,
+        totalPages: +totalPages || 0,
+      },
+      data,
+    };
   }
 
   findOne(id: number) {
@@ -124,3 +241,4 @@ export class EmployeesService {
     return this.repo.delete(id);
   }
 }
+

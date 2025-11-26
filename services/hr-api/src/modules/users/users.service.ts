@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Users } from '../../models/user.entity';
+import { Roles } from 'src/common/guards/roles.enum';
 
 @Injectable()
 export class UsersService {
@@ -14,8 +15,8 @@ export class UsersService {
     return await this.repo.findOne({ where: { id } });
   }
 
-  async findOneByEmail(email: string) {
-    return await this.repo.findOne({ where: { email } });
+  async findOneByEmailAndRole(email: string, role: Roles) {
+    return await this.repo.findOne({ where: { email, role } });
   }
 
   async create(userData: Partial<Users>) {

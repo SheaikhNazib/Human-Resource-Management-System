@@ -3,7 +3,10 @@
 import React, { useEffect, useState } from "react";
 import { Formik, Form, Field, ErrorMessage } from "formik";
 import * as Yup from "yup";
-import { updateEmployee, getEmployeeById } from "@/actions/employees/server-actions";
+import {
+  updateEmployee,
+  getEmployeeById,
+} from "@/actions/employees/server-actions";
 import { useRouter, useParams } from "next/navigation";
 import { toast } from "sonner";
 import PhoneInput from "react-phone-input-2";
@@ -13,6 +16,7 @@ import {
   getExampleNumber,
 } from "libphonenumber-js";
 import { AlertCircle } from "lucide-react";
+import Loader from "@/components/ui/Loader";
 
 const EditEmployeePage = () => {
   const router = useRouter();
@@ -38,11 +42,15 @@ const EditEmployeePage = () => {
           setEmployee(response.data);
           // Set country codes when employee data is loaded
           if (response.data.mobile) {
-            const countryCode = response.data.mobile.substring(1, 3).toLowerCase();
+            const countryCode = response.data.mobile
+              .substring(1, 3)
+              .toLowerCase();
             setSelectedCountry(countryCode);
           }
           if (response.data.office_phone) {
-            const countryCode = response.data.office_phone.substring(1, 3).toLowerCase();
+            const countryCode = response.data.office_phone
+              .substring(1, 3)
+              .toLowerCase();
             setSelectedOfficeCountry(countryCode);
           }
         } else {
@@ -151,8 +159,10 @@ const EditEmployeePage = () => {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
-          <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-          <p className="mt-4 text-gray-600 font-medium">Loading employee details...</p>
+          <Loader size={48} />
+          <p className="mt-4 text-gray-600 font-medium">
+            Loading employee details...
+          </p>
         </div>
       </div>
     );
@@ -714,7 +724,9 @@ const EditEmployeePage = () => {
                     <div className="flex space-x-4 w-full sm:w-auto">
                       <button
                         type="button"
-                        onClick={() => router.push(`/employees/${params.id}/view`)}
+                        onClick={() =>
+                          router.push(`/employees/${params.id}/view`)
+                        }
                         className="flex-1 sm:flex-none px-4 py-2 border-2 border-gray-300 rounded-lg text-gray-700 font-semibold hover:bg-gray-50 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
                         disabled={isSubmitting || formikSubmitting}
                       >
@@ -727,26 +739,7 @@ const EditEmployeePage = () => {
                       >
                         {isSubmitting || formikSubmitting ? (
                           <span className="flex items-center justify-center">
-                            <svg
-                              className="animate-spin -ml-1 mr-3 h-5 w-5 text-white"
-                              xmlns="http://www.w3.org/2000/svg"
-                              fill="none"
-                              viewBox="0 0 24 24"
-                            >
-                              <circle
-                                className="opacity-25"
-                                cx="12"
-                                cy="12"
-                                r="10"
-                                stroke="currentColor"
-                                strokeWidth="4"
-                              ></circle>
-                              <path
-                                className="opacity-75"
-                                fill="currentColor"
-                                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                              ></path>
-                            </svg>
+                            <Loader size={20} className="inline-flex" />
                             Updating...
                           </span>
                         ) : (

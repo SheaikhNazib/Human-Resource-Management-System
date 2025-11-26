@@ -68,7 +68,12 @@ export const Api_path = {
     DELETE: (id) => `/api/v1/emp-departments/${id}`,
     CREATE: "/api/v1/emp-departments",
     UPDATE: (id) => `/api/v1/emp-departments/${id}`,
+  },
+  USERS: {
+    LIST: "/api/v1/users",
+    CREATE: "/api/v1/users",
+    UPDATE: (id) => `/api/v1/users/${id}`,
+    DELETE: (id) => `/api/v1/users/${id}`,
+    GET_ONE: (id) => `/api/v1/users/${id}`,
   }
-
-  
 };
