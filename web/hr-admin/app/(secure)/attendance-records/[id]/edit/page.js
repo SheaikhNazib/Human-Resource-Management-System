@@ -125,7 +125,7 @@ const EditAttendancePage = () => {
         resetForm();
         toast.success("Attendance updated successfully");
         setTimeout(() => {
-          router.push(`/attendance/${params.id}/view`);
+          router.push(`/attendance-records/${params.id}/view`);
         }, 1500);
       } else {
         const errorMsg = response.error || "Failed to update attendance";
@@ -166,7 +166,7 @@ const EditAttendancePage = () => {
             {error || "Attendance not found"}
           </p>
           <button
-            onClick={() => router.push("/attendance")}
+            onClick={() => router.push("/attendance-records")}
             className="px-6 py-3 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition-all"
           >
             Back to Attendance
@@ -470,6 +470,9 @@ const EditAttendancePage = () => {
                       </button>
                       <button
                         type="submit"
+                        onClick={() =>
+                          router.push(`/attendance-records/${params.id}/view`)
+                        }
                         className="flex-1 sm:flex-none px-8 py-3 bg-blue-600 text-white rounded-lg font-semibold transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
                         disabled={isSubmitting || formikSubmitting}
                       >

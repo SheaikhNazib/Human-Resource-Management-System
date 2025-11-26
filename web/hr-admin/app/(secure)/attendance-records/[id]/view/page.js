@@ -66,7 +66,7 @@ const AttendanceDetailsPage = () => {
             {error || "Attendance not found"}
           </p>
           <button
-            onClick={() => router.push("/attendance")}
+            onClick={() => router.push("/attendance-records")}
             className="px-6 py-3 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition-all"
           >
             Back to Attendance
@@ -130,7 +130,7 @@ const AttendanceDetailsPage = () => {
                   Edit
                 </button>
                 <button
-                  onClick={() => router.push("/attendance")}
+                  onClick={() => router.push("/attendance-records")}
                   className="px-6 py-2 bg-blue-500 text-white rounded-lg font-semibold hover:bg-blue-600 transition-all shadow-md"
                 >
                   Back

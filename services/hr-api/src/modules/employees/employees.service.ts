@@ -6,6 +6,7 @@ import { EmpJobTitles } from '../../models/emp_job_titles.entity';
 import { Employees } from '../../models/employees.entity';
 import { UpdateEmployeeDto } from './dto/update.dto';
 import { CreateEmployeeDto } from './dto/create.dto';
+import { Roles } from 'src/common/guards/roles.enum';
 
 @Injectable()
 export class EmployeesService {
