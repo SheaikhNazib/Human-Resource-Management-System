@@ -31,13 +31,7 @@ const AutoComplete = (props = {}) => {
     if (typeof firstOption !== "object") return { display: null, value: null };
 
     const keys = Object.keys(firstOption);
-    const autoDetectedDisplayKey = keys.find(k => ["name", "label", "title"].includes(k.toLowerCase())) || 
-                                    keys.find(k => typeof firstOption[k] === "string") ||
-                                    keys[0];
-    const valueKey = keys.find(k => ["id", "value", "code"].includes(k.toLowerCase())) || autoDetectedDisplayKey;
-
-    return { display: autoDetectedDisplayKey, value: valueKey };
-
+    
     // Detect a good display key (name-like string)
     const detectedDisplayKey =
       displayKey && keys.includes(displayKey)
@@ -50,11 +44,13 @@ const AutoComplete = (props = {}) => {
 
     // Detect a sensible value key (id/number-like) distinct from display
     const detectedValueKey =
-      keys.find((k) => ["id", "value", "code"].includes(k.toLowerCase())) ||
-      keys.find((k) => typeof firstOption[k] === "number") ||
-      // fallback to a different key than display if possible
-      keys.find((k) => k !== detectedDisplayKey) ||
-      detectedDisplayKey;
+      valueKey && keys.includes(valueKey)
+        ? valueKey
+        : keys.find((k) => ["id", "value", "code"].includes(k.toLowerCase())) ||
+          keys.find((k) => typeof firstOption[k] === "number") ||
+          // fallback to a different key than display if possible
+          keys.find((k) => k !== detectedDisplayKey) ||
+          detectedDisplayKey;
 
     return { display: detectedDisplayKey, value: detectedValueKey };
   };
