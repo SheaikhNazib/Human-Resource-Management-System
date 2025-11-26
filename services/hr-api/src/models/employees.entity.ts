@@ -3,7 +3,7 @@ import { BaseEntity } from "./base.entity";
 import { ENTITY_NAME } from "../common/constant/entity";
 import { EmpDepartments } from "./emp_departments.entity";
 import { EmpJobTitles } from "./emp_job_titles.entity";
-
+import { Roles } from "../common/guards/roles.enum";
 @Entity({ name: ENTITY_NAME.EMPLOYEES })
 export class Employees extends BaseEntity {
   @Column()
@@ -24,8 +24,8 @@ export class Employees extends BaseEntity {
   @Column({ nullable: true })
   mobile?: string;
 
-  // @Column()
-  // password: string;
+  @Column({ nullable: true })
+  password?: string;
 
   @Column({ nullable: true })
   office_phone?: string;
@@ -52,4 +52,7 @@ export class Employees extends BaseEntity {
   @ManyToOne(() => EmpJobTitles, { nullable: false })
   @JoinColumn({ name: 'emp_job_title_id' })
   emp_job_title: EmpJobTitles;
+
+  @Column({ type: 'enum', enum: Roles, nullable: true }) 
+  role: Roles = Roles.EMPLOYEE;
 }

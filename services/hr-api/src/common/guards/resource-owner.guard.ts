@@ -33,7 +33,7 @@ export class ResourceOwnerGuard implements CanActivate {
     }
 
     // Admin can access everything (if allowed)
-    if (allowAdmin && user.role === Roles.ADMIN) {
+    if (allowAdmin && user.role === Roles.SUPER_ADMIN) {
       return true;
     }
 

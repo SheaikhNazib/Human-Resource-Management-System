@@ -4,6 +4,7 @@ import { PassportModule } from '@nestjs/passport';
 import { AuthService } from './auth.service';
 import { JwtStrategy } from './jwt.strategy';
 import { AuthController } from './auth.controller';
+import { UsersModule } from '../users/users.module';
 import { EmployeesModule } from '../employees/employees.module';
 
 @Module({
@@ -13,6 +14,7 @@ import { EmployeesModule } from '../employees/employees.module';
       secret: '@!$#@!**@#$%^&*()_+',
       signOptions: { expiresIn: '1h' },
     }),
+    UsersModule,
     EmployeesModule,
   ],
   providers: [AuthService, JwtStrategy],
