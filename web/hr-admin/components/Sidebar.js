@@ -50,7 +50,7 @@ export default function Sidebar({ open, onClose }) {
       icon: IdCardLanyard,
       children: [
         { href: "/employees", label: "Employees", icon: Users },
-        { href: "/employees-attendance", label: "Attendance", icon: CalendarCheck },
+        { href: "/attendance", label: "Attendance", icon: CalendarCheck },
         {
           href: "/attendance-records",
           label: "Attendance Records",
