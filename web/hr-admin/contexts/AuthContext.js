@@ -37,6 +37,60 @@ export const AuthProvider = ({ children }) => {
     checkAuth();
   }, []);
 
+  // Listen for token expiration events
+  useEffect(() => {
+    const handleTokenExpired = async () => {
+      console.log("Token expired event received");
+      setIsAuthenticated(false);
+      setUser(null);
+      
+      // Force clear all state and redirect
+      if (typeof window !== 'undefined') {
+        // Use window.location for immediate redirect
+        window.location.href = '/login';
+      }
+    };
+
+    if (typeof window !== 'undefined') {
+      window.addEventListener('token-expired', handleTokenExpired);
+      return () => {
+        window.removeEventListener('token-expired', handleTokenExpired);
+      };
+    }
+  }, []);
+
+  // Periodic token validation - check more frequently
+  useEffect(() => {
+    if (!isAuthenticated) return;
+
+    const intervalId = setInterval(async () => {
+      try {
+        const response = await verifyAuth();
+        if (!response.success || !response.authenticated) {
+          // Token is no longer valid
+          console.log("Token validation failed, logging out");
+          setIsAuthenticated(false);
+          setUser(null);
+          
+          // Force page redirect
+          if (typeof window !== 'undefined') {
+            window.location.href = '/login';
+          }
+        }
+      } catch (error) {
+        console.error("Token validation failed:", error);
+        // On error, also log out
+        setIsAuthenticated(false);
+        setUser(null);
+        if (typeof window !== 'undefined') {
+          window.location.href = '/login';
+        }
+      }
+    }, 30 * 60 * 1000); // Check every 30 minutes
+
+    return () => clearInterval(intervalId);
+  }, [isAuthenticated]);
+
   const checkAuth = async () => {
     setLoading(true);
     try {
@@ -47,6 +101,10 @@ export const AuthProvider = ({ children }) => {
       } else {
         setIsAuthenticated(false);
         setUser(null);
+        // Redirect to login if not authenticated
+        if (typeof window !== 'undefined' && window.location.pathname !== '/login' && !window.location.pathname.startsWith('/register')) {
+          router.push("/login");
+        }
       }
     } catch (error) {
       console.error("Auth check failed:", error);

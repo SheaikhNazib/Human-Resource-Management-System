@@ -214,6 +214,11 @@ export async function getCurrentUser() {
       const data = body?.data ?? body;
 
       if (response.status >= 400 || !data) {
+        // Clear cookies on auth failure
+        if (response.status === 401) {
+          cookieStore.delete("access_token");
+          cookieStore.delete("user_data");
+        }
         return {
           success: false,
           error: data?.message || body?.message || "Failed to get user",
@@ -222,6 +227,16 @@ export async function getCurrentUser() {
 
       return { success: true, data };
     } catch (error) {
+      // If token is expired or invalid (401), clear cookies
+      if (error?.response?.status === 401) {
+        cookieStore.delete("access_token");
+        cookieStore.delete("user_data");
+        return {
+          success: false,
+          error: "Token expired or invalid",
+        };
+      }
+      
       // If /auth/me endpoint doesn't exist (404), consider user authenticated if token exists
       if (error?.response?.status === 404) {
         console.log("/auth/me endpoint not available, relying on token");
