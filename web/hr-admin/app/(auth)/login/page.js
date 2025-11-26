@@ -2,7 +2,7 @@
 import Link from "next/link";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Eye, EyeOff, Mail, Lock, Loader2, Shield } from "lucide-react";
+import { Eye, EyeOff, Mail, Lock, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { loginUser } from "@/actions/auth";
 
@@ -12,7 +12,6 @@ export default function LoginPage() {
   const [formData, setFormData] = useState({
     email: "",
     password: "",
-    role: "employee",
     remember: false,
   });
   const router = useRouter();
@@ -25,7 +24,6 @@ export default function LoginPage() {
       const response = await loginUser({
         email: formData.email,
         password: formData.password,
-        role: formData.role,
       });
 
       if (response.success) {
@@ -131,38 +129,6 @@ export default function LoginPage() {
                     <Eye className="w-5 h-5" />
                   )}
                 </button>
-              </div>
-            </div>
-
-            {/* Role Selection */}
-            <div>
-              <label
-                htmlFor="role"
-                className="block text-sm font-medium text-zinc-700 mb-2"
-              >
-                Login As
-              </label>
-              <div className="relative">
-                <Shield className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-zinc-400 pointer-events-none z-10" />
-                <select
-                  id="role"
-                  name="role"
-                  value={formData.role}
-                  onChange={handleChange}
-                  className="w-full pl-10 pr-4 py-3 border border-zinc-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all bg-white appearance-none cursor-pointer"
-                  required
-                >
-                  <option value="employee">Employee</option>
-                  <option value="manager">Manager</option>
-                  <option value="hr_manager">HR Manager</option>
-                  <option value="accountant">Accountant</option>
-                  <option value="super_admin">Super Admin</option>
-                </select>
-                <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
-                  <svg className="w-5 h-5 text-zinc-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                  </svg>
-                </div>
               </div>
             </div>
 
