@@ -16,8 +16,8 @@ export class AuthService {
     return await this.usersService.findOne(userId);
   }
 
-  async validateUserByEmailAndRole(email: string, role: Roles) {
-    return await this.usersService.findOneByEmailAndRole(email, role);
+  async validateUserByEmail(email: string) {
+    return await this.usersService.findOneByEmail(email);
   }
 
   async validateEmployeeByEmail(email: string) {
