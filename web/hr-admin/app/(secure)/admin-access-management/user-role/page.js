@@ -11,7 +11,7 @@ const ROLE_OPTIONS = [
   { value: "hr_manager", label: "HR Manager" },
   { value: "accountant", label: "Accountant" },
   { value: "manager", label: "Manager" },
-  { value: "employee", label: "Employee" },
+//   { value: "employee", label: "Employee" },
 ];
 
 const ROLE_COLORS = {
@@ -191,8 +191,8 @@ export default function UserRolePage() {
                       </td>
                       <td className="px-6 py-4">
                         {isSuperAdmin ? (
-                          <div className="text-sm text-zinc-500 italic">
-                            Cannot modify Super Admin
+                          <div className="text-sm text-pink-400">
+                            Super Admin
                           </div>
                         ) : (
                           <div className="flex items-center gap-2">
@@ -236,7 +236,7 @@ export default function UserRolePage() {
               <li>• <strong>HR Manager:</strong> Manage employees, attendance, and leaves</li>
               <li>• <strong>Accountant:</strong> Manage payroll and financial records</li>
               <li>• <strong>Manager:</strong> Manage team tasks and performance</li>
-              <li>• <strong>Employee:</strong> Basic access to own records</li>
+              {/* <li>• <strong>Employee:</strong> Basic access to own records</li> */}
             </ul>
           </div>
         </div>
