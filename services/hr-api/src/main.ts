@@ -4,16 +4,20 @@ import { ValidationPipe } from '@nestjs/common';
 import { ResponseInterceptor } from './common/interceptors/response.interceptor';
 import { AllExceptionsFilter } from './common/filters/all-exceptions.filter';
 import { ConfigService } from '@nestjs/config';
-
-import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import { NotFoundExceptionFilter } from './common/logger/notFoundException';
+import { BadRequestExceptionFilter } from './common/logger/badRequestException';
+import { UnauthorizedExceptionFilter } from './common/logger/unauthorizedException';
+import { ForbiddenExceptionFilter } from './common/logger/forbiddenException';
+import { SwaggerModule } from '@nestjs/swagger';
 import { LoggingInterceptor } from './common/interceptors/logging.interceptor';
 import helmet from 'helmet';
 import * as express from 'express';
+import swaggerConfig from './config/swagger.config';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, {
-    // cors: true,
-    // logger: false, 
+    cors: true,
+    logger: false, 
   });
 
   app.use(helmet({
@@ -34,24 +38,28 @@ async function bootstrap() {
   app.setGlobalPrefix('api/v1');
   app.useGlobalPipes(new ValidationPipe({ whitelist: true }));
   app.useGlobalInterceptors(new LoggingInterceptor(), new ResponseInterceptor());
-  app.useGlobalFilters(new AllExceptionsFilter());
+  app.useGlobalFilters(
+    new AllExceptionsFilter(), // This will handle all other exceptions (checked last)
+    new NotFoundExceptionFilter(),
+    new BadRequestExceptionFilter(),
+    new UnauthorizedExceptionFilter(),
+    new ForbiddenExceptionFilter(),
+  );
 
   const configService = app.get(ConfigService);
   const port = configService.get('app.port') || 5000;
-
-  // Swagger setup
-  const config = new DocumentBuilder()
-    .setTitle('HR Management API')
-    .setDescription('API documentation for the HR Management system')
-    .setVersion('1.0')
-    .build();
-  const document = SwaggerModule.createDocument(app, config);
-  SwaggerModule.setup('api-docs', app, document);
+    
+  SwaggerModule.setup('api-docs', app, SwaggerModule.createDocument(app, swaggerConfig), {
+    swaggerOptions: {
+      cacheControl: true,
+      docExpansion: 'list', // list -> auto collapse is on, none -> auto collapse is off
+      persistAuthorization: true, // token is not auto logout, when link is refresh
+    },
+  });
 
   try {
     await app.listen(port);
     const baseUrl = `http://localhost:${port}`;
-    // Colorful logs using ANSI escape codes
     console.log('\x1b[36m%s\x1b[0m', '');
     console.log('\x1b[32m%s\x1b[0m', `🚀 Server is running:     ${baseUrl}`);
     console.log('\x1b[36m%s\x1b[0m', '✅ Database connection is okay');

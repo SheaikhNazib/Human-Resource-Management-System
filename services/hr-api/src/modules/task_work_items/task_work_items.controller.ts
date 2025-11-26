@@ -1,11 +1,15 @@
 
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiBody, ApiParam } from '@nestjs/swagger';
+import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards } from '@nestjs/common';
+import { ApiTags, ApiOperation, ApiResponse, ApiBody, ApiParam, ApiBearerAuth } from '@nestjs/swagger';
 import { TaskWorkItemsService } from './task_work_items.service';
 import { CreateTaskWorkItemDto } from './dto/create.dto';
 import { UpdateTaskWorkItemDto } from './dto/update.dto';
+import { JwtAuthGuard } from 'src/common/guards/jwt-auth.guard';
+import { RolesGuard } from 'src/common/guards/roles.guard';
 
 @ApiTags('TaskWorkItems')
+@UseGuards(JwtAuthGuard, RolesGuard)
+@ApiBearerAuth('JWT-auth')
 @Controller('task-work-items')
 export class TaskWorkItemsController {
   constructor(private readonly service: TaskWorkItemsService) {}
