@@ -72,7 +72,7 @@ export default function Sidebar({ open, onClose }) {
       icon: DollarSign,
       children: [
         {
-          href: "/salary-list",
+          href: "/salary-compensations/salary-list",
           label: "Salary List",
           icon: CreditCard,
         },
