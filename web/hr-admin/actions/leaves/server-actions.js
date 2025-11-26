@@ -22,13 +22,31 @@ export async function getLeavesList() {
 
     const data = Array.isArray(rawList)
       ? rawList.map((item) => {
+          // Extract employee ID from various possible formats
+          let empId = null;
+          if (typeof item.employee === 'number') {
+            empId = item.employee;
+          } else if (typeof item.employee === 'object' && item.employee?.id) {
+            empId = item.employee.id;
+          } else {
+            empId = item.employee_id || item.employeeId;
+          }
+          
           const firstName = item.employee?.first_name || '';
           const lastName = item.employee?.last_name || '';
           const employeeName = firstName && lastName ? `${firstName} ${lastName}` : firstName || lastName || '—';
           
+          // Calculate leave days if not provided
+          let leaveDays = item.leave_days || item.leaveDays || 0;
+          if (!leaveDays && item.start_date && item.end_date) {
+            const start = new Date(item.start_date);
+            const end = new Date(item.end_date);
+            leaveDays = Math.ceil((end - start) / (1000 * 60 * 60 * 24)) + 1; // +1 to include both start and end date
+          }
+          
           return {
             id: item.id,
-            employeeId: item.employee_id || item.employeeId,
+            employeeId: empId,
             employeeName,
             leaveType: item.leave_type || item.leaveType || '—',
             startDate: item.start_date || item.startDate || null,
@@ -38,11 +56,13 @@ export async function getLeavesList() {
             approvedBy: item.approved_by || item.approvedBy || null,
             approvedAt: item.approved_at || item.approvedAt || null,
             createdAt: item.created_at || item.createdAt || null,
+            leave_days: leaveDays,
             raw: item,
           };
         })
       : [];
 
+    console.log("Mapped leaves data with leave_days:", JSON.stringify(data.map(l => ({ id: l.id, employeeId: l.employeeId, reason: l.reason, leave_days: l.leave_days, status: l.status })), null, 2));
     return { success: true, data };
   } catch (error) {
     console.error("Error fetching leaves:", error);
@@ -58,13 +78,31 @@ export async function getLeaveById(id) {
     // Handle nested data structure
     let item = body?.data?.data || body?.data || body;
     
+    // Extract employee ID from various possible formats
+    let empId = null;
+    if (typeof item.employee === 'number') {
+      empId = item.employee;
+    } else if (typeof item.employee === 'object' && item.employee?.id) {
+      empId = item.employee.id;
+    } else {
+      empId = item.employee_id || item.employeeId;
+    }
+    
     const firstName = item.employee?.first_name || '';
     const lastName = item.employee?.last_name || '';
     const employeeName = firstName && lastName ? `${firstName} ${lastName}` : firstName || lastName || '—';
     
+    // Calculate leave days if not provided
+    let leaveDays = item.leave_days || item.leaveDays || 0;
+    if (!leaveDays && item.start_date && item.end_date) {
+      const start = new Date(item.start_date);
+      const end = new Date(item.end_date);
+      leaveDays = Math.ceil((end - start) / (1000 * 60 * 60 * 24)) + 1;
+    }
+    
     const data = {
       id: item.id,
-      employeeId: item.employee_id || item.employeeId,
+      employeeId: empId,
       employeeName,
       leaveType: item.leave_type || item.leaveType || '—',
       startDate: item.start_date || item.startDate || null,
@@ -74,6 +112,7 @@ export async function getLeaveById(id) {
       approvedBy: item.approved_by || item.approvedBy || null,
       approvedAt: item.approved_at || item.approvedAt || null,
       createdAt: item.created_at || item.createdAt || null,
+      leave_days: leaveDays,
       raw: item,
     };
 
