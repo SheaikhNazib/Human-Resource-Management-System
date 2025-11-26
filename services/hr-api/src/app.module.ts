@@ -14,6 +14,7 @@ import { TasksModule } from "./modules/tasks/tasks.module";
 import { TaskStatusesModule } from "./modules/task_statuses/task_statuses.module";
 import { TaskWorkItemsModule } from "./modules/task_work_items/task_work_items.module";
 import { EmpLeavesModule } from "./modules/emp_leaves/emp_leaves.module";
+import { AuthModule } from "./modules/auth/auth.module";
 import { SqlInjectionDetectorMiddleware } from "./common/middleware/sql-injection-detector.middleware";
 import { XssProtectionMiddleware } from "./common/middleware/xss-protection.middleware";
 
@@ -40,6 +41,7 @@ import { EmpPerformancesModule } from "./modules/emp_performances/emp_performanc
         synchronize: false, // don't use true in production
       }),
     }),
+    AuthModule,
     AppRolesModule,
     EmpAttendancesModule,
     EmpDepartmentsModule,

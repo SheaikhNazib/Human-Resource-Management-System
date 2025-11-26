@@ -24,6 +24,9 @@ export class Employees extends BaseEntity {
   @Column({ nullable: true })
   mobile?: string;
 
+  // @Column()
+  // password: string;
+
   @Column({ nullable: true })
   office_phone?: string;
 
