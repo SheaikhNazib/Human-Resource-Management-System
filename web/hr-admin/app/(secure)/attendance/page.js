@@ -1,7 +1,7 @@
 "use client";
 import React, { useState, useEffect, useMemo } from 'react';
-import { fetchFromApi } from '@/lib/axios';
-import { Api_path } from '@/constant/api-path';
+import { getEmployeesWithTodayAttendance, bulkSaveAttendance } from '@/actions/attendances/server-actions';
+import { toast } from 'sonner';
 import TableArchive from "@/components/core/TableArchive";
 
 export default function AttendancePage() {
@@ -11,6 +11,7 @@ export default function AttendancePage() {
   const [error, setError] = useState(null);
   const [successMessage, setSuccessMessage] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
+  const [changedEmployeeIds, setChangedEmployeeIds] = useState(new Set());
 
   // Fetch employees on mount
   useEffect(() => {
@@ -21,40 +22,16 @@ export default function AttendancePage() {
     setLoading(true);
     setError(null);
     try {
-      const response = await fetchFromApi(Api_path.EMPLOYEE.LIST);
-      const body = response?.data ?? response;
+      const result = await getEmployeesWithTodayAttendance();
       
-      let employeesList = [];
-      if (Array.isArray(body)) {
-        employeesList = body;
-      } else if (Array.isArray(body.data)) {
-        employeesList = body.data;
-      } else if (Array.isArray(body?.data?.data)) {
-        employeesList = body.data.data;
+      if (result.success) {
+        setEmployees(result.data);
+        setChangedEmployeeIds(new Set()); // Reset changed employees when fetching fresh data
+      } else {
+        setError('Failed to fetch employees: ' + result.error);
       }
-
-      // Get current time in HH:MM format
-      const now = new Date();
-      const currentTime = now.toTimeString().slice(0, 5);
-      const currentDate = now.toISOString().split('T')[0];
-
-      // Initialize each employee with current time for check-in and check-out
-      const initializedEmployees = employeesList.map(emp => ({
-        id: emp.id,
-        firstName: emp.first_name || emp.firstName || '',
-        lastName: emp.last_name || emp.lastName || '',
-        name: `${emp.first_name || emp.firstName || ''} ${emp.last_name || emp.lastName || ''}`.trim() || emp.name || `Employee ${emp.id}`,
-        email: emp.email || '',
-        jobTitle: emp.job_title || emp.jobTitle || '',
-        department: emp.department || '',
-        checkInTime: currentTime,
-        checkOutTime: currentTime,
-        date: currentDate
-      }));
-
-      setEmployees(initializedEmployees);
     } catch (err) {
-      setError('Failed to fetch employees: ' + err.message);
+      toast.error('Failed to fetch employees: ' + err.message);
       console.error('Error fetching employees:', err);
     } finally {
       setLoading(false);
@@ -67,6 +44,9 @@ export default function AttendancePage() {
         emp.id === employeeId ? { ...emp, [field]: value } : emp
       )
     );
+    
+    // Mark this employee as changed
+    setChangedEmployeeIds(prev => new Set(prev).add(employeeId));
   };
 
   // Filter employees based on search query
@@ -82,72 +62,75 @@ export default function AttendancePage() {
     );
   }, [employees, searchQuery]);
 
+  // Human-friendly current date for display in the header
+  const formattedDate = useMemo(() => {
+    const now = new Date();
+    return now.toLocaleDateString(undefined, {
+      weekday: 'long',
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+    });
+  }, []);
+
   const handleUpdateAttendance = async () => {
+    // Check if there are any changes
+    if (changedEmployeeIds.size === 0) {
+      toast.error('No changes detected. Please modify attendance times before updating.');
+      return;
+    }
+
     setSubmitting(true);
     setError(null);
     setSuccessMessage('');
 
     try {
-      // Create attendance records for all employees (not just filtered ones)
-      const attendancePromises = employees.map(async (employee) => {
-        const formatTime = (time) => {
-          if (!time) return null;
-          // Add seconds if not present
-          if (time.length === 5) return `${time}:00`;
-          return time;
-        };
+      // Only prepare attendance records for employees that have been changed
+      const changedEmployees = employees.filter(employee => 
+        changedEmployeeIds.has(employee.id)
+      );
 
-        const payload = {
-          date: employee.date,
-          checkIn: formatTime(employee.checkInTime),
-          checkOut: formatTime(employee.checkOutTime),
-          remarks: "",
-          onsite_or_remote: true,
-          check_in_ip: "",
-          check_out_ip: "",
-          employee: employee.id,
-        };
+      const attendanceRecords = changedEmployees.map(employee => ({
+        employeeId: employee.id,
+        employeeName: employee.name,
+        date: employee.date,
+        checkInTime: employee.checkInTime,
+        checkOutTime: employee.checkOutTime,
+        attendanceId: employee.attendanceId,
+        remarks: employee.remarks || ''
+      }));
 
-        try {
-          const response = await fetchFromApi(Api_path.ATTENDANCE.CREATE, {
-            method: "POST",
-            body: payload,
-          });
+      const result = await bulkSaveAttendance(attendanceRecords);
 
-          const responseData = response?.data?.data ?? response?.data ?? response;
-          
-          if (responseData?.statusCode >= 400) {
-            throw new Error(responseData?.message || 'Failed to create attendance');
-          }
-
-          return { success: true, employeeName: employee.name };
-        } catch (err) {
-          console.error(`Error creating attendance for ${employee.name}:`, err);
-          return { success: false, employeeName: employee.name, error: err.message };
-        }
-      });
-
-      const results = await Promise.all(attendancePromises);
-      
-      const successCount = results.filter(r => r.success).length;
-      const failCount = results.filter(r => !r.success).length;
-
-      if (failCount === 0) {
-        setSuccessMessage(`Successfully created attendance for ${successCount} employee(s)!`);
+      if (result.success) {
+        toast.success(`Successfully saved attendance for ${result.successCount} employee(s)!`);
+        setChangedEmployeeIds(new Set()); // Clear changed employees after successful save
+      } else if (result.successCount > 0) {
+        toast.success(`Saved attendance for ${result.successCount} employee(s). ${result.failCount} failed.`);
+        const failedEmployees = result.results
+          .filter(r => !r.success)
+          .map(r => {
+            const emp = employees.find(e => e.id === r.employeeId);
+            return emp?.name || `Employee ${r.employeeId}`;
+          })
+          .join(', ');
+        toast.error(`Failed for: ${failedEmployees}`);
+        
+        // Remove successfully saved employees from changed set
+        const failedIds = new Set(result.results.filter(r => !r.success).map(r => r.employeeId));
+        setChangedEmployeeIds(failedIds);
       } else {
-        setSuccessMessage(`Created attendance for ${successCount} employee(s). ${failCount} failed.`);
-        const failedEmployees = results.filter(r => !r.success).map(r => r.employeeName).join(', ');
-        setError(`Failed for: ${failedEmployees}`);
+        toast.error('Failed to save attendance: ' + result.error);
       }
 
-      // Optionally refresh the form with current time
+      // Refresh the form with updated data
       setTimeout(() => {
         setSuccessMessage('');
         fetchEmployees();
       }, 3000);
 
     } catch (err) {
-      setError('Failed to update attendance: ' + err.message);
+      toast.error('Failed to update attendance: ' + err.message);
       console.error('Error updating attendance:', err);
     } finally {
       setSubmitting(false);
@@ -185,26 +168,73 @@ export default function AttendancePage() {
     {
       header: "Check In Time",
       accessor: "checkInTime",
-      render: (emp) => (
-        <input
-          type="time"
-          value={emp.checkInTime}
-          onChange={(e) => handleTimeChange(emp.id, 'checkInTime', e.target.value)}
-          className="px-3 py-2 border border-zinc-300 dark:border-zinc-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-zinc-500 focus:border-zinc-500 dark:bg-zinc-800 dark:text-zinc-100 bg-white text-zinc-900 text-sm"
-        />
-      )
+      render: (emp) => {
+        const isChanged = changedEmployeeIds.has(emp.id);
+        return (
+          <div className="relative">
+            <input
+              type="time"
+              value={emp.checkInTime}
+              onChange={(e) => handleTimeChange(emp.id, 'checkInTime', e.target.value)}
+              className={`px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-zinc-500 focus:border-zinc-500 dark:bg-zinc-800 dark:text-zinc-100 bg-white text-zinc-900 text-sm ${
+                isChanged 
+                  ? 'border-yellow-400 dark:border-yellow-500 ring-1 ring-yellow-400 dark:ring-yellow-500' 
+                  : 'border-zinc-300 dark:border-zinc-600'
+              }`}
+            />
+            {isChanged && (
+              <span className="absolute -top-1 -right-1 w-2 h-2 bg-yellow-400 rounded-full"></span>
+            )}
+          </div>
+        );
+      }
     },
     {
       header: "Check Out Time",
       accessor: "checkOutTime",
-      render: (emp) => (
-        <input
-          type="time"
-          value={emp.checkOutTime}
-          onChange={(e) => handleTimeChange(emp.id, 'checkOutTime', e.target.value)}
-          className="px-3 py-2 border border-zinc-300 dark:border-zinc-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-zinc-500 focus:border-zinc-500 dark:bg-zinc-800 dark:text-zinc-100 bg-white text-zinc-900 text-sm"
-        />
-      )
+      render: (emp) => {
+        const isChanged = changedEmployeeIds.has(emp.id);
+        return (
+          <div className="relative">
+            <input
+              type="time"
+              value={emp.checkOutTime}
+              onChange={(e) => handleTimeChange(emp.id, 'checkOutTime', e.target.value)}
+              className={`px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-zinc-500 focus:border-zinc-500 dark:bg-zinc-800 dark:text-zinc-100 bg-white text-zinc-900 text-sm ${
+                isChanged 
+                  ? 'border-yellow-400 dark:border-yellow-500 ring-1 ring-yellow-400 dark:ring-yellow-500' 
+                  : 'border-zinc-300 dark:border-zinc-600'
+              }`}
+            />
+            {isChanged && (
+              <span className="absolute -top-1 -right-1 w-2 h-2 bg-yellow-400 rounded-full"></span>
+            )}
+          </div>
+        );
+      }
+    },
+    {
+      header: "Remarks",
+      accessor: "remarks",
+      render: (emp) => {
+        const isChanged = changedEmployeeIds.has(emp.id);
+        return (
+          <div className="relative">
+            <input
+              type="text"
+              value={emp.remarks || ''}
+              onChange={(e) => handleTimeChange(emp.id, 'remarks', e.target.value)}
+              placeholder="Remarks"
+              className={`px-2 py-1 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-zinc-500 focus:border-zinc-500 dark:bg-zinc-800 dark:text-zinc-100 bg-white text-zinc-900 text-sm w-full ${
+                isChanged ? 'border-yellow-400 dark:border-yellow-500' : 'border-zinc-300 dark:border-zinc-600'
+              }`}
+            />
+            {isChanged && (
+              <span className="absolute -top-1 -right-1 w-2 h-2 bg-yellow-400 rounded-full"></span>
+            )}
+          </div>
+        );
+      }
     }
   ];
 
@@ -223,7 +253,12 @@ export default function AttendancePage() {
       )}
 
       <TableArchive
-        title="Employee Attendance"
+        title={
+          <div className="flex items-center justify-between w-full text-white">
+            <span className="font-semibold">Employee Attendance</span>
+            <span className="text-sm text-white">{formattedDate}</span>
+          </div>
+        }
         columns={columns}
         data={filteredEmployees}
         loading={loading}
@@ -233,8 +268,18 @@ export default function AttendancePage() {
         onSearchChange={setSearchQuery}
         searchPlaceholder="Search by name, email, job title, or department..."
         createButtonOnClick={employees.length > 0 ? handleUpdateAttendance : null}
-        createButtonText={submitting ? 'Updating...' : 'Update Attendance'}
-        createButtonClassName="ml-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2 text-sm"
+        createButtonText={
+          submitting 
+            ? 'Updating...' 
+            : changedEmployeeIds.size > 0 
+              ? `Update Attendance (${changedEmployeeIds.size})` 
+              : 'Update Attendance'
+        }
+        createButtonClassName={`ml-2 px-4 py-2 rounded-lg transition-colors flex items-center gap-2 text-sm ${
+          changedEmployeeIds.size > 0 
+            ? 'bg-blue-600 text-white hover:bg-blue-700' 
+            : 'bg-gray-400 text-white cursor-not-allowed'
+        }`}
         showRefreshButton={true}
         onRefresh={fetchEmployees}
         className="max-w-full"
