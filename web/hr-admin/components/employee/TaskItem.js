@@ -41,7 +41,7 @@ const TaskItem = ({ task }) => {
   return (
     <div
       onClick={handleClick}
-      className="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md transition-all cursor-pointer group"
+      className="bg-white dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 rounded-lg p-4 hover:shadow-md transition-all cursor-pointer group"
     >
       <div className="flex items-start justify-between mb-3">
         <h3 className="text-lg font-semibold text-gray-900 group-hover:text-blue-600 transition-colors flex-1">

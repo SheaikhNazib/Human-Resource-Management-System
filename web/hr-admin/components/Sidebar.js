@@ -87,8 +87,8 @@ export default function Sidebar({ open, onClose }) {
 
   // Shared classes for consistency between top-level and nested items
   const baseItemClass =
-    "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors text-zinc-700 hover:bg-blue-50 hover:text-blue-700";
-  const activeClass = "bg-blue-50 text-blue-700 border-l-4 border-blue-500";
+    "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors text-zinc-700 dark:text-zinc-300 hover:bg-blue-50 dark:hover:bg-blue-900/20 hover:text-blue-700 dark:hover:text-blue-400";
+  const activeClass = "bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 border-l-4 border-blue-500 dark:border-blue-400";
 
   return (
     <aside
@@ -102,7 +102,7 @@ export default function Sidebar({ open, onClose }) {
         <div className="w-7 h-7 rounded bg-linear-to-br from-blue-600 to-purple-500 flex items-center justify-center group-hover:scale-105 transition-transform">
           <div className="w-4 h-4 bg-white rounded shadow" />
         </div>
-        <span className="font-bold text-lg tracking-tight text-zinc-900 group-hover:text-blue-700">
+        <span className="font-bold text-lg tracking-tight text-zinc-900 dark:text-zinc-100 group-hover:text-blue-700 dark:group-hover:text-blue-400">
           HRMS
         </span>
       </Link>
@@ -133,7 +133,7 @@ export default function Sidebar({ open, onClose }) {
                   <div className="flex items-center gap-3">
                     <Icon
                       className={`w-5 h-5 ${
-                        parentActive ? "text-blue-600" : "text-zinc-400"
+                        parentActive ? "text-blue-600 dark:text-blue-400" : "text-zinc-400 dark:text-zinc-500"
                       }`}
                     />
                     <span className="text-sm flex-1 truncate">{label}</span>
@@ -143,7 +143,7 @@ export default function Sidebar({ open, onClose }) {
                       isOpen ? "rotate-180" : "rotate-0"
                     }`}
                   >
-                    <ChevronDown className="w-4 h-4 text-zinc-400" />
+                    <ChevronDown className="w-4 h-4 text-zinc-400 dark:text-zinc-500" />
                   </span>
                 </button>
 
@@ -162,8 +162,8 @@ export default function Sidebar({ open, onClose }) {
                           <ChIcon
                             className={`w-4 h-4 ${
                               pathname === chHref
-                                ? "text-blue-600"
-                                : "text-zinc-400"
+                                ? "text-blue-600 dark:text-blue-400"
+                                : "text-zinc-400 dark:text-zinc-500"
                             }`}
                           />
                           <span className="flex-1 truncate">{chLabel}</span>
@@ -187,7 +187,7 @@ export default function Sidebar({ open, onClose }) {
             >
               <Icon
                 className={`w-5 h-5 ${
-                  pathname === href ? "text-blue-600" : "text-zinc-400"
+                  pathname === href ? "text-blue-600 dark:text-blue-400" : "text-zinc-400 dark:text-zinc-500"
                 }`}
               />
               <span className="flex-1 truncate">{label}</span>
@@ -223,7 +223,7 @@ export default function Sidebar({ open, onClose }) {
               toast.error("Failed to logout");
             }
           }}
-          className={`w-full flex items-center gap-2 text-left text-zinc-500 hover:text-red-500 transition-colors ${
+          className={`w-full flex items-center gap-2 text-left text-zinc-500 dark:text-zinc-400 hover:text-red-500 dark:hover:text-red-400 transition-colors ${
             collapsed ? "justify-center" : ""
           }`}
           title="Logout"

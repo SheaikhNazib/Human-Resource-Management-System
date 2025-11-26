@@ -54,7 +54,7 @@ const TabBar = ({ tabs, activeTab, onTabChange }) => {
 
   return (
     <div
-      className="bg-white border-b border-gray-200 shadow-sm"
+      className="bg-white dark:bg-zinc-900 border-b border-gray-200 dark:border-zinc-800 shadow-sm"
       role="tablist"
       aria-label="Employee information tabs"
     >
@@ -78,6 +78,10 @@ const TabBar = ({ tabs, activeTab, onTabChange }) => {
                   whitespace-nowrap flex items-center justify-center space-x-2
                   focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-inset
                   ${
+                    isActive
+                      ? "text-blue-600 dark:text-blue-400 border-b-2 border-blue-600 dark:border-blue-400"
+                      : "text-gray-600 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-zinc-100 hover:bg-gray-50 dark:hover:bg-zinc-800"
+                  }
                     isActive
                       ? "text-blue-600 border-b-2 border-blue-600 bg-blue-50/50"
                       : "text-gray-600 hover:text-gray-900 hover:bg-gray-50"

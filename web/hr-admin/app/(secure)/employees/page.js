@@ -51,7 +51,7 @@ export default function EmployeesPage() {
 
                 return (
                     <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center text-xs font-bold">
+                        <div className="w-8 h-8 rounded-full bg-gray-200 dark:bg-zinc-700 flex items-center justify-center text-xs font-bold text-zinc-900 dark:text-zinc-100">
                             {initials || '—'}
                         </div>
                         <div>
@@ -89,7 +89,7 @@ export default function EmployeesPage() {
                 const status = emp.status ?? emp.raw?.status ?? 'Active';
                 return (
                     <span className={`px-2 py-1 rounded text-xs font-medium ${
-                        status === "Active" ? "bg-green-100 text-green-700" : "bg-zinc-100 text-zinc-700"
+                        status === "Active" ? "bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400" : "bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300"
                     }`}>
                         {status}
                     </span>

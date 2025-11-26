@@ -131,16 +131,16 @@ export default function DashboardPage() {
           />
         </div>
         {/* Attendance Overview Chart Placeholder */}
-        <div className="bg-white rounded-xl shadow p-6">
+        <div className="bg-white dark:bg-zinc-900 rounded-xl shadow p-6">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="font-semibold text-lg">Attendance Overview</h2>
+            <h2 className="font-semibold text-lg text-zinc-900 dark:text-zinc-100">Attendance Overview</h2>
             <div className="flex items-center gap-2">
-              <select className="bg-zinc-100 border border-zinc-200 rounded px-2 py-1 text-sm">
+              <select className="bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded px-2 py-1 text-sm text-zinc-900 dark:text-zinc-100">
                 <option>Today</option>
                 <option>This Week</option>
                 <option>This Month</option>
               </select>
-              <MoreVertical className="w-4 h-4 text-zinc-400" />
+              <MoreVertical className="w-4 h-4 text-zinc-400 dark:text-zinc-500" />
             </div>
           </div>
           {/* Modern Bar Chart */}
@@ -208,17 +208,17 @@ export default function DashboardPage() {
           </div>
         </div>
         {/* Attendance Table */}
-        <div className="bg-white rounded-xl shadow p-6">
+        <div className="bg-white dark:bg-zinc-900 rounded-xl shadow p-6">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="font-semibold text-lg">Attendance Overview</h2>
-            <button className="text-xs text-blue-600 font-medium">
+            <h2 className="font-semibold text-lg text-zinc-900 dark:text-zinc-100">Attendance Overview</h2>
+            <button className="text-xs text-blue-600 dark:text-blue-400 font-medium">
               View All
             </button>
           </div>
           <div className="overflow-x-auto">
             <table className="min-w-full text-sm">
               <thead>
-                <tr className="text-zinc-500">
+                <tr className="text-zinc-500 dark:text-zinc-400">
                   <th className="py-2 px-3 text-left font-normal">
                     Employee Name
                   </th>
@@ -232,9 +232,9 @@ export default function DashboardPage() {
                   <th className="py-2 px-3 text-left font-normal">Status</th>
                 </tr>
               </thead>
-              <tbody>
+              <tbody className="text-zinc-700 dark:text-zinc-300">
                 {attendanceRows.map((row, i) => (
-                  <tr key={i} className="border-t border-zinc-100">
+                  <tr key={i} className="border-t border-zinc-100 dark:border-zinc-800">
                     <td className="py-2 px-3 flex items-center gap-2">
                       <img
                         src={row.avatar}
@@ -250,8 +250,8 @@ export default function DashboardPage() {
                       <span
                         className={`px-2 py-1 rounded text-xs font-medium ${
                           row.status === "On Time"
-                            ? "bg-green-100 text-green-700"
-                            : "bg-red-100 text-red-700"
+                            ? "bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400"
+                            : "bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400"
                         }`}
                       >
                         {row.status}
@@ -266,28 +266,28 @@ export default function DashboardPage() {
       </div>
       {/* Right: Schedule & Calendar */}
       <div className="w-full lg:w-auto flex-shrink-0 flex flex-col gap-6">
-        <div className="bg-white rounded-xl shadow p-6 flex flex-col gap-4">
+        <div className="bg-white dark:bg-zinc-900 rounded-xl shadow p-6 flex flex-col gap-4">
           <div className="flex items-center justify-between mb-2">
-            <h2 className="font-semibold text-lg">My Schedule</h2>
-            <Calendar className="w-5 h-5 text-zinc-400" />
+            <h2 className="font-semibold text-lg text-zinc-900 dark:text-zinc-100">My Schedule</h2>
+            <Calendar className="w-5 h-5 text-zinc-400 dark:text-zinc-500" />
           </div>
           {/* Calendar Placeholder */}
           <div className="flex justify-center mb-2">
-            <div className="rounded-lg border border-zinc-200 p-2 w-full">
+            <div className="rounded-lg border border-zinc-200 dark:border-zinc-700 p-2 w-full">
               <div className="flex justify-between items-center mb-2">
-                <span className="text-sm font-medium">July, 2023</span>
+                <span className="text-sm font-medium text-zinc-900 dark:text-zinc-100">July, 2023</span>
                 <div className="flex gap-1">
-                  <button className="rounded p-1 hover:bg-zinc-100">
+                  <button className="rounded p-1 hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-700 dark:text-zinc-300">
                     <span className="sr-only">Prev</span>&lt;
                   </button>
-                  <button className="rounded p-1 hover:bg-zinc-100">
+                  <button className="rounded p-1 hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-700 dark:text-zinc-300">
                     <span className="sr-only">Next</span>&gt;
                   </button>
                 </div>
               </div>
               <div className="grid grid-cols-7 gap-1 text-xs text-center">
                 {["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"].map((d, i) => (
-                  <div key={i} className="font-medium text-zinc-400">
+                  <div key={i} className="font-medium text-zinc-400 dark:text-zinc-500">
                     {d}
                   </div>
                 ))}
@@ -298,7 +298,7 @@ export default function DashboardPage() {
                     className={`rounded-full w-6 h-6 flex items-center justify-center ${
                       [5, 6, 7].includes(i)
                         ? "bg-blue-600 text-white"
-                        : "text-zinc-700"
+                        : "text-zinc-700 dark:text-zinc-300"
                     }`}
                   >
                     {i + 1}
@@ -311,17 +311,17 @@ export default function DashboardPage() {
           <div className="flex flex-col gap-2">
             {schedule.map((day, i) => (
               <div key={i} className="mb-2">
-                <div className="text-xs text-zinc-500 mb-1">{day.day}</div>
+                <div className="text-xs text-zinc-500 dark:text-zinc-400 mb-1">{day.day}</div>
                 {day.items.map((item, j) => (
                   <div key={j} className="flex items-center gap-2 mb-1">
-                    <span className="text-xs text-zinc-400 w-12">
+                    <span className="text-xs text-zinc-400 dark:text-zinc-500 w-12">
                       {item.time}
                     </span>
                     <div>
-                      <div className="font-medium text-xs text-zinc-800">
+                      <div className="font-medium text-xs text-zinc-800 dark:text-zinc-200">
                         {item.title}
                       </div>
-                      <div className="text-xs text-zinc-500">
+                      <div className="text-xs text-zinc-500 dark:text-zinc-400">
                         {item.subtitle}
                       </div>
                     </div>
@@ -338,19 +338,19 @@ export default function DashboardPage() {
 
 function DashboardStat({ title, value, trend, date, negative }) {
   return (
-    <div className="bg-white rounded-xl shadow p-4 flex flex-col gap-2">
-      <div className="flex items-center gap-2 text-zinc-500 text-xs">
+    <div className="bg-white dark:bg-zinc-900 rounded-xl shadow p-4 flex flex-col gap-2">
+      <div className="flex items-center gap-2 text-zinc-500 dark:text-zinc-400 text-xs">
         <span>{title}</span>
         <span
           className={`ml-auto text-xs font-semibold ${
-            negative ? "text-red-600" : "text-green-600"
+            negative ? "text-red-600 dark:text-red-400" : "text-green-600 dark:text-green-400"
           }`}
         >
           {trend}
         </span>
       </div>
-      <div className="text-2xl font-bold text-zinc-900">{value}</div>
-      <div className="text-xs text-zinc-400">Update: {date}</div>
+      <div className="text-2xl font-bold text-zinc-900 dark:text-zinc-100">{value}</div>
+      <div className="text-xs text-zinc-400 dark:text-zinc-500">Update: {date}</div>
     </div>
   );
 }

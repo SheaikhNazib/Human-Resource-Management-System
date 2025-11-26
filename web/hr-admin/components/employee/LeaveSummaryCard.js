@@ -13,15 +13,15 @@ const LeaveSummaryCard = ({ leavePolicy, employee }) => {
   const { casual, sick, annual, monthsSinceJoining, isEligibleForCasual, isEligibleForAnnual } = leavePolicy;
 
   return (
-    <div className="bg-white rounded-xl shadow-md border border-gray-200 p-6 mb-6">
+    <div className="bg-white dark:bg-zinc-900 rounded-xl shadow-md border border-gray-200 dark:border-zinc-800 p-6 mb-6">
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center space-x-3">
-          <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
-            <Calendar className="w-6 h-6 text-blue-600" />
+          <div className="w-10 h-10 bg-blue-100 dark:bg-blue-900/30 rounded-lg flex items-center justify-center">
+            <Calendar className="w-6 h-6 text-blue-600 dark:text-blue-400" />
           </div>
           <div>
-            <h2 className="text-xl font-bold text-gray-900">Leave Balance Summary</h2>
-            <p className="text-sm text-gray-500">
+            <h2 className="text-xl font-bold text-gray-900 dark:text-zinc-100">Leave Balance Summary</h2>
+            <p className="text-sm text-gray-500 dark:text-zinc-400">
               Current Year • {monthsSinceJoining} months since joining
             </p>
           </div>
@@ -68,8 +68,8 @@ const LeaveSummaryCard = ({ leavePolicy, employee }) => {
       </div>
 
       {/* Policy Information */}
-      <div className="mt-4 pt-4 border-t border-gray-200">
-        <div className="flex items-start space-x-2 text-xs text-gray-600">
+      <div className="mt-4 pt-4 border-t border-gray-200 dark:border-zinc-700">
+        <div className="flex items-start space-x-2 text-xs text-gray-600 dark:text-zinc-400">
           <AlertCircle className="w-4 h-4 mt-0.5 shrink-0" />
           <div>
             <p className="font-medium mb-1">Leave Policy:</p>

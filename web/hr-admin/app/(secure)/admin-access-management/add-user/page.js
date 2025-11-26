@@ -83,13 +83,13 @@ export default function AddUserPage() {
       </div>
 
       {/* Form */}
-      <div className="bg-white rounded-lg shadow-sm border border-zinc-200 p-6">
+      <div className="bg-white dark:bg-zinc-900 rounded-lg shadow-sm border border-zinc-200 dark:border-zinc-800 p-6">
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* Email Field */}
           <div>
             <label
               htmlFor="email"
-              className="block text-sm font-medium text-zinc-700 mb-2"
+              className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-2"
             >
               Email Address <span className="text-red-500">*</span>
             </label>
@@ -101,7 +101,7 @@ export default function AddUserPage() {
               onChange={handleChange}
               required
               disabled={loading}
-              className="w-full px-4 py-2 border border-zinc-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-zinc-100 disabled:cursor-not-allowed"
+              className="w-full px-4 py-2 border border-zinc-300 dark:border-zinc-700 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-zinc-100 dark:disabled:bg-zinc-800 disabled:cursor-not-allowed bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100"
               placeholder="user@example.com"
             />
           </div>
@@ -110,7 +110,7 @@ export default function AddUserPage() {
           <div>
             <label
               htmlFor="password"
-              className="block text-sm font-medium text-zinc-700 mb-2"
+              className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-2"
             >
               Password <span className="text-red-500">*</span>
             </label>
@@ -123,10 +123,10 @@ export default function AddUserPage() {
               required
               minLength={6}
               disabled={loading}
-              className="w-full px-4 py-2 border border-zinc-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-zinc-100 disabled:cursor-not-allowed"
+              className="w-full px-4 py-2 border border-zinc-300 dark:border-zinc-700 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-zinc-100 dark:disabled:bg-zinc-800 disabled:cursor-not-allowed bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100"
               placeholder="Minimum 6 characters"
             />
-            <p className="text-xs text-zinc-500 mt-1">
+            <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1">
               Password must be at least 6 characters long
             </p>
           </div>
@@ -135,7 +135,7 @@ export default function AddUserPage() {
           <div>
             <label
               htmlFor="role"
-              className="block text-sm font-medium text-zinc-700 mb-2"
+              className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-2"
             >
               Role <span className="text-red-500">*</span>
             </label>
@@ -146,7 +146,7 @@ export default function AddUserPage() {
               onChange={handleChange}
               required
               disabled={loading}
-              className="w-full px-4 py-2 border border-zinc-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-zinc-100 disabled:cursor-not-allowed"
+              className="w-full px-4 py-2 border border-zinc-300 dark:border-zinc-700 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-zinc-100 dark:disabled:bg-zinc-800 disabled:cursor-not-allowed bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100"
             >
               <option value="hr_manager">HR Manager</option>
               <option value="accountant">Accountant</option>
