@@ -69,6 +69,20 @@ export default function Sidebar({ open, onClose }) {
       label: "Tasks",
       icon: Calendar,
     },
+
+    // Admin access - only visible to super_admin
+    ...(user?.role === "super_admin"
+      ? [
+          {
+            label: "Admin access",
+            icon: Wallet,
+            children: [
+              { href: "/admin-access-management/add-user", label: "Add User", icon: Users },
+              { href: "/admin-access-management/user-role", label: "User Role", icon: Users },
+            ],
+          },
+        ]
+      : []),
   ];
 
   // Shared classes for consistency between top-level and nested items
