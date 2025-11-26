@@ -98,7 +98,7 @@ const LeaveStatusDropdown = ({ currentStatus, onStatusChange, leaveId, disabled 
       </button>
 
       {isOpen && !disabled && !isUpdating && (
-        <div className="fixed z-[9999] mt-2 w-40 rounded-lg shadow-xl bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 overflow-hidden" 
+        <div className="fixed z-9999 mt-2 w-40 rounded-lg shadow-xl bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 overflow-hidden" 
           style={{
             top: dropdownRef.current?.getBoundingClientRect().bottom + window.scrollY + 8 + 'px',
             left: dropdownRef.current?.getBoundingClientRect().left + window.scrollX + 'px'
