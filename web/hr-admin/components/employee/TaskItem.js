@@ -24,9 +24,21 @@ const TaskItem = ({ task }) => {
 
   const getStatusConfig = (statusId) => {
     const statusMap = {
-      1: { label: "To Do", color: "bg-gray-100 text-gray-800", icon: AlertCircle },
-      2: { label: "In Progress", color: "bg-blue-100 text-blue-800", icon: Clock },
-      3: { label: "Done", color: "bg-green-100 text-green-800", icon: CheckCircle2 },
+      1: {
+        label: "To Do",
+        color: "bg-gray-100 text-gray-800",
+        icon: AlertCircle,
+      },
+      2: {
+        label: "In Progress",
+        color: "bg-blue-100 text-blue-800",
+        icon: Clock,
+      },
+      3: {
+        label: "Done",
+        color: "bg-green-100 text-green-800",
+        icon: CheckCircle2,
+      },
     };
     return statusMap[statusId] || statusMap[1];
   };

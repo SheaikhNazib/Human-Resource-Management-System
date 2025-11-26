@@ -34,7 +34,8 @@ const LeavesPanel = ({ employeeId, isActive, employee }) => {
     // Filter leaves for this employee (always keep cache updated)
     const filtered = allLeaves.filter((leave) => {
       // Handle various employee ID formats
-      const leaveEmpId = leave.employeeId || leave.employee_id || leave.employee;
+      const leaveEmpId =
+        leave.employeeId || leave.employee_id || leave.employee;
       // Skip if no employee ID found
       if (!leaveEmpId) return false;
       return String(leaveEmpId) === String(employeeId);
@@ -132,8 +133,8 @@ const LeavesPanel = ({ employeeId, isActive, employee }) => {
         {/* Leave Items */}
         <div className="space-y-4">
           {employeeLeaves.map((leave) => (
-            <LeaveItem 
-              key={leave.id} 
+            <LeaveItem
+              key={leave.id}
               leave={leave}
               inferLeaveType={leavePolicy.inferLeaveType}
             />
@@ -161,7 +162,10 @@ const LoadingSkeleton = () => {
       {/* Summary skeleton */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
         {[1, 2, 3, 4].map((i) => (
-          <div key={i} className="bg-white dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 rounded-lg p-4">
+          <div
+            key={i}
+            className="bg-white dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 rounded-lg p-4"
+          >
             <div className="h-4 bg-gray-200 dark:bg-zinc-700 rounded w-24 mb-2 animate-pulse" />
             <div className="h-8 bg-gray-200 dark:bg-zinc-700 rounded w-16 animate-pulse" />
           </div>
@@ -219,7 +223,9 @@ const EmptyState = ({ message, icon: Icon }) => {
         <div className="w-16 h-16 bg-gray-200 dark:bg-zinc-700 rounded-full flex items-center justify-center mx-auto mb-4">
           <Icon className="w-8 h-8 text-gray-600 dark:text-zinc-400" />
         </div>
-        <h3 className="text-lg font-semibold text-gray-900 dark:text-zinc-100 mb-2">No Leaves</h3>
+        <h3 className="text-lg font-semibold text-gray-900 dark:text-zinc-100 mb-2">
+          No Leaves
+        </h3>
         <p className="text-gray-600 dark:text-zinc-400">{message}</p>
       </div>
     </div>

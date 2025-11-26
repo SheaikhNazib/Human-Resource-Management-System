@@ -27,7 +27,7 @@ export default function AddUserPage() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     // Validation
     if (!formData.email || !formData.password) {
       toast.error("Email and password are required");
@@ -44,7 +44,7 @@ export default function AddUserPage() {
 
     try {
       const response = await createUser(formData);
-      
+
       if (response.success) {
         toast.success("User created successfully", { id: toastId });
         router.push("/admin-access-management/user-role");

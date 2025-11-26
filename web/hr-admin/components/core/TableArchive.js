@@ -564,8 +564,9 @@ export default function TableArchive({
                 </button>
               )}
 
-              {(createButtonOnClick || createButtonHref) && showCreateButton && (
-                createButtonOnClick ? (
+              {(createButtonOnClick || createButtonHref) &&
+                showCreateButton &&
+                (createButtonOnClick ? (
                   <button
                     onClick={createButtonOnClick}
                     className={createButtonClassName}
@@ -605,8 +606,7 @@ export default function TableArchive({
                     </svg>
                     {createButtonText}
                   </Link>
-                )
-              )}
+                ))}
             </div>
           </div>
         </div>
@@ -656,7 +656,9 @@ export default function TableArchive({
                   >
                     <div className="flex flex-col items-center justify-center gap-2">
                       <div className="h-8 w-8 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin"></div>
-                      <span className="text-zinc-500 dark:text-zinc-400">Loading...</span>
+                      <span className="text-zinc-500 dark:text-zinc-400">
+                        Loading...
+                      </span>
                     </div>
                   </td>
                 </tr>
@@ -712,7 +714,9 @@ export default function TableArchive({
                     {columns.map((col, ci) => (
                       <td
                         key={ci}
-                        className={`py-3 px-4 text-zinc-700 dark:text-zinc-300 ${col.cellClassName || ""}`}
+                        className={`py-3 px-4 text-zinc-700 dark:text-zinc-300 ${
+                          col.cellClassName || ""
+                        }`}
                       >
                         {col.render
                           ? col.render(row)

@@ -114,7 +114,10 @@ const AboutPanel = ({ employee, loading, error }) => {
                 label="Department"
                 value={employee.emp_department?.name}
               />
-              <InfoRow label="Hire Date" value={formatDate(employee.hire_date)} />
+              <InfoRow
+                label="Hire Date"
+                value={formatDate(employee.hire_date)}
+              />
               <InfoRow
                 label="Leave Date"
                 value={formatDate(employee.leave_date)}
@@ -161,7 +164,9 @@ const AboutPanel = ({ employee, loading, error }) => {
 const InfoRow = ({ label, value, multiline = false }) => {
   return (
     <div className="border-b border-gray-100 dark:border-zinc-800 pb-3 last:border-0">
-      <p className="text-sm font-semibold text-gray-500 dark:text-zinc-400 mb-1">{label}</p>
+      <p className="text-sm font-semibold text-gray-500 dark:text-zinc-400 mb-1">
+        {label}
+      </p>
       <p
         className={`text-gray-800 dark:text-zinc-200 font-medium ${
           multiline ? "whitespace-pre-line" : ""
@@ -179,7 +184,10 @@ const LoadingSkeleton = () => {
     <div className="max-w-6xl mx-auto px-4 py-6">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {[1, 2, 3, 4].map((i) => (
-          <div key={i} className="bg-white dark:bg-zinc-900 shadow-xl rounded-2xl p-6 border border-gray-200 dark:border-zinc-800">
+          <div
+            key={i}
+            className="bg-white dark:bg-zinc-900 shadow-xl rounded-2xl p-6 border border-gray-200 dark:border-zinc-800"
+          >
             <div className="flex items-center mb-5">
               <div className="w-10 h-10 bg-gray-200 dark:bg-zinc-700 rounded-lg animate-pulse mr-3" />
               <div className="h-6 bg-gray-200 dark:bg-zinc-700 rounded w-48 animate-pulse" />
@@ -207,7 +215,9 @@ const ErrorState = ({ message }) => {
         <div className="w-12 h-12 bg-red-100 dark:bg-red-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
           <Info className="w-6 h-6 text-red-600 dark:text-red-400" />
         </div>
-        <h3 className="text-lg font-semibold text-red-900 dark:text-red-400 mb-2">Error Loading Data</h3>
+        <h3 className="text-lg font-semibold text-red-900 dark:text-red-400 mb-2">
+          Error Loading Data
+        </h3>
         <p className="text-red-700 dark:text-red-300">{message}</p>
       </div>
     </div>
@@ -222,7 +232,9 @@ const EmptyState = ({ message }) => {
         <div className="w-12 h-12 bg-gray-200 dark:bg-zinc-700 rounded-full flex items-center justify-center mx-auto mb-4">
           <User className="w-6 h-6 text-gray-600 dark:text-zinc-400" />
         </div>
-        <h3 className="text-lg font-semibold text-gray-900 dark:text-zinc-100 mb-2">No Data</h3>
+        <h3 className="text-lg font-semibold text-gray-900 dark:text-zinc-100 mb-2">
+          No Data
+        </h3>
         <p className="text-gray-600 dark:text-zinc-400">{message}</p>
       </div>
     </div>

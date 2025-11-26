@@ -95,7 +95,7 @@ const attendanceRows = [
     time: "09:29 AM",
     status: "On Time",
     avatar: "/avatar6.png",
-  }
+  },
 ];
 
 export default function DashboardPage() {
@@ -133,7 +133,9 @@ export default function DashboardPage() {
         {/* Attendance Overview Chart Placeholder */}
         <div className="bg-white dark:bg-zinc-900 rounded-xl shadow p-6">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="font-semibold text-lg text-zinc-900 dark:text-zinc-100">Attendance Overview</h2>
+            <h2 className="font-semibold text-lg text-zinc-900 dark:text-zinc-100">
+              Attendance Overview
+            </h2>
             <div className="flex items-center gap-2">
               <select className="bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded px-2 py-1 text-sm text-zinc-900 dark:text-zinc-100">
                 <option>Today</option>
@@ -210,7 +212,9 @@ export default function DashboardPage() {
         {/* Attendance Table */}
         <div className="bg-white dark:bg-zinc-900 rounded-xl shadow p-6">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="font-semibold text-lg text-zinc-900 dark:text-zinc-100">Attendance Overview</h2>
+            <h2 className="font-semibold text-lg text-zinc-900 dark:text-zinc-100">
+              Attendance Overview
+            </h2>
             <button className="text-xs text-blue-600 dark:text-blue-400 font-medium">
               View All
             </button>
@@ -234,7 +238,10 @@ export default function DashboardPage() {
               </thead>
               <tbody className="text-zinc-700 dark:text-zinc-300">
                 {attendanceRows.map((row, i) => (
-                  <tr key={i} className="border-t border-zinc-100 dark:border-zinc-800">
+                  <tr
+                    key={i}
+                    className="border-t border-zinc-100 dark:border-zinc-800"
+                  >
                     <td className="py-2 px-3 flex items-center gap-2">
                       <img
                         src={row.avatar}
@@ -268,14 +275,18 @@ export default function DashboardPage() {
       <div className="w-full lg:w-auto flex-shrink-0 flex flex-col gap-6">
         <div className="bg-white dark:bg-zinc-900 rounded-xl shadow p-6 flex flex-col gap-4">
           <div className="flex items-center justify-between mb-2">
-            <h2 className="font-semibold text-lg text-zinc-900 dark:text-zinc-100">My Schedule</h2>
+            <h2 className="font-semibold text-lg text-zinc-900 dark:text-zinc-100">
+              My Schedule
+            </h2>
             <Calendar className="w-5 h-5 text-zinc-400 dark:text-zinc-500" />
           </div>
           {/* Calendar Placeholder */}
           <div className="flex justify-center mb-2">
             <div className="rounded-lg border border-zinc-200 dark:border-zinc-700 p-2 w-full">
               <div className="flex justify-between items-center mb-2">
-                <span className="text-sm font-medium text-zinc-900 dark:text-zinc-100">July, 2023</span>
+                <span className="text-sm font-medium text-zinc-900 dark:text-zinc-100">
+                  July, 2023
+                </span>
                 <div className="flex gap-1">
                   <button className="rounded p-1 hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-700 dark:text-zinc-300">
                     <span className="sr-only">Prev</span>&lt;
@@ -287,7 +298,10 @@ export default function DashboardPage() {
               </div>
               <div className="grid grid-cols-7 gap-1 text-xs text-center">
                 {["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"].map((d, i) => (
-                  <div key={i} className="font-medium text-zinc-400 dark:text-zinc-500">
+                  <div
+                    key={i}
+                    className="font-medium text-zinc-400 dark:text-zinc-500"
+                  >
                     {d}
                   </div>
                 ))}
@@ -311,7 +325,9 @@ export default function DashboardPage() {
           <div className="flex flex-col gap-2">
             {schedule.map((day, i) => (
               <div key={i} className="mb-2">
-                <div className="text-xs text-zinc-500 dark:text-zinc-400 mb-1">{day.day}</div>
+                <div className="text-xs text-zinc-500 dark:text-zinc-400 mb-1">
+                  {day.day}
+                </div>
                 {day.items.map((item, j) => (
                   <div key={j} className="flex items-center gap-2 mb-1">
                     <span className="text-xs text-zinc-400 dark:text-zinc-500 w-12">
@@ -343,14 +359,20 @@ function DashboardStat({ title, value, trend, date, negative }) {
         <span>{title}</span>
         <span
           className={`ml-auto text-xs font-semibold ${
-            negative ? "text-red-600 dark:text-red-400" : "text-green-600 dark:text-green-400"
+            negative
+              ? "text-red-600 dark:text-red-400"
+              : "text-green-600 dark:text-green-400"
           }`}
         >
           {trend}
         </span>
       </div>
-      <div className="text-2xl font-bold text-zinc-900 dark:text-zinc-100">{value}</div>
-      <div className="text-xs text-zinc-400 dark:text-zinc-500">Update: {date}</div>
+      <div className="text-2xl font-bold text-zinc-900 dark:text-zinc-100">
+        {value}
+      </div>
+      <div className="text-xs text-zinc-400 dark:text-zinc-500">
+        Update: {date}
+      </div>
     </div>
   );
 }

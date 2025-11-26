@@ -27,7 +27,7 @@ const TasksPanel = ({ employeeId, isActive }) => {
       // Check if employee ID is in the assigned employees array
       // Handle both object format {id: X} and number format X
       return task.assigned_employees.some((emp) => {
-        const empId = typeof emp === 'object' && emp !== null ? emp.id : emp;
+        const empId = typeof emp === "object" && emp !== null ? emp.id : emp;
         return String(empId) === String(employeeId);
       });
     });
@@ -54,7 +54,10 @@ const TasksPanel = ({ employeeId, isActive }) => {
 
   if (employeeTasks.length === 0 && hasLoaded) {
     return (
-      <EmptyState message="No tasks assigned to this employee" icon={Briefcase} />
+      <EmptyState
+        message="No tasks assigned to this employee"
+        icon={Briefcase}
+      />
     );
   }
 

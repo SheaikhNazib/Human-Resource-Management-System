@@ -77,8 +77,16 @@ export default function Sidebar({ open, onClose }) {
             label: "Admin access",
             icon: Wallet,
             children: [
-              { href: "/admin-access-management/add-user", label: "Add User", icon: Users },
-              { href: "/admin-access-management/user-role", label: "User Role", icon: Users },
+              {
+                href: "/admin-access-management/add-user",
+                label: "Add User",
+                icon: Users,
+              },
+              {
+                href: "/admin-access-management/user-role",
+                label: "User Role",
+                icon: Users,
+              },
             ],
           },
         ]
@@ -88,7 +96,8 @@ export default function Sidebar({ open, onClose }) {
   // Shared classes for consistency between top-level and nested items
   const baseItemClass =
     "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors text-zinc-700 dark:text-zinc-300 hover:bg-blue-50 dark:hover:bg-blue-900/20 hover:text-blue-700 dark:hover:text-blue-400";
-  const activeClass = "bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 border-l-4 border-blue-500 dark:border-blue-400";
+  const activeClass =
+    "bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 border-l-4 border-blue-500 dark:border-blue-400";
 
   return (
     <aside
@@ -133,7 +142,9 @@ export default function Sidebar({ open, onClose }) {
                   <div className="flex items-center gap-3">
                     <Icon
                       className={`w-5 h-5 ${
-                        parentActive ? "text-blue-600 dark:text-blue-400" : "text-zinc-400 dark:text-zinc-500"
+                        parentActive
+                          ? "text-blue-600 dark:text-blue-400"
+                          : "text-zinc-400 dark:text-zinc-500"
                       }`}
                     />
                     <span className="text-sm flex-1 truncate">{label}</span>
@@ -187,7 +198,9 @@ export default function Sidebar({ open, onClose }) {
             >
               <Icon
                 className={`w-5 h-5 ${
-                  pathname === href ? "text-blue-600 dark:text-blue-400" : "text-zinc-400 dark:text-zinc-500"
+                  pathname === href
+                    ? "text-blue-600 dark:text-blue-400"
+                    : "text-zinc-400 dark:text-zinc-500"
                 }`}
               />
               <span className="flex-1 truncate">{label}</span>
