@@ -89,6 +89,31 @@ export default function LeavesPage() {
       },
     },
     {
+      header: "Leave Type",
+      accessor: "leaveType",
+      render: (leave) => {
+        const reason = leave.reason || leave.raw?.reason || "";
+        let type = "Casual";
+        let colorClass = "bg-blue-100 text-blue-800 dark:bg-blue-900/20 dark:text-blue-400";
+        
+        if (reason.startsWith("Sick Leave")) {
+          type = "Sick";
+          colorClass = "bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400";
+        } else if (reason.startsWith("Annual Leave")) {
+          type = "Annual";
+          colorClass = "bg-purple-100 text-purple-800 dark:bg-purple-900/20 dark:text-purple-400";
+        } else if (reason.startsWith("Casual Leave")) {
+          type = "Casual";
+        }
+        
+        return (
+          <span className={`inline-flex px-2.5 py-0.5 rounded-full text-xs font-semibold ${colorClass}`}>
+            {type}
+          </span>
+        );
+      },
+    },
+    {
       header: "Status",
       accessor: "status",
       render: (leave) => {
@@ -103,13 +128,22 @@ export default function LeavesPage() {
       },
     },
     {
-      header: "Reason",
+      header: "Notes",
       accessor: "reason",
-      render: (leave) => (
-        <div className="text-sm text-zinc-600 dark:text-zinc-300 max-w-xs truncate">
-          {leave.reason || leave.raw?.reason || "—"}
-        </div>
-      ),
+      render: (leave) => {
+        const reason = leave.reason || leave.raw?.reason || "";
+        // Extract notes part after leave type prefix
+        let displayText = reason;
+        if (reason.startsWith("Casual Leave") || reason.startsWith("Sick Leave") || reason.startsWith("Annual Leave")) {
+          displayText = reason.replace(/^(Casual|Sick|Annual) Leave[\s-]*/, "").trim();
+        }
+        
+        return (
+          <div className="text-sm text-zinc-600 dark:text-zinc-300 max-w-xs truncate">
+            {displayText || "—"}
+          </div>
+        );
+      },
     },
   ];
 
