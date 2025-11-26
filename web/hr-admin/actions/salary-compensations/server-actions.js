@@ -40,12 +40,16 @@ export async function getSalaryCompensationsList() {
             id: item.id,
             employeeId: empId,
             employeeName,
-            amount: item.amount || item.compensation_amount || 0,
-            currency: item.currency || item.currency_code || "",
-            type: item.compensation_type || item.type || "",
+            baseSalary: parseFloat(item.base_salary) || 0,
+            bonus: parseFloat(item.bonus) || 0,
+            allowance: parseFloat(item.allowance) || 0,
+            deduction: parseFloat(item.deduction) || 0,
+            netSalary: parseFloat(item.net_salary) || 0,
+            payableDate: item.payable_date || item.payableDate || null,
             effectiveDate: item.effective_date || item.effectiveDate || null,
-            notes: item.note || item.notes || "",
+            remarks: item.remarks || item.note || "",
             createdAt: item.created_at || item.createdAt || null,
+            updatedAt: item.updated_at || item.updatedAt || null,
             raw: item,
           };
         })
@@ -87,12 +91,16 @@ export async function getSalaryCompensationById(id) {
       id: item.id,
       employeeId: empId,
       employeeName,
-      amount: item.amount || item.compensation_amount || 0,
-      currency: item.currency || item.currency_code || "",
-      type: item.compensation_type || item.type || "",
+      baseSalary: parseFloat(item.base_salary) || 0,
+      bonus: parseFloat(item.bonus) || 0,
+      allowance: parseFloat(item.allowance) || 0,
+      deduction: parseFloat(item.deduction) || 0,
+      netSalary: parseFloat(item.net_salary) || 0,
+      payableDate: item.payable_date || item.payableDate || null,
       effectiveDate: item.effective_date || item.effectiveDate || null,
-      notes: item.note || item.notes || "",
+      remarks: item.remarks || item.note || "",
       createdAt: item.created_at || item.createdAt || null,
+      updatedAt: item.updated_at || item.updatedAt || null,
       raw: item,
     };
 
@@ -107,11 +115,14 @@ export async function createSalaryCompensation(compData) {
   try {
     const payload = {
       employee: compData.employee || compData.employeeId || compData.employee_id,
-      amount: compData.amount,
-      compensation_type: compData.type || compData.compensation_type,
+      base_salary: parseFloat(compData.baseSalary || compData.base_salary || 0),
+      bonus: parseFloat(compData.bonus || 0),
+      allowance: parseFloat(compData.allowance || 0),
+      deduction: parseFloat(compData.deduction || 0),
+      net_salary: parseFloat(compData.netSalary || compData.net_salary || 0),
+      payable_date: compData.payableDate || compData.payable_date,
       effective_date: compData.effectiveDate || compData.effective_date,
-      note: compData.notes || compData.note || "",
-      currency: compData.currency || compData.currency_code || undefined,
+      remarks: compData.remarks || compData.note || "",
     };
 
     const response = await fetchFromApi(Api_path.EMPLOYEE_SALARY_COMPENSATIONS.CREATE, {
@@ -139,11 +150,14 @@ export async function updateSalaryCompensation(id, compData) {
   try {
     const payload = {
       employee: compData.employee || compData.employeeId || compData.employee_id,
-      amount: compData.amount,
-      compensation_type: compData.type || compData.compensation_type,
+      base_salary: parseFloat(compData.baseSalary || compData.base_salary || 0),
+      bonus: parseFloat(compData.bonus || 0),
+      allowance: parseFloat(compData.allowance || 0),
+      deduction: parseFloat(compData.deduction || 0),
+      net_salary: parseFloat(compData.netSalary || compData.net_salary || 0),
+      payable_date: compData.payableDate || compData.payable_date,
       effective_date: compData.effectiveDate || compData.effective_date,
-      note: compData.notes || compData.note || "",
-      currency: compData.currency || compData.currency_code || undefined,
+      remarks: compData.remarks || compData.note || "",
     };
 
     const response = await fetchFromApi(Api_path.EMPLOYEE_SALARY_COMPENSATIONS.UPDATE(id), {
