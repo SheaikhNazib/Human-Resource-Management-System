@@ -24,9 +24,21 @@ const TaskItem = ({ task }) => {
 
   const getStatusConfig = (statusId) => {
     const statusMap = {
-      1: { label: "To Do", color: "bg-gray-100 text-gray-800", icon: AlertCircle },
-      2: { label: "In Progress", color: "bg-blue-100 text-blue-800", icon: Clock },
-      3: { label: "Done", color: "bg-green-100 text-green-800", icon: CheckCircle2 },
+      1: {
+        label: "To Do",
+        color: "bg-gray-100 text-gray-800",
+        icon: AlertCircle,
+      },
+      2: {
+        label: "In Progress",
+        color: "bg-blue-100 text-blue-800",
+        icon: Clock,
+      },
+      3: {
+        label: "Done",
+        color: "bg-green-100 text-green-800",
+        icon: CheckCircle2,
+      },
     };
     return statusMap[statusId] || statusMap[1];
   };
@@ -41,7 +53,7 @@ const TaskItem = ({ task }) => {
   return (
     <div
       onClick={handleClick}
-      className="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md transition-all cursor-pointer group"
+      className="bg-white dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 rounded-lg p-4 hover:shadow-md transition-all cursor-pointer group"
     >
       <div className="flex items-start justify-between mb-3">
         <h3 className="text-lg font-semibold text-gray-900 group-hover:text-blue-600 transition-colors flex-1">
