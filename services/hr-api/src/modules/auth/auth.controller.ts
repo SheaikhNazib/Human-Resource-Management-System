@@ -49,7 +49,7 @@ export class AuthController {
       const access_token = this.jwtService.sign({ id: user.id, role: loginDto.role });
       const userResponse = {
         id: user.id,
-        email: user.email,
+        email: user.email, 
         role: user.role
       };
       return res.status(HttpStatus.OK).json({
