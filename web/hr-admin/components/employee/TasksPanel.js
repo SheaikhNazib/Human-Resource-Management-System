@@ -27,7 +27,7 @@ const TasksPanel = ({ employeeId, isActive }) => {
       // Check if employee ID is in the assigned employees array
       // Handle both object format {id: X} and number format X
       return task.assigned_employees.some((emp) => {
-        const empId = typeof emp === 'object' && emp !== null ? emp.id : emp;
+        const empId = typeof emp === "object" && emp !== null ? emp.id : emp;
         return String(empId) === String(employeeId);
       });
     });
@@ -54,7 +54,10 @@ const TasksPanel = ({ employeeId, isActive }) => {
 
   if (employeeTasks.length === 0 && hasLoaded) {
     return (
-      <EmptyState message="No tasks assigned to this employee" icon={Briefcase} />
+      <EmptyState
+        message="No tasks assigned to this employee"
+        icon={Briefcase}
+      />
     );
   }
 
@@ -91,7 +94,7 @@ const TasksPanel = ({ employeeId, isActive }) => {
 const LoadingSkeleton = () => {
   return (
     <div className="max-w-6xl mx-auto px-4 py-6">
-      <div className="h-8 bg-gray-200 rounded w-48 mb-6 animate-pulse" />
+      <div className="h-8 bg-gray-200 dark:bg-zinc-700 rounded w-48 mb-6 animate-pulse" />
       <div className="space-y-4">
         {[1, 2, 3].map((i) => (
           <div
@@ -136,8 +139,8 @@ const ErrorState = ({ message }) => {
 const EmptyState = ({ message, icon: Icon }) => {
   return (
     <div className="max-w-6xl mx-auto px-4 py-12">
-      <div className="bg-gray-50 border border-gray-200 rounded-lg p-8 text-center">
-        <div className="w-16 h-16 bg-gray-200 rounded-full flex items-center justify-center mx-auto mb-4">
+      <div className="bg-gray-50 dark:bg-zinc-900/50 border border-gray-200 dark:border-zinc-800 rounded-lg p-8 text-center">
+        <div className="w-16 h-16 bg-gray-200 dark:bg-zinc-700 rounded-full flex items-center justify-center mx-auto mb-4">
           <Icon className="w-8 h-8 text-gray-600" />
         </div>
         <h3 className="text-lg font-semibold text-gray-900 mb-2">No Tasks</h3>

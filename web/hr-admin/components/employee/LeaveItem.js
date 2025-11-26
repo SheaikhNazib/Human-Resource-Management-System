@@ -1,7 +1,16 @@
 "use client";
 
 import React from "react";
-import { Calendar, FileText, CheckCircle2, XCircle, Clock, Heart, Briefcase, Plane } from "lucide-react";
+import {
+  Calendar,
+  FileText,
+  CheckCircle2,
+  XCircle,
+  Clock,
+  Heart,
+  Briefcase,
+  Plane,
+} from "lucide-react";
 
 /**
  * LeaveItem - Individual leave display component
@@ -58,40 +67,61 @@ const LeaveItem = ({ leave, inferLeaveType }) => {
 
   // Extract leave type and notes from reason field
   const parseReason = () => {
-    if (!leave.reason) return { type: 'casual', displayReason: '' };
-    
+    if (!leave.reason) return { type: "casual", displayReason: "" };
+
     const reason = leave.reason;
-    
+
     // Check if reason starts with leave type label
-    if (reason.startsWith('Casual Leave')) {
-      const notes = reason.replace('Casual Leave', '').replace(/^[\s-]+/, '').trim();
-      return { type: 'casual', displayReason: notes };
+    if (reason.startsWith("Casual Leave")) {
+      const notes = reason
+        .replace("Casual Leave", "")
+        .replace(/^[\s-]+/, "")
+        .trim();
+      return { type: "casual", displayReason: notes };
     }
-    if (reason.startsWith('Sick Leave')) {
-      const notes = reason.replace('Sick Leave', '').replace(/^[\s-]+/, '').trim();
-      return { type: 'sick', displayReason: notes };
+    if (reason.startsWith("Sick Leave")) {
+      const notes = reason
+        .replace("Sick Leave", "")
+        .replace(/^[\s-]+/, "")
+        .trim();
+      return { type: "sick", displayReason: notes };
     }
-    if (reason.startsWith('Annual Leave')) {
-      const notes = reason.replace('Annual Leave', '').replace(/^[\s-]+/, '').trim();
-      return { type: 'annual', displayReason: notes };
+    if (reason.startsWith("Annual Leave")) {
+      const notes = reason
+        .replace("Annual Leave", "")
+        .replace(/^[\s-]+/, "")
+        .trim();
+      return { type: "annual", displayReason: notes };
     }
-    
+
     // Fallback to inference function or full reason
-    const inferredType = inferLeaveType ? inferLeaveType(reason) : 'casual';
+    const inferredType = inferLeaveType ? inferLeaveType(reason) : "casual";
     return { type: inferredType, displayReason: reason };
   };
 
   const { type: leaveType, displayReason } = parseReason();
-  
+
   const getLeaveTypeConfig = (type) => {
     const normalizedType = String(type).toLowerCase();
-    if (normalizedType.includes('sick')) {
-      return { label: "Sick Leave", color: "bg-green-100 text-green-800", icon: Heart };
+    if (normalizedType.includes("sick")) {
+      return {
+        label: "Sick Leave",
+        color: "bg-green-100 text-green-800",
+        icon: Heart,
+      };
     }
-    if (normalizedType.includes('annual')) {
-      return { label: "Annual Leave", color: "bg-purple-100 text-purple-800", icon: Plane };
+    if (normalizedType.includes("annual")) {
+      return {
+        label: "Annual Leave",
+        color: "bg-purple-100 text-purple-800",
+        icon: Plane,
+      };
     }
-    return { label: "Casual Leave", color: "bg-blue-100 text-blue-800", icon: Briefcase };
+    return {
+      label: "Casual Leave",
+      color: "bg-blue-100 text-blue-800",
+      icon: Briefcase,
+    };
   };
 
   const leaveTypeConfig = getLeaveTypeConfig(leaveType);
@@ -109,11 +139,13 @@ const LeaveItem = ({ leave, inferLeaveType }) => {
   const duration = calculateDuration();
 
   return (
-    <div className="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md transition-all">
+    <div className="bg-white dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 rounded-lg p-4 hover:shadow-md transition-all">
       <div className="flex items-start justify-between mb-3">
         <div className="flex-1">
           <div className="flex items-center space-x-2 mb-2">
-            <span className={`inline-flex items-center space-x-1 px-2.5 py-0.5 rounded-full text-xs font-semibold ${leaveTypeConfig.color}`}>
+            <span
+              className={`inline-flex items-center space-x-1 px-2.5 py-0.5 rounded-full text-xs font-semibold ${leaveTypeConfig.color}`}
+            >
               <LeaveTypeIcon className="w-3 h-3" />
               <span>{leaveTypeConfig.label}</span>
             </span>
@@ -149,7 +181,9 @@ const LeaveItem = ({ leave, inferLeaveType }) => {
         <div className="border-t border-gray-100 pt-3">
           <div className="flex items-start space-x-2">
             <FileText className="w-4 h-4 text-gray-400 mt-0.5" />
-            <p className="text-sm text-gray-600 line-clamp-2">{displayReason}</p>
+            <p className="text-sm text-gray-600 line-clamp-2">
+              {displayReason}
+            </p>
           </div>
         </div>
       )}
