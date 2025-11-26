@@ -1,6 +1,6 @@
 import React from "react";
 import { fetchFromApi } from "@/lib/axios";
-import { Department_path } from "@/constant/api-path";
+import { Api_path } from "@/constant/api-path";
 import Link from "next/link";
 
 export default async function DepartmentDetailPage({ params } = {}) {
@@ -31,7 +31,7 @@ export default async function DepartmentDetailPage({ params } = {}) {
 
   try {
     const res = await fetchFromApi(
-      Department_path.GET_ONE(encodeURIComponent(id))
+      Api_path.DEPARTMENT.GET_ONE(encodeURIComponent(id))
     );
     const body = res?.data ?? res;
 

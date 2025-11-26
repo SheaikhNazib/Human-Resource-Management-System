@@ -41,7 +41,6 @@ export const Api_path = {
     DELETE: (itemId) => `/api/v1/task-work-items/${itemId}`,
     GET_ONE: (itemId) => `/api/v1/task-work-items/${itemId}`,
   },
-
   EMPLOYEE_LEAVE: {
     LIST: "/api/v1/emp-leaves",
     CREATE: "/api/v1/emp-leaves",
@@ -66,5 +65,3 @@ export const Api_path = {
 
   
 };
-
-// Note: `Department_path` contains all department endpoint helpers.

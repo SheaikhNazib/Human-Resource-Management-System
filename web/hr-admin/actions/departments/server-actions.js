@@ -1,11 +1,11 @@
 "use server";
 
 import { fetchFromApi } from "@/lib/axios";
-import { Department_path } from "@/constant/api-path";
+import { Api_path } from "@/constant/api-path";
 
 export async function getDepartmentsList() {
   try {
-    const response = await fetchFromApi(Department_path.LIST);
+    const response = await fetchFromApi(Api_path.DEPARTMENT.LIST);
     const body = response?.data ?? response;
     let rawList = [];
     if (Array.isArray(body)) {
@@ -54,7 +54,7 @@ export async function getDepartmentsList() {
 
 export async function createDepartment(data) {
   try {
-    const response = await fetchFromApi(Department_path.LIST, {
+    const response = await fetchFromApi(Api_path.DEPARTMENT.LIST, {
       method: "POST",
       data: {
         name: data.name,
@@ -70,7 +70,7 @@ export async function createDepartment(data) {
 
 export async function updateDepartment(id, data) {
   try {
-    const response = await fetchFromApi(`${Department_path.LIST}/${id}`, {
+    const response = await fetchFromApi(`${Api_path.DEPARTMENT.LIST}/${id}`, {
       method: "PATCH",
       data: {
         name: data.name,
@@ -86,7 +86,7 @@ export async function updateDepartment(id, data) {
 
 export async function deleteDepartment(id) {
   try {
-    const response = await fetchFromApi(`${Department_path.LIST}/${id}`, {
+    const response = await fetchFromApi(`${Api_path.DEPARTMENT.LIST}/${id}`, {
       method: "DELETE",
     });
     return { success: true, data: response?.data ?? response };
@@ -98,7 +98,7 @@ export async function deleteDepartment(id) {
 
 export async function getDepartment(id) {
   try {
-    const endpoint = `${Department_path.LIST}/${id}`;
+    const endpoint = `${Api_path.DEPARTMENT.LIST}/${id}`;
     const response = await fetchFromApi(endpoint);
     const body = response?.data ?? response;
     // Try to extract the department object from known shapes
