@@ -3,11 +3,14 @@ import {
   Building2,
   Calendar,
   CalendarCheck,
+  CalendarDays,
   FileText,
   LayoutDashboard,
   LogOut,
   Users,
   Wallet,
+  DollarSign,
+  CreditCard,
   ChevronDown,
 } from "lucide-react";
 import Link from "next/link";
@@ -57,10 +60,22 @@ export default function Sidebar({ open, onClose }) {
         {
           href: "/attendance-records",
           label: "Attendance Records",
-          icon: CalendarCheck,
+          icon: CalendarDays,
         },
         { href: "/leaves", label: "Leaves", icon: FileText },
         { href: "/performance", label: "Performance", icon: Wallet },
+      ],
+    },
+
+    {
+      label: "Salary Compensation",
+      icon: DollarSign,
+      children: [
+        {
+          href: "/salary-list",
+          label: "Salary List",
+          icon: CreditCard,
+        },
       ],
     },
 
@@ -77,8 +92,16 @@ export default function Sidebar({ open, onClose }) {
             label: "Admin access",
             icon: Wallet,
             children: [
-              { href: "/admin-access-management/add-user", label: "Add User", icon: Users },
-              { href: "/admin-access-management/user-role", label: "User Role", icon: Users },
+              {
+                href: "/admin-access-management/add-user",
+                label: "Add User",
+                icon: Users,
+              },
+              {
+                href: "/admin-access-management/user-role",
+                label: "User Role",
+                icon: Users,
+              },
             ],
           },
         ]
