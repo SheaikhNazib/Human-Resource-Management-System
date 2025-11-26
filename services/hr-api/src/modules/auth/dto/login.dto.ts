@@ -4,11 +4,6 @@ import { EmpJobTitles } from 'src/models/emp_job_titles.entity';
 import { Roles } from 'src/common/guards/roles.enum';
 
 export class LoginDto {
-  @ApiProperty({ example: Roles.SUPER_ADMIN })
-  @IsNotEmpty()
-  @IsEnum(Roles)
-  role: Roles;
-
   @ApiProperty({ example: 'super_admin@gmail.com' })
   @IsNotEmpty()
   @IsString()

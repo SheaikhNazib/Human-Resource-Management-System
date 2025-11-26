@@ -24,7 +24,7 @@ export class UsersController {
     @ApiResponse({ status: 201, description: 'User created' })
     async create(@Body() createDto: CreateUserDto, @Res() res: Response) {
         try {
-            const user = await this.usersService.findOneByEmailAndRole(createDto.email, createDto.role);
+            const user = await this.usersService.findOneByEmail(createDto.email);
             if (user) {
                 return res.status(HttpStatus.BAD_REQUEST).json({
                     success: false, data: null, message: 'User already exists!'
@@ -90,6 +90,22 @@ export class UsersController {
     @ApiResponse({ status: 200, description: 'User updated' })
     async update(@Param('id') id: number, @Body() updateDto: UpdateUserDto, @Res() res: Response) {
         try {
+            const user = await this.usersService.findOne(id);
+            if(!user) {
+                return res.status(HttpStatus.NOT_FOUND).json({
+                    success: false, data: null, message: 'User not found!'
+                });
+            }
+            if(updateDto.email && updateDto.email !== user.email) {
+                const userByEmail = await this.usersService.findOneByEmail(updateDto.email);
+                if(userByEmail) {
+                    return res.status(HttpStatus.BAD_REQUEST).json({
+                        success: false, data: null, message: 'User already exists!'
+                    });
+                }
+            }
+            if(updateDto.password) updateDto.password = await bcrypt.hash(updateDto.password, 10);
+            
             const updatedUser = await this.usersService.update(id, updateDto);
             if (!updatedUser) {
                 return res.status(HttpStatus.NOT_FOUND).json({
