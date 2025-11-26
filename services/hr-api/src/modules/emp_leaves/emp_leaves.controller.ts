@@ -1,10 +1,14 @@
-import { Controller, Get, Post, Body, Param, Patch, Delete } from '@nestjs/common';
+import { Controller, Get, Post, Body, Param, Patch, Delete, UseGuards } from '@nestjs/common';
 import { EmpLeavesService } from './emp_leaves.service';
 import { CreateEmpLeaveDto } from './dto/create.dto';
 import { UpdateEmpLeaveDto } from './dto/update.dto';
-import { ApiTags, ApiCreatedResponse, ApiBody } from '@nestjs/swagger';
+import { ApiTags, ApiCreatedResponse, ApiBody, ApiBearerAuth } from '@nestjs/swagger';
+import { JwtAuthGuard } from 'src/common/guards/jwt-auth.guard';
+import { RolesGuard } from 'src/common/guards/roles.guard';
 
 @ApiTags('EmpLeaves')
+@UseGuards(JwtAuthGuard, RolesGuard)
+@ApiBearerAuth('JWT-auth')
 @Controller('emp-leaves')
 export class EmpLeavesController {
   constructor(private readonly service: EmpLeavesService) {}

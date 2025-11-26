@@ -31,10 +31,21 @@ export class EmpDepartmentsService {
     };
   }
 
-  async findAll() {
-    const data = await this.repo.find();
+  async findAll(page: number, limit: number, sortBy: string, sortOrder: string = 'asc'): Promise<any> {
+    const allTotal = await this.repo.count();
+    const totalPages = Math.ceil(allTotal / limit);
+    
+    // ASC = newest first (DESC order), DESC = oldest first (ASC order)
+    const orderDirection = sortOrder.toLowerCase() === 'asc' ? 'DESC' : 'ASC';
+    
+    const data = await this.repo.find({ skip: (page - 1) * limit, take: limit, order: { [sortBy]: orderDirection } });
     return {
-      message: data.length > 0 ? 'Departments fetched successfully.' : 'No departments found.',
+      metaData: {
+        page: +page || 1,
+        limit: +limit || 10,
+        allTotal: +allTotal || 0,
+        totalPages: +totalPages || 0,
+      },
       data,
     };
   }

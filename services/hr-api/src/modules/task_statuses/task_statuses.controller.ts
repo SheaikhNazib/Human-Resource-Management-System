@@ -1,10 +1,14 @@
-import { Controller, Get, Post, Body, Param, Delete, Patch } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiBody, ApiParam } from '@nestjs/swagger';
+import { Controller, Get, Post, Body, Param, Delete, Patch, UseGuards } from '@nestjs/common';
+import { ApiTags, ApiOperation, ApiResponse, ApiBody, ApiParam, ApiBearerAuth } from '@nestjs/swagger';
 import { TaskStatusesService } from './task_statuses.service';
 import { CreateTaskStatusDto } from './dto/create.dto';
 import { UpdateTaskStatusDto } from './dto/update.dto';
+import { JwtAuthGuard } from 'src/common/guards/jwt-auth.guard';
+import { RolesGuard } from 'src/common/guards/roles.guard';
 
 @ApiTags('TaskStatuses')
+@UseGuards(JwtAuthGuard, RolesGuard)
+@ApiBearerAuth('JWT-auth')
 @Controller('task-statuses')
 export class TaskStatusesController {
   constructor(private readonly taskStatusesService: TaskStatusesService) {}

@@ -1,11 +1,15 @@
 
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiBody, ApiParam } from '@nestjs/swagger';
+import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards } from '@nestjs/common';
+import { ApiTags, ApiOperation, ApiResponse, ApiBody, ApiParam, ApiBearerAuth } from '@nestjs/swagger';
 import { CreateEmpSalaryCompensationDto } from './dto/create.dto';
 import { UpdateEmpSalaryCompensationDto } from './dto/update.dto';
 import { EmpSalaryCompensationsService } from './emp_salary_compensations.service';
+import { RolesGuard } from 'src/common/guards/roles.guard';
+import { JwtAuthGuard } from 'src/common/guards/jwt-auth.guard';
 
 @ApiTags('EmployeeSalaryCompensations')
+@UseGuards(JwtAuthGuard, RolesGuard)
+@ApiBearerAuth('JWT-auth')
 @Controller('emp-salary-compensations')
 export class EmpSalaryCompensationsController {
   constructor(private readonly empSalaryCompensationsService: EmpSalaryCompensationsService) {}

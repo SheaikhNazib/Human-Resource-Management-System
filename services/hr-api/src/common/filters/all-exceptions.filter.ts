@@ -4,15 +4,33 @@ import {
   ArgumentsHost,
   HttpException,
   HttpStatus,
+  BadRequestException,
+  UnauthorizedException,
+  ForbiddenException,
+  NotFoundException,
 } from '@nestjs/common';
-import { Request, Response } from 'express';
+import { Response } from 'express';
 
 @Catch()
 export class AllExceptionsFilter implements ExceptionFilter {
   catch(exception: unknown, host: ArgumentsHost) {
     const ctx = host.switchToHttp();
     const response = ctx.getResponse<Response>();
-    const request = ctx.getRequest<Request>();
+
+    // Skip if response has already been sent by a specific filter
+    if (response.headersSent || response.writableEnded) {
+      return;
+    }
+
+    // Skip if exception is already handled by custom filters
+    if (
+      exception instanceof BadRequestException ||
+      exception instanceof UnauthorizedException ||
+      exception instanceof ForbiddenException ||
+      exception instanceof NotFoundException
+    ) {
+      return; // Let the specific filters handle these
+    }
 
     let status = HttpStatus.INTERNAL_SERVER_ERROR;
     let message = 'Internal server error';
@@ -32,13 +50,6 @@ export class AllExceptionsFilter implements ExceptionFilter {
       }
     }
 
-    response.status(status).json({
-      status_code: status,
-      message,
-      error,
-      data,
-      path: request.url,
-      timestamp: new Date().toISOString(),
-    });
+    response.status(status).json({success: false, data: null, message});
   }
 }

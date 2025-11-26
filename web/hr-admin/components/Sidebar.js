@@ -14,8 +14,11 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
 import { IdCardLanyard } from "lucide-react";
+import { useAuthContext } from "@/contexts/AuthContext";
+import { toast } from "sonner";
 
 export default function Sidebar({ open, onClose }) {
+  const { user, logout } = useAuthContext();
   const [collapsed, setCollapsed] = useState(false);
   const [openMenus, setOpenMenus] = useState({});
   const pathname = usePathname();
@@ -180,27 +183,39 @@ export default function Sidebar({ open, onClose }) {
       </nav>
       <div className="mt-auto pt-8 border-t border-zinc-200 dark:border-zinc-800 flex flex-col items-center">
         {/* Profile section */}
-        {!collapsed && (
+        {!collapsed && user && (
           <div className="flex flex-col items-center mb-4">
             <img
-              src="/avatar.png"
-              alt="Admin Avatar"
+              src={user.avatar || "/avatar.png"}
+              alt="User Avatar"
               className="w-10 h-10 rounded-full border border-zinc-300 dark:border-zinc-700 mb-2"
             />
-            <span className="text-xs text-zinc-600 dark:text-zinc-300">
-              Admin
+            <span className="text-xs text-zinc-600 dark:text-zinc-300 truncate max-w-full px-2">
+              {user.first_name && user.last_name
+                ? `${user.first_name} ${user.last_name}`
+                : user.name || user.email || "User"}
             </span>
           </div>
         )}
         <button
-          href="/login"
+          onClick={async () => {
+            toast.loading("Logging out...");
+            try {
+              await logout();
+              toast.dismiss();
+              toast.success("Logged out successfully");
+            } catch (error) {
+              toast.dismiss();
+              toast.error("Failed to logout");
+            }
+          }}
           className={`w-full flex items-center gap-2 text-left text-zinc-500 hover:text-red-500 transition-colors ${
             collapsed ? "justify-center" : ""
           }`}
+          title="Logout"
         >
           <LogOut className="w-5 h-5" />
           {!collapsed && "Logout"}
-          {/* Optionally add a profile/logout section here if needed */}
         </button>
       </div>
     </aside>
