@@ -4,6 +4,8 @@ import React, { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { getSalaryCompensationById } from "@/actions/salary-compensations/server-actions";
 import { getEmployeeById } from "@/actions/employees/server-actions";
+import { getLeavesList } from "@/actions/leaves/server-actions";
+import { getAttendancesList } from "@/actions/attendances/server-actions";
 import {
   AlertCircle,
   ChevronLeft,
@@ -17,9 +19,17 @@ import {
   Award,
   Plus,
   Minus,
+  Clock,
+  CalendarX,
 } from "lucide-react";
 import Loader from "@/components/ui/Loader";
 import { toast } from "sonner";
+import {
+  calculateTotalDeduction,
+  getApprovedLeaveDays,
+  getMonthlyAttendance,
+  calculateLateDeduction,
+} from "@/lib/salary-calculations";
 
 const SalaryCompensationViewPage = () => {
   const params = useParams();
@@ -28,6 +38,13 @@ const SalaryCompensationViewPage = () => {
   const [employee, setEmployee] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [deductionBreakdown, setDeductionBreakdown] = useState({
+    leaveDeduction: 0,
+    leaveDays: 0,
+    attendanceDeduction: 0,
+    lateAttendances: [],
+    otherDeduction: 0,
+  });
 
   useEffect(() => {
     const fetchData = async () => {
@@ -37,21 +54,76 @@ const SalaryCompensationViewPage = () => {
       setError(null);
 
       try {
-        const response = await getSalaryCompensationById(params.id);
+        const [compResponse, leavesResponse, attendancesResponse] = await Promise.all([
+          getSalaryCompensationById(params.id),
+          getLeavesList(),
+          getAttendancesList(),
+        ]);
 
-        if (response.success) {
-          setCompensation(response.data);
+        if (compResponse.success) {
+          setCompensation(compResponse.data);
           
           // Fetch employee details if employeeId is available
-          if (response.data.employeeId) {
-            const empResponse = await getEmployeeById(response.data.employeeId);
+          if (compResponse.data.employeeId) {
+            const empResponse = await getEmployeeById(compResponse.data.employeeId);
             if (empResponse.success) {
               setEmployee(empResponse.data);
             }
+
+            // Calculate deduction breakdown
+            if (compResponse.data.effectiveDate) {
+              const date = new Date(compResponse.data.effectiveDate);
+              const month = date.getMonth() + 1;
+              const year = date.getFullYear();
+
+              const leaves = leavesResponse.success ? leavesResponse.data : [];
+              const attendances = attendancesResponse.success ? attendancesResponse.data : [];
+
+              // Get approved leave days
+              const leaveDays = getApprovedLeaveDays(leaves, compResponse.data.employeeId, month, year);
+
+              // Get attendance records
+              const monthlyAttendance = getMonthlyAttendance(attendances, compResponse.data.employeeId, month, year);
+
+              // Calculate deductions
+              const deductions = calculateTotalDeduction(
+                compResponse.data.baseSalary,
+                leaveDays,
+                monthlyAttendance
+              );
+
+              // Find late attendances
+              const lateAttendances = monthlyAttendance
+                .map(att => {
+                  const checkIn = att.checkIn || att.check_in || att.checkInTime;
+                  const lateDeduction = calculateLateDeduction(compResponse.data.baseSalary, checkIn);
+                  if (lateDeduction > 0) {
+                    return {
+                      date: att.date,
+                      checkIn,
+                      deduction: lateDeduction,
+                    };
+                  }
+                  return null;
+                })
+                .filter(Boolean);
+
+              // Calculate other deductions (manual deductions not from leave/attendance)
+              const autoDeduction = deductions.leaveDeduction + deductions.attendanceDeduction;
+              const otherDeduction = Math.max(0, compResponse.data.deduction - autoDeduction);
+
+              setDeductionBreakdown({
+                leaveDeduction: deductions.leaveDeduction,
+                leaveDays,
+                attendanceDeduction: deductions.attendanceDeduction,
+                lateAttendances,
+                otherDeduction,
+              });
+            }
           }
         } else {
-          setError(response.error || "Failed to fetch salary compensation details");
-          toast.error(response.error || "Failed to fetch salary compensation details");
+          setError(compResponse.error || "Failed to fetch salary compensation details");
+          toast.error(compResponse.error || "Failed to fetch salary compensation details");
         }
       } catch (err) {
         setError(err.message || "An unexpected error occurred");
@@ -89,6 +161,55 @@ const SalaryCompensationViewPage = () => {
     const first = employee.first_name || compensation?.employeeName?.split(' ')[0] || "";
     const last = employee.last_name || compensation?.employeeName?.split(' ')[1] || "";
     return `${first[0] || ""}${last[0] || ""}`.toUpperCase() || "?";
+  };
+
+  // Calculate days worked between effective date and payable date
+  const calculateDaysWorked = () => {
+    if (!compensation?.effectiveDate || !compensation?.payableDate) {
+      return { daysWorked: 30, isProrated: false };
+    }
+
+    const effectiveDate = new Date(compensation.effectiveDate);
+    const payableDate = new Date(compensation.payableDate);
+
+    // Calculate the difference in milliseconds
+    const diffTime = Math.abs(payableDate - effectiveDate);
+    // Convert to days (including both start and end dates)
+    const daysWorked = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
+
+    return {
+      daysWorked: daysWorked,
+      isProrated: daysWorked < 30,
+      effectiveDate,
+      payableDate,
+    };
+  };
+
+  // Calculate prorated salary based on days worked
+  const calculateProratedSalary = () => {
+    const { daysWorked, isProrated } = calculateDaysWorked();
+    const fullMonthSalary = compensation?.baseSalary || 0;
+    
+    if (!isProrated || daysWorked >= 30) {
+      return {
+        proratedSalary: fullMonthSalary,
+        daysWorked: 30,
+        isProrated: false,
+        fullMonthSalary,
+      };
+    }
+
+    // Calculate daily rate and prorated salary
+    const dailyRate = fullMonthSalary / 30;
+    const proratedSalary = dailyRate * daysWorked;
+
+    return {
+      proratedSalary,
+      daysWorked,
+      isProrated: true,
+      fullMonthSalary,
+      dailyRate,
+    };
   };
 
   if (loading) {
@@ -213,20 +334,45 @@ const SalaryCompensationViewPage = () => {
               Salary Breakdown
             </h2>
             <div className="space-y-4">
-              <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-zinc-800 rounded-lg">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
-                    <DollarSign className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+              {(() => {
+                const salaryInfo = calculateProratedSalary();
+                return (
+                  <div className="p-3 bg-gray-50 dark:bg-zinc-800 rounded-lg">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
+                          <DollarSign className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+                        </div>
+                        <div>
+                          <div className="text-sm text-gray-600 dark:text-zinc-400">Base Salary</div>
+                          <div className="text-xs text-gray-500 dark:text-zinc-500">
+                            {salaryInfo.isProrated ? `${salaryInfo.daysWorked} days worked` : 'Full month (30 days)'}
+                          </div>
+                        </div>
+                      </div>
+                      <div className="text-lg font-bold text-gray-900 dark:text-zinc-100">
+                        {formatCurrency(salaryInfo.proratedSalary)}
+                      </div>
+                    </div>
+                    {salaryInfo.isProrated && (
+                      <div className="mt-2 pt-2 border-t border-gray-200 dark:border-zinc-700">
+                        <div className="flex justify-between text-xs text-gray-600 dark:text-zinc-400">
+                          <span>Full Month Salary:</span>
+                          <span>{formatCurrency(salaryInfo.fullMonthSalary)}</span>
+                        </div>
+                        <div className="flex justify-between text-xs text-gray-600 dark:text-zinc-400 mt-1">
+                          <span>Daily Rate:</span>
+                          <span>{formatCurrency(salaryInfo.dailyRate)}</span>
+                        </div>
+                        <div className="flex justify-between text-xs text-blue-600 dark:text-blue-400 mt-1 font-medium">
+                          <span>Prorated ({salaryInfo.daysWorked} days):</span>
+                          <span>{formatCurrency(salaryInfo.proratedSalary)}</span>
+                        </div>
+                      </div>
+                    )}
                   </div>
-                  <div>
-                    <div className="text-sm text-gray-600 dark:text-zinc-400">Base Salary</div>
-                    <div className="text-xs text-gray-500 dark:text-zinc-500">Primary compensation</div>
-                  </div>
-                </div>
-                <div className="text-lg font-bold text-gray-900 dark:text-zinc-100">
-                  {formatCurrency(compensation.baseSalary)}
-                </div>
-              </div>
+                );
+              })()}
 
               <div className="flex items-center justify-between p-3 bg-green-50 dark:bg-green-900/10 rounded-lg">
                 <div className="flex items-center gap-3">
@@ -258,31 +404,104 @@ const SalaryCompensationViewPage = () => {
                 </div>
               </div>
 
-              <div className="flex items-center justify-between p-3 bg-red-50 dark:bg-red-900/10 rounded-lg">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-red-100 dark:bg-red-900/30 flex items-center justify-center">
-                    <Minus className="w-5 h-5 text-red-600 dark:text-red-400" />
+              <div className="p-3 bg-red-50 dark:bg-red-900/10 rounded-lg border-2 border-red-200 dark:border-red-900/30">
+                <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-full bg-red-100 dark:bg-red-900/30 flex items-center justify-center">
+                      <Minus className="w-5 h-5 text-red-600 dark:text-red-400" />
+                    </div>
+                    <div>
+                      <div className="text-sm font-semibold text-gray-900 dark:text-zinc-100">Total Deduction</div>
+                      <div className="text-xs text-gray-500 dark:text-zinc-500">Breakdown below</div>
+                    </div>
                   </div>
-                  <div>
-                    <div className="text-sm text-gray-600 dark:text-zinc-400">Deduction</div>
-                    <div className="text-xs text-gray-500 dark:text-zinc-500">Taxes & withholdings</div>
+                  <div className="text-lg font-bold text-red-600 dark:text-red-400">
+                    -{formatCurrency(compensation.deduction)}
                   </div>
                 </div>
-                <div className="text-lg font-bold text-red-600 dark:text-red-400">
-                  -{formatCurrency(compensation.deduction)}
+
+                {/* Deduction Breakdown */}
+                <div className="space-y-2 pl-2 border-l-2 border-red-300 dark:border-red-800 ml-5">
+                  {/* Leave Deduction */}
+                  {deductionBreakdown.leaveDeduction > 0 && (
+                    <div className="flex items-center justify-between text-xs bg-white dark:bg-zinc-800 p-2 rounded">
+                      <div className="flex items-center gap-2">
+                        <CalendarX className="w-4 h-4 text-orange-500" />
+                        <span className="text-gray-700 dark:text-zinc-300">
+                          Leave ({deductionBreakdown.leaveDays} day{deductionBreakdown.leaveDays !== 1 ? 's' : ''})
+                        </span>
+                      </div>
+                      <span className="font-semibold text-orange-600 dark:text-orange-400">
+                        -{formatCurrency(deductionBreakdown.leaveDeduction)}
+                      </span>
+                    </div>
+                  )}
+
+                  {/* Late Attendance Deduction */}
+                  {deductionBreakdown.attendanceDeduction > 0 && (
+                    <div className="flex items-center justify-between text-xs bg-white dark:bg-zinc-800 p-2 rounded">
+                      <div className="flex items-center gap-2">
+                        <Clock className="w-4 h-4 text-amber-500" />
+                        <span className="text-gray-700 dark:text-zinc-300">
+                          Late Attendance ({deductionBreakdown.lateAttendances.length} time{deductionBreakdown.lateAttendances.length !== 1 ? 's' : ''})
+                        </span>
+                      </div>
+                      <span className="font-semibold text-amber-600 dark:text-amber-400">
+                        -{formatCurrency(deductionBreakdown.attendanceDeduction)}
+                      </span>
+                    </div>
+                  )}
+
+                  {/* Other Deductions */}
+                  {deductionBreakdown.otherDeduction > 0 && (
+                    <div className="flex items-center justify-between text-xs bg-white dark:bg-zinc-800 p-2 rounded">
+                      <div className="flex items-center gap-2">
+                        <Minus className="w-4 h-4 text-red-500" />
+                        <span className="text-gray-700 dark:text-zinc-300">
+                          Other Deductions
+                        </span>
+                      </div>
+                      <span className="font-semibold text-red-600 dark:text-red-400">
+                        -{formatCurrency(deductionBreakdown.otherDeduction)}
+                      </span>
+                    </div>
+                  )}
+
+                  {/* No deductions message */}
+                  {compensation.deduction === 0 && (
+                    <div className="text-xs text-gray-500 dark:text-zinc-500 italic p-2">
+                      No deductions applied
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
 
             <div className="mt-4 pt-4 border-t border-gray-200 dark:border-zinc-700">
-              <div className="flex items-center justify-between">
-                <div className="text-sm font-medium text-gray-600 dark:text-zinc-400">
-                  Calculation:
-                </div>
-                <div className="text-xs text-gray-500 dark:text-zinc-500 text-right">
-                  ${compensation.baseSalary?.toFixed(2) || "0.00"} + ${compensation.bonus?.toFixed(2) || "0.00"} + ${compensation.allowance?.toFixed(2) || "0.00"} - ${compensation.deduction?.toFixed(2) || "0.00"}
-                </div>
-              </div>
+              {(() => {
+                const salaryInfo = calculateProratedSalary();
+                const calculatedNet = salaryInfo.proratedSalary + (compensation.bonus || 0) + (compensation.allowance || 0) - (compensation.deduction || 0);
+                return (
+                  <>
+                    <div className="flex items-center justify-between">
+                      <div className="text-sm font-medium text-gray-600 dark:text-zinc-400">
+                        Calculation:
+                      </div>
+                      <div className="text-xs text-gray-500 dark:text-zinc-500 text-right">
+                        ${salaryInfo.proratedSalary?.toFixed(2) || "0.00"} + ${compensation.bonus?.toFixed(2) || "0.00"} + ${compensation.allowance?.toFixed(2) || "0.00"} - ${compensation.deduction?.toFixed(2) || "0.00"}
+                      </div>
+                    </div>
+                    <div className="flex items-center justify-between mt-2">
+                      <div className="text-sm font-semibold text-gray-900 dark:text-zinc-100">
+                        Calculated Net:
+                      </div>
+                      <div className="text-sm font-bold text-emerald-600 dark:text-emerald-400">
+                        {formatCurrency(calculatedNet)}
+                      </div>
+                    </div>
+                  </>
+                );
+              })()}
             </div>
           </div>
 
@@ -316,6 +535,23 @@ const SalaryCompensationViewPage = () => {
                   Scheduled payment date
                 </div>
               </div>
+
+              {(() => {
+                const { daysWorked, isProrated } = calculateDaysWorked();
+                return (
+                  <div className="p-4 bg-teal-50 dark:bg-teal-900/10 rounded-lg border border-teal-200 dark:border-teal-900/30">
+                    <div className="text-sm text-teal-600 dark:text-teal-400 font-medium mb-1">
+                      Days Worked
+                    </div>
+                    <div className="text-lg font-bold text-gray-900 dark:text-zinc-100">
+                      {daysWorked} {daysWorked === 1 ? 'Day' : 'Days'}
+                    </div>
+                    <div className="text-xs text-gray-500 dark:text-zinc-500 mt-1">
+                      {isProrated ? `Prorated salary (${daysWorked}/30 days)` : 'Full month compensation'}
+                    </div>
+                  </div>
+                );
+              })()}
             </div>
 
             {/* Employee Information */}
@@ -361,6 +597,87 @@ const SalaryCompensationViewPage = () => {
             )}
           </div>
         </div>
+
+        {/* Deduction Details Section */}
+        {(deductionBreakdown.leaveDeduction > 0 || deductionBreakdown.attendanceDeduction > 0) && (
+          <div className="mt-6 bg-white dark:bg-zinc-900 rounded-xl shadow-md border border-gray-100 dark:border-zinc-800 p-6">
+            <h2 className="text-xl font-bold text-gray-900 dark:text-zinc-100 mb-4 flex items-center gap-2">
+              <TrendingDown className="w-5 h-5 text-red-600" />
+              Deduction Details
+            </h2>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* Leave Details */}
+              {deductionBreakdown.leaveDeduction > 0 && (
+                <div className="p-4 bg-orange-50 dark:bg-orange-900/10 rounded-lg border border-orange-200 dark:border-orange-900/30">
+                  <div className="flex items-center gap-2 mb-3">
+                    <CalendarX className="w-5 h-5 text-orange-600 dark:text-orange-400" />
+                    <h3 className="font-semibold text-gray-900 dark:text-zinc-100">Leave Deduction</h3>
+                  </div>
+                  <div className="space-y-2 text-sm">
+                    <div className="flex justify-between">
+                      <span className="text-gray-600 dark:text-zinc-400">Leave Days:</span>
+                      <span className="font-medium text-gray-900 dark:text-zinc-100">
+                        {deductionBreakdown.leaveDays} day{deductionBreakdown.leaveDays !== 1 ? 's' : ''}
+                      </span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-600 dark:text-zinc-400">Daily Rate:</span>
+                      <span className="font-medium text-gray-900 dark:text-zinc-100">
+                        {formatCurrency(compensation.baseSalary / 30)}
+                      </span>
+                    </div>
+                    <div className="pt-2 border-t border-orange-200 dark:border-orange-900/30 flex justify-between">
+                      <span className="font-semibold text-gray-900 dark:text-zinc-100">Total Deduction:</span>
+                      <span className="font-bold text-orange-600 dark:text-orange-400">
+                        -{formatCurrency(deductionBreakdown.leaveDeduction)}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Attendance Details */}
+              {deductionBreakdown.attendanceDeduction > 0 && (
+                <div className="p-4 bg-amber-50 dark:bg-amber-900/10 rounded-lg border border-amber-200 dark:border-amber-900/30">
+                  <div className="flex items-center gap-2 mb-3">
+                    <Clock className="w-5 h-5 text-amber-600 dark:text-amber-400" />
+                    <h3 className="font-semibold text-gray-900 dark:text-zinc-100">Late Attendance Deduction</h3>
+                  </div>
+                  <div className="space-y-2 text-sm">
+                    <div className="flex justify-between mb-2">
+                      <span className="text-gray-600 dark:text-zinc-400">Late Days:</span>
+                      <span className="font-medium text-gray-900 dark:text-zinc-100">
+                        {deductionBreakdown.lateAttendances.length} time{deductionBreakdown.lateAttendances.length !== 1 ? 's' : ''}
+                      </span>
+                    </div>
+                    {deductionBreakdown.lateAttendances.slice(0, 3).map((late, idx) => (
+                      <div key={idx} className="flex justify-between text-xs bg-white dark:bg-zinc-800 p-2 rounded">
+                        <span className="text-gray-600 dark:text-zinc-400">
+                          {new Date(late.date).toLocaleDateString()} - {late.checkIn}
+                        </span>
+                        <span className="font-medium text-amber-600 dark:text-amber-400">
+                          -{formatCurrency(late.deduction)}
+                        </span>
+                      </div>
+                    ))}
+                    {deductionBreakdown.lateAttendances.length > 3 && (
+                      <div className="text-xs text-gray-500 dark:text-zinc-500 italic">
+                        ... and {deductionBreakdown.lateAttendances.length - 3} more
+                      </div>
+                    )}
+                    <div className="pt-2 border-t border-amber-200 dark:border-amber-900/30 flex justify-between">
+                      <span className="font-semibold text-gray-900 dark:text-zinc-100">Total Deduction:</span>
+                      <span className="font-bold text-amber-600 dark:text-amber-400">
+                        -{formatCurrency(deductionBreakdown.attendanceDeduction)}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
 
         {/* Remarks Section */}
         {compensation.remarks && (
