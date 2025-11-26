@@ -25,26 +25,21 @@ export class AuthController {
   async login(@Body() loginDto: LoginDto, @Res() res: Response) {
     try {
       let user: any;
-      if (loginDto.role !== Roles.EMPLOYEE) {
-        user = await this.usersService.findOneByEmailAndRole(loginDto.email, loginDto.role);
-        if (!user) {
+      user = await this.usersService.findOneByEmail(loginDto.email);
+      if(user && !user.isActive) {
+        return res.status(HttpStatus.UNAUTHORIZED).json({
+          success: false, data: null, message: 'User is not activated!'
+        });
+      }
+      if(!user) {
+        user = await this.employeesService.findOneByEmail(loginDto.email);
+        if(!user) {
           return res.status(HttpStatus.NOT_FOUND).json({
             success: false, data: null, message: 'User not found!'
           });
         }
-        if(!user.isActive) {
-          return res.status(HttpStatus.UNAUTHORIZED).json({
-            success: false, data: null, message: 'User is not activated!'
-          });
-        }
-      } else {
-        user = await this.employeesService.findOneByEmail(loginDto.email);
-        if (!user) {
-          return res.status(HttpStatus.NOT_FOUND).json({
-            success: false, data: null, message: 'Employee not found!'
-          });
-        }
       }
+
       const isPasswordValid = await bcrypt.compare(loginDto.password, user.password);
       if (!isPasswordValid) {
         return res.status(HttpStatus.UNAUTHORIZED).json({

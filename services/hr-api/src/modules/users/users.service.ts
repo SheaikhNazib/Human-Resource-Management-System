@@ -15,8 +15,8 @@ export class UsersService {
     return await this.repo.findOne({ where: { id } });
   }
 
-  async findOneByEmailAndRole(email: string, role: Roles) {
-    return await this.repo.findOne({ where: { email, role } });
+  async findOneByEmail(email: string) {
+    return await this.repo.findOne({ where: { email } });
   }
 
   async create(userData: Partial<Users>) {
