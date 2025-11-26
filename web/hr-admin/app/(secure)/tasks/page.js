@@ -1,8 +1,9 @@
 import React from 'react'
+import TasksListPage from './list/page';
 
 const page = () => {
   return (
-    <div>Tasks</div>
+    <TasksListPage />
   )
 }
 

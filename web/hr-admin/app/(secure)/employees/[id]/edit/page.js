@@ -1,10 +1,10 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Formik, Form, Field, ErrorMessage } from "formik";
 import * as Yup from "yup";
-import { createEmployee } from "@/actions/employees/server-actions";
-import { useRouter } from "next/navigation";
+import { updateEmployee, getEmployeeById } from "@/actions/employees/server-actions";
+import { useRouter, useParams } from "next/navigation";
 import { toast } from "sonner";
 import PhoneInput from "react-phone-input-2";
 import "react-phone-input-2/lib/style.css";
@@ -12,10 +12,53 @@ import {
   parsePhoneNumberFromString,
   getExampleNumber,
 } from "libphonenumber-js";
+import { AlertCircle } from "lucide-react";
 
-const AddEmployeePage = () => {
+const EditEmployeePage = () => {
   const router = useRouter();
+  const params = useParams();
+  const [employee, setEmployee] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [selectedCountry, setSelectedCountry] = useState("bd");
+  const [selectedOfficeCountry, setSelectedOfficeCountry] = useState("bd");
+
+  useEffect(() => {
+    const fetchEmployee = async () => {
+      if (!params.id) return;
+
+      setLoading(true);
+      setError(null);
+
+      try {
+        const response = await getEmployeeById(params.id);
+
+        if (response.success) {
+          setEmployee(response.data);
+          // Set country codes when employee data is loaded
+          if (response.data.mobile) {
+            const countryCode = response.data.mobile.substring(1, 3).toLowerCase();
+            setSelectedCountry(countryCode);
+          }
+          if (response.data.office_phone) {
+            const countryCode = response.data.office_phone.substring(1, 3).toLowerCase();
+            setSelectedOfficeCountry(countryCode);
+          }
+        } else {
+          setError(response.error || "Failed to fetch employee details");
+          toast.error(response.error || "Failed to fetch employee details");
+        }
+      } catch (err) {
+        setError(err.message || "An unexpected error occurred");
+        toast.error(err.message || "An unexpected error occurred");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchEmployee();
+  }, [params.id]);
 
   const validationSchema = Yup.object({
     name: Yup.string(),
@@ -61,29 +104,14 @@ const AddEmployeePage = () => {
       .integer(),
   });
 
-  const initialValues = {
-    name: "",
-    first_name: "",
-    last_name: "",
-    personal_email: "",
-    work_email: "",
-    mobile: "",
-    office_phone: "",
-    address: "",
-    full_address: "",
-    hire_date: "",
-    leave_date: "",
-    current_or_former_emp: true,
-    emp_department: "",
-    emp_job_title: "",
+  const formatDateForInput = (dateString) => {
+    if (!dateString) return "";
+    const date = new Date(dateString);
+    return date.toISOString().split("T")[0];
   };
-
-  const [selectedCountry, setSelectedCountry] = useState("bd");
-  const [selectedOfficeCountry, setSelectedOfficeCountry] = useState("bd");
 
   const handleSubmit = async (values, { setSubmitting, resetForm }) => {
     setIsSubmitting(true);
-    // toasts will show errors/success, no local submit state needed
 
     try {
       // Convert form values to match API expectations
@@ -95,19 +123,19 @@ const AddEmployeePage = () => {
       };
 
       console.log("Submitting employee data:", employeeData);
-      const response = await createEmployee(employeeData);
-      console.log("Create employee response:", response);
+      const response = await updateEmployee(params.id, employeeData);
+      console.log("Update employee response:", response);
 
       if (response.success) {
         resetForm();
-        toast.success("Employee created successfully");
-        // Redirect to employees list after 1.5 seconds
+        toast.success("Employee updated successfully");
+        // Redirect to view page after 1.5 seconds
         setTimeout(() => {
-          router.push("/employees");
+          router.push(`/employees/${params.id}/view`);
         }, 1500);
       } else {
-        const errorMsg = response.error || "Failed to create employee";
-        console.error("Employee creation failed:", errorMsg);
+        const errorMsg = response.error || "Failed to update employee";
+        console.error("Employee update failed:", errorMsg);
         toast.error(errorMsg);
       }
     } catch (error) {
@@ -119,15 +147,63 @@ const AddEmployeePage = () => {
     }
   };
 
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+          <p className="mt-4 text-gray-600 font-medium">Loading employee details...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error || !employee) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
+        <div className="bg-white shadow-xl rounded-2xl p-8 max-w-md w-full text-center">
+          <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <AlertCircle className="w-6 h-6 text-red-600" />
+          </div>
+          <h2 className="text-2xl font-bold text-gray-800 mb-2">Error</h2>
+          <p className="text-gray-600 mb-6">{error || "Employee not found"}</p>
+          <button
+            onClick={() => router.push("/employees")}
+            className="px-6 py-3 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition-all"
+          >
+            Back to Employees
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  const initialValues = {
+    name: employee.name || "",
+    first_name: employee.first_name || "",
+    last_name: employee.last_name || "",
+    personal_email: employee.personal_email || "",
+    work_email: employee.work_email || "",
+    mobile: employee.mobile || "",
+    office_phone: employee.office_phone || "",
+    address: employee.address || "",
+    full_address: employee.full_address || "",
+    hire_date: formatDateForInput(employee.hire_date),
+    leave_date: formatDateForInput(employee.leave_date),
+    current_or_former_emp: employee.current_or_former_emp !== false,
+    emp_department: employee.emp_department?.id || "",
+    emp_job_title: employee.emp_job_title?.id || "",
+  };
+
   return (
     <div className="min-h-screen bg-gray-50 px-4">
       <div className="w-full">
         <div className="bg-white shadow-xl rounded-2xl overflow-hidden">
           {/* Header */}
           <div className="bg-blue-600 px-6 py-3">
-            <h1 className="text-2xl font-bold text-white">Add New Employee</h1>
+            <h1 className="text-2xl font-bold text-white">Edit Employee</h1>
             <p className="text-blue-100 mt-1 text-sm">
-              Fill in the employee details below
+              Update the employee details below
             </p>
           </div>
 
@@ -137,6 +213,7 @@ const AddEmployeePage = () => {
               initialValues={initialValues}
               validationSchema={validationSchema}
               onSubmit={handleSubmit}
+              enableReinitialize
             >
               {({ isSubmitting: formikSubmitting }) => (
                 <Form className="space-y-8">
@@ -637,15 +714,15 @@ const AddEmployeePage = () => {
                     <div className="flex space-x-4 w-full sm:w-auto">
                       <button
                         type="button"
-                        onClick={() => router.push("/employees")}
-                        className="flex-1 sm:flex-none px-8 py-3 border-2 border-gray-300 rounded-lg text-gray-700 font-semibold hover:bg-gray-50 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                        onClick={() => router.push(`/employees/${params.id}/view`)}
+                        className="flex-1 sm:flex-none px-4 py-2 border-2 border-gray-300 rounded-lg text-gray-700 font-semibold hover:bg-gray-50 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
                         disabled={isSubmitting || formikSubmitting}
                       >
                         Cancel
                       </button>
                       <button
                         type="submit"
-                        className="flex-1 sm:flex-none px-8 py-3 bg-blue-600 text-white rounded-lg font-semibold transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
+                        className="flex-1 sm:flex-none px-4 py-2 bg-blue-600 text-white rounded-lg font-semibold transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
                         disabled={isSubmitting || formikSubmitting}
                       >
                         {isSubmitting || formikSubmitting ? (
@@ -670,10 +747,10 @@ const AddEmployeePage = () => {
                                 d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
                               ></path>
                             </svg>
-                            Creating...
+                            Updating...
                           </span>
                         ) : (
-                          "Create Employee"
+                          "Update Employee"
                         )}
                       </button>
                     </div>
@@ -688,4 +765,4 @@ const AddEmployeePage = () => {
   );
 };
 
-export default AddEmployeePage;
+export default EditEmployeePage;
