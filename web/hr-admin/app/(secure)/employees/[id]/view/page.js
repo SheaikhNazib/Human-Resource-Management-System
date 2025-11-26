@@ -90,10 +90,10 @@ const EmployeeDetailsPage = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gray-50 dark:bg-zinc-950 flex items-center justify-center">
         <div className="text-center">
           <Loader size={48} />
-          <p className="mt-4 text-gray-600 font-medium">
+          <p className="mt-4 text-gray-600 dark:text-zinc-400 font-medium">
             Loading employee details...
           </p>
         </div>
@@ -103,13 +103,17 @@ const EmployeeDetailsPage = () => {
 
   if (error || !employee) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
-        <div className="bg-white shadow-xl rounded-2xl p-8 max-w-md w-full text-center">
-          <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
-            <AlertCircle className="w-6 h-6 text-red-600" />
+      <div className="min-h-screen bg-gray-50 dark:bg-zinc-950 flex items-center justify-center px-4">
+        <div className="bg-white dark:bg-zinc-900 shadow-xl rounded-2xl p-8 max-w-md w-full text-center border border-gray-100 dark:border-zinc-800">
+          <div className="w-16 h-16 bg-red-100 dark:bg-red-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
+            <AlertCircle className="w-6 h-6 text-red-600 dark:text-red-400" />
           </div>
-          <h2 className="text-2xl font-bold text-gray-800 mb-2">Error</h2>
-          <p className="text-gray-600 mb-6">{error || "Employee not found"}</p>
+          <h2 className="text-2xl font-bold text-gray-800 dark:text-zinc-100 mb-2">
+            Error
+          </h2>
+          <p className="text-gray-600 dark:text-zinc-400 mb-6">
+            {error || "Employee not found"}
+          </p>
           <button
             onClick={() => router.push("/employees")}
             className="px-6 py-3 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition-all"
@@ -122,9 +126,9 @@ const EmployeeDetailsPage = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 dark:bg-zinc-950">
       {/* Header */}
-      <div className="bg-white shadow-xl">
+      <div className="bg-white dark:bg-zinc-900 shadow-xl border-b border-gray-100 dark:border-zinc-800">
         <div className="max-w-6xl mx-auto px-4 py-6">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4">
@@ -132,17 +136,17 @@ const EmployeeDetailsPage = () => {
                 {getInitials()}
               </div>
               <div>
-                <h1 className="text-3xl font-bold text-gray-900">
+                <h1 className="text-3xl font-bold text-gray-900 dark:text-zinc-100">
                   {employee.first_name} {employee.last_name}
                 </h1>
-                <p className="text-gray-600 text-lg mt-1">
+                <p className="text-gray-600 dark:text-zinc-400 text-lg mt-1">
                   {employee.emp_job_title?.name || "No Information Available"}
                 </p>
                 <span
                   className={`inline-block mt-2 px-3 py-1 rounded-full text-xs font-semibold ${
                     employee.current_or_former_emp !== false
-                      ? "bg-green-100 text-green-800"
-                      : "bg-gray-100 text-gray-800"
+                      ? "bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-400"
+                      : "bg-gray-100 dark:bg-zinc-800 text-gray-800 dark:text-zinc-300"
                   }`}
                 >
                   {employee.current_or_former_emp !== false
@@ -181,7 +185,7 @@ const EmployeeDetailsPage = () => {
       <TabBar tabs={TABS} activeTab={activeTab} onTabChange={handleTabChange} />
 
       {/* Tab Content */}
-      <div className="bg-gray-50 min-h-screen">
+      <div className="bg-gray-50 dark:bg-zinc-950 min-h-screen">
         {/* About tab - always rendered since it's the default */}
         {activeTab === "about" && (
           <AboutPanel employee={employee} loading={false} error={null} />

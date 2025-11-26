@@ -10,18 +10,27 @@ import { Calendar, AlertCircle, CheckCircle2, XCircle } from "lucide-react";
  * @param {Object} props.employee - Employee data with hire_date
  */
 const LeaveSummaryCard = ({ leavePolicy, employee }) => {
-  const { casual, sick, annual, monthsSinceJoining, isEligibleForCasual, isEligibleForAnnual } = leavePolicy;
+  const {
+    casual,
+    sick,
+    annual,
+    monthsSinceJoining,
+    isEligibleForCasual,
+    isEligibleForAnnual,
+  } = leavePolicy;
 
   return (
-    <div className="bg-white rounded-xl shadow-md border border-gray-200 p-6 mb-6">
+    <div className="bg-white dark:bg-zinc-900 rounded-xl shadow-md border border-gray-200 dark:border-zinc-800 p-6 mb-6">
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center space-x-3">
-          <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
-            <Calendar className="w-6 h-6 text-blue-600" />
+          <div className="w-10 h-10 bg-blue-100 dark:bg-blue-900/30 rounded-lg flex items-center justify-center">
+            <Calendar className="w-6 h-6 text-blue-600 dark:text-blue-400" />
           </div>
           <div>
-            <h2 className="text-xl font-bold text-gray-900">Leave Balance Summary</h2>
-            <p className="text-sm text-gray-500">
+            <h2 className="text-xl font-bold text-gray-900 dark:text-zinc-100">
+              Leave Balance Summary
+            </h2>
+            <p className="text-sm text-gray-500 dark:text-zinc-400">
               Current Year • {monthsSinceJoining} months since joining
             </p>
           </div>
@@ -39,7 +48,9 @@ const LeaveSummaryCard = ({ leavePolicy, employee }) => {
           eligible={casual.eligible}
           color="blue"
           icon={Calendar}
-          eligibilityMessage={!isEligibleForCasual ? "Eligible after 3 months" : null}
+          eligibilityMessage={
+            !isEligibleForCasual ? "Eligible after 3 months" : null
+          }
         />
 
         {/* Sick Leave */}
@@ -63,13 +74,15 @@ const LeaveSummaryCard = ({ leavePolicy, employee }) => {
           eligible={annual.eligible}
           color="purple"
           icon={CheckCircle2}
-          eligibilityMessage={!isEligibleForAnnual ? "Eligible after 12 months" : null}
+          eligibilityMessage={
+            !isEligibleForAnnual ? "Eligible after 12 months" : null
+          }
         />
       </div>
 
       {/* Policy Information */}
-      <div className="mt-4 pt-4 border-t border-gray-200">
-        <div className="flex items-start space-x-2 text-xs text-gray-600">
+      <div className="mt-4 pt-4 border-t border-gray-200 dark:border-zinc-700">
+        <div className="flex items-start space-x-2 text-xs text-gray-600 dark:text-zinc-400">
           <AlertCircle className="w-4 h-4 mt-0.5 shrink-0" />
           <div>
             <p className="font-medium mb-1">Leave Policy:</p>
@@ -77,7 +90,9 @@ const LeaveSummaryCard = ({ leavePolicy, employee }) => {
               <li>Casual Leave: 10 days/year (eligible after 3 months)</li>
               <li>Sick Leave: 14 days/year (prorated first 3 months)</li>
               <li>Annual Leave: 14 days/year (eligible after 12 months)</li>
-              <li>Quota calculated based on months worked in current calendar year</li>
+              <li>
+                Quota calculated based on months worked in current calendar year
+              </li>
               <li>Only approved leaves count towards quota usage</li>
             </ul>
           </div>
@@ -90,7 +105,16 @@ const LeaveSummaryCard = ({ leavePolicy, employee }) => {
 /**
  * LeaveQuotaCard - Individual leave type quota display
  */
-const LeaveQuotaCard = ({ title, total, used, remaining, eligible, color, icon: Icon, eligibilityMessage }) => {
+const LeaveQuotaCard = ({
+  title,
+  total,
+  used,
+  remaining,
+  eligible,
+  color,
+  icon: Icon,
+  eligibilityMessage,
+}) => {
   const colorClasses = {
     blue: {
       bg: "bg-blue-50",
@@ -143,7 +167,11 @@ const LeaveQuotaCard = ({ title, total, used, remaining, eligible, color, icon: 
             </div>
             <div>
               <p className="text-xs text-gray-600">Left</p>
-              <p className={`text-lg font-bold ${remaining > 0 ? colors.text : 'text-red-600'}`}>
+              <p
+                className={`text-lg font-bold ${
+                  remaining > 0 ? colors.text : "text-red-600"
+                }`}
+              >
                 {remaining}
               </p>
             </div>
