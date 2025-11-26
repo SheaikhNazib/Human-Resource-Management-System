@@ -11,6 +11,7 @@ const AutoComplete = (props = {}) => {
     placeholder = "Search...",
     label = "",
     displayKey = "",
+    valueKey = "",
     error = "",
     disabled = false,
     className = "",
@@ -29,17 +30,18 @@ const AutoComplete = (props = {}) => {
     const firstOption = options[0];
     if (typeof firstOption !== "object") return { display: null, value: null };
 
-    // Custom display key provided
+    // Custom keys provided
+    if (displayKey && valueKey) return { display: displayKey, value: valueKey };
     if (displayKey) return { display: displayKey, value: displayKey };
 
     // Auto-detect common patterns
     const keys = Object.keys(firstOption);
-    const displayKey = keys.find(k => ["name", "label", "title"].includes(k.toLowerCase())) || 
-                       keys.find(k => typeof firstOption[k] === "string") ||
-                       keys[0];
-    const valueKey = keys.find(k => ["id", "value", "code"].includes(k.toLowerCase())) || displayKey;
+    const autoDisplayKey = keys.find(k => ["name", "label", "title"].includes(k.toLowerCase())) || 
+                            keys.find(k => typeof firstOption[k] === "string") ||
+                            keys[0];
+    const autoValueKey = keys.find(k => ["id", "value", "code"].includes(k.toLowerCase())) || autoDisplayKey;
 
-    return { display: displayKey, value: valueKey };
+    return { display: autoDisplayKey, value: autoValueKey };
   };
 
   const { display: displayKeyAuto, value: valueKeyAuto } = getKeys();
