@@ -11,4 +11,4 @@ export class MakePasswordNullableInEmployees1764137363000 implements MigrationIn
         await queryRunner.query(`ALTER TABLE "employees" DROP COLUMN "password"`);
     }
 }
-
+ 
