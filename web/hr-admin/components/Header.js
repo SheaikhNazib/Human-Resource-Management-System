@@ -56,7 +56,7 @@ export default function Header({ onOpen }) {
                   alt="User Avatar"
                   width={32}
                   height={32}
-                  className="w-8 h-8 rounded-full border border-zinc-300 dark:border-zinc-700 flex-shrink-0 object-cover"
+                  className="w-8 h-8 rounded-full border border-zinc-300 dark:border-zinc-700 shrink-0 object-cover"
                 />
                 <ChevronDown className="w-4 h-4 text-zinc-400 group-hover:text-zinc-700" />
               </button>
