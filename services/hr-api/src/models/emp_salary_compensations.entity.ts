@@ -20,7 +20,10 @@ export class EmpSalaryCompensations extends BaseEntity {
 	@Column({ type: 'decimal', precision: 12, scale: 2, nullable: true })
 	net_salary?: number;
 
-	@Column({ type: 'date'})
+	@Column({ type: 'date', nullable: false })
+	payable_date: Date;
+
+	@Column({ type: 'date', nullable: false })
 	effective_date: string;
 
 	@Column({ type: 'text', nullable: true })
