@@ -101,9 +101,9 @@ export function Actions({
     // Each menu item is approximately 36px (py-2 with text), plus some padding
     const menuHeight = Math.min(menuItemCount * 36 + 8, 300);
 
-    // Calculate initial position
-    let top = rect.bottom + window.scrollY + 4;
-    let left = rect.right + window.scrollX - menuWidth;
+    // Calculate initial position (viewport-relative since menu is `position: fixed`)
+    let top = rect.bottom + 4;
+    let left = rect.right - menuWidth;
 
     // Check if menu goes beyond viewport bottom
     const viewportHeight = window.innerHeight;
@@ -112,23 +112,23 @@ export function Actions({
 
     // If not enough space below and more space above, show menu above button
     if (spaceBelow < menuHeight && spaceAbove > spaceBelow) {
-      top = rect.top + window.scrollY - menuHeight - 4;
+      top = rect.top - menuHeight - 4;
     }
 
     // Check if menu goes beyond viewport right edge
     if (rect.right < menuWidth) {
-      left = rect.left + window.scrollX;
+      left = rect.left;
     }
 
     // Ensure menu doesn't go beyond left edge
     if (left < padding) {
-      left = padding + window.scrollX;
+      left = padding;
     }
 
     // Ensure menu doesn't go beyond right edge
     const viewportWidth = window.innerWidth;
     if (left + menuWidth > viewportWidth) {
-      left = viewportWidth - menuWidth - padding + window.scrollX;
+      left = viewportWidth - menuWidth - padding;
     }
 
     setMenuPosition({ top, left });

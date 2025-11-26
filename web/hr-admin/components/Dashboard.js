@@ -54,7 +54,7 @@ const attendanceRows = [
     type: "Office",
     time: "09:27 AM",
     status: "On Time",
-    avatar: "/avatar1.png",
+    avatar: "/avatar1.svg",
   },
   {
     name: "Darlene Robertson",
@@ -62,7 +62,7 @@ const attendanceRows = [
     type: "Office",
     time: "10:15 AM",
     status: "Late",
-    avatar: "/avatar2.png",
+    avatar: "/avatar2.svg",
   },
   {
     name: "Jacob Jones",
@@ -70,7 +70,7 @@ const attendanceRows = [
     type: "Remote",
     time: "10:24 AM",
     status: "Late",
-    avatar: "/avatar3.png",
+    avatar: "/avatar3.svg",
   },
   {
     name: "Kathryn Murphy",
@@ -78,7 +78,7 @@ const attendanceRows = [
     type: "Office",
     time: "09:10 AM",
     status: "On Time",
-    avatar: "/avatar4.png",
+    avatar: "/avatar4.svg",
   },
   {
     name: "Leslie Alexander",
@@ -86,7 +86,7 @@ const attendanceRows = [
     type: "Office",
     time: "09:15 AM",
     status: "On Time",
-    avatar: "/avatar5.png",
+    avatar: "/avatar5.svg",
   },
   {
     name: "Ronald Richards",
@@ -94,7 +94,7 @@ const attendanceRows = [
     type: "Remote",
     time: "09:29 AM",
     status: "On Time",
-    avatar: "/avatar6.png",
+    avatar: "/avatar6.svg",
   },
 ];
 

@@ -14,7 +14,7 @@ import { RolesGuard } from 'src/common/guards/roles.guard';
 @ApiBearerAuth('JWT-auth')
 @Controller('emp-attendances')
 export class EmpAttendancesController {
-  constructor(private readonly empAttendancesService: EmpAttendancesService, private readonly employeesService: EmployeesService) {}
+  constructor(private readonly empAttendancesService: EmpAttendancesService, private readonly employeesService: EmployeesService) { }
 
   @Post()
   @ApiOperation({ summary: 'Create employee attendance' })
@@ -37,13 +37,34 @@ export class EmpAttendancesController {
     @Query('limit') limit: number = 10,
     @Query('sortBy') sortBy: string = 'createdAt',
     @Query('sortOrder') sortOrder: string = 'asc',
-    @Res() res: Response  
+    @Res() res: Response
   ) {
     const response = await this.empAttendancesService.findAll(page, limit, sortBy, sortOrder);
-    return res.status(HttpStatus.OK).json({ 
+    return res.status(HttpStatus.OK).json({
       success: true, data: response.data, metaData: response.metaData,
-      message: response.data.length > 0 ? 'Attendances fetched successfully!' : 'No attendances found!' 
+      message: response.data.length > 0 ? 'Attendances fetched successfully!' : 'No attendances found!'
     });
+  }
+
+  @Get('total-attendance-count')
+  @ApiQuery({ name: 'date', type: String, required: false, example: '2025-11-26', description: 'Date in YYYY-MM-DD format. If not provided, uses current date.' })
+  @ApiOperation({ summary: 'Get total attendance count for a specific date' })
+  @ApiResponse({ status: 200, description: 'Total attendance count for the specified date' })
+  async getTotalAttendanceCount(@Res() res: Response, @Query('date') date?: string) {
+    try {
+      const queryDate = date || new Date().toISOString().split('T')[0];
+      const response = await this.empAttendancesService.getTotalAttendanceCount(queryDate);
+      return res.status(HttpStatus.OK).json({
+        success: true, data: { date: queryDate, totalAttendance: response },
+        message: `Total attendance count fetched successfully!`
+      });
+    }
+    catch (error) {
+      console.error(error);
+      return res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({
+        success: false, data: null, message: 'Internal server error occurred. Please try again later!'
+      });
+    }
   }
 
   @Get(':id')

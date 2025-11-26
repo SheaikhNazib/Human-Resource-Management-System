@@ -81,7 +81,6 @@ export async function createEmployee(employeeData) {
 export async function getEmployeeById(id) {
   try {
     const response = await fetchFromApi(Api_path.EMPLOYEE.GET_ONE(id));
-    console.log("Raw employee detail response:", JSON.stringify(response));
 
     const body = response?.data ?? response;
     const employeeData = body?.data ?? body;

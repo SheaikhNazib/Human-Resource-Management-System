@@ -48,7 +48,6 @@ export class EmpAttendancesService {
     };
   }
 
-
   async findOne(id: number) {
     const data = await this.repo.findOne({ where: { id }, relations: ['employee'] });
     if (data) {
@@ -63,7 +62,6 @@ export class EmpAttendancesService {
       };
     }
   }
-
 
   async update(id: number, updateDto: UpdateEmpAttendanceDto) {
     // Map employee id to relation
@@ -84,7 +82,6 @@ export class EmpAttendancesService {
     }
   }
 
-
   async remove(id: number) {
     const result = await this.repo.delete(id);
     if (result.affected && result.affected > 0) {
@@ -92,5 +89,14 @@ export class EmpAttendancesService {
     } else {
       return { message: 'Attendance not found or not deleted', id };
     }
+  }
+
+  async getTotalAttendanceCount(date: string) {
+    // Format date to YYYY-MM-DD format if needed
+    const formattedDate = date.split('T')[0];
+    const totalAttendance = await this.repo.count({ 
+      where: { date: formattedDate } 
+    });
+    return totalAttendance;
   }
 }
