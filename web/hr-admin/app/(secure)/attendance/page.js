@@ -111,16 +111,20 @@ export default function AttendancePage() {
           .filter(r => !r.success)
           .map(r => {
             const emp = employees.find(e => e.id === r.employeeId);
-            return emp?.name || `Employee ${r.employeeId}`;
+            const empName = emp?.name || `Employee ${r.employeeId}`;
+            const errorMsg = r.error || 'Unknown error';
+            return `${empName} (${errorMsg})`;
           })
           .join(', ');
-        toast.error(`Failed for: ${failedEmployees}`);
+        toast.error(`Failed for: ${failedEmployees}`, { duration: 6000 });
         
         // Remove successfully saved employees from changed set
         const failedIds = new Set(result.results.filter(r => !r.success).map(r => r.employeeId));
         setChangedEmployeeIds(failedIds);
       } else {
-        toast.error('Failed to save attendance: ' + result.error);
+        const errorMsg = result.error || 'All records failed - check console for details';
+        toast.error('Failed to save attendance: ' + errorMsg, { duration: 6000 });
+        console.error('Bulk save result:', result);
       }
 
       // Refresh the form with updated data
@@ -130,7 +134,8 @@ export default function AttendancePage() {
       }, 3000);
 
     } catch (err) {
-      toast.error('Failed to update attendance: ' + err.message);
+      const errorMsg = err.message || err.toString() || 'Unknown error';
+      toast.error('Failed to update attendance: ' + errorMsg);
       console.error('Error updating attendance:', err);
     } finally {
       setSubmitting(false);
@@ -143,14 +148,32 @@ export default function AttendancePage() {
       accessor: "name",
       render: (emp) => {
         const initials = `${emp.firstName?.[0] || ''}${emp.lastName?.[0] || ''}`.toUpperCase();
+        const hasAttendance = emp.attendanceId !== null && emp.checkInTime && emp.checkOutTime;
+        const isChanged = changedEmployeeIds.has(emp.id);
+        
         return (
           <div className="flex items-center gap-3">
             <div className="w-8 h-8 rounded-full bg-zinc-200 dark:bg-zinc-700 flex items-center justify-center text-xs font-bold text-zinc-700 dark:text-zinc-300">
               {initials || '—'}
             </div>
-            <div>
-              <div className="font-medium text-zinc-900 dark:text-zinc-100">
-                {emp.name}
+            <div className="flex-1">
+              <div className="flex items-center gap-2">
+                <div className="font-medium text-zinc-900 dark:text-zinc-100">
+                  {emp.name}
+                </div>
+                {hasAttendance ? (
+                  <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
+                    ✓ Recorded
+                  </span>
+                ) : emp.attendanceId !== null && emp.checkInTime && !emp.checkOutTime ? (
+                  <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200">
+                    ⏱ Checked In (No Checkout)
+                  </span>
+                ) : (
+                  <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-200">
+                    ⚠ Not Recorded
+                  </span>
+                )}
               </div>
               <div className="text-sm text-zinc-500 dark:text-zinc-400">
                 {emp.jobTitle || 'N/A'}
@@ -194,6 +217,9 @@ export default function AttendancePage() {
       accessor: "checkOutTime",
       render: (emp) => {
         const isChanged = changedEmployeeIds.has(emp.id);
+        const hasCheckOut = emp.checkOutTime && emp.checkOutTime !== '';
+        const hasAttendanceId = emp.attendanceId !== null;
+        
         return (
           <div className="relative">
             <input
@@ -208,6 +234,11 @@ export default function AttendancePage() {
             />
             {isChanged && (
               <span className="absolute -top-1 -right-1 w-2 h-2 bg-yellow-400 rounded-full"></span>
+            )}
+            {hasAttendanceId && !hasCheckOut && (
+              <div className="absolute -bottom-5 left-0 text-xs text-red-500 dark:text-red-400 whitespace-nowrap">
+                ⚠ Not checked out yet
+              </div>
             )}
           </div>
         );
@@ -238,6 +269,23 @@ export default function AttendancePage() {
     }
   ];
 
+  // Calculate statistics
+  const stats = useMemo(() => {
+    const totalEmployees = employees.length;
+    const recordedCount = employees.filter(emp => emp.attendanceId !== null && emp.checkInTime && emp.checkOutTime).length;
+    const checkedInOnlyCount = employees.filter(emp => emp.attendanceId !== null && emp.checkInTime && !emp.checkOutTime).length;
+    const notRecordedCount = totalEmployees - recordedCount - checkedInOnlyCount;
+    const modifiedCount = changedEmployeeIds.size;
+    
+    return {
+      totalEmployees,
+      recordedCount,
+      checkedInOnlyCount,
+      notRecordedCount,
+      modifiedCount
+    };
+  }, [employees, changedEmployeeIds]);
+
   return (
     <div className="max-w-full">
       {error && (
@@ -254,9 +302,39 @@ export default function AttendancePage() {
 
       <TableArchive
         title={
-          <div className="flex items-center justify-between w-full text-white">
-            <span className="font-semibold">Employee Attendance</span>
-            <span className="text-sm text-white">{formattedDate}</span>
+          <div className="flex flex-col gap-4 w-full">
+            <div className="flex items-center justify-between w-full text-white">
+              <span className="font-semibold">Employee Attendance</span>
+              <span className="text-sm text-white">{formattedDate}</span>
+            </div>
+            
+            {/* Statistics Summary */}
+            <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+              <div className="bg-white dark:bg-zinc-800 p-4 rounded-lg shadow-sm border border-zinc-200 dark:border-zinc-700">
+                <div className="text-sm text-zinc-500 dark:text-zinc-400">Total Employees</div>
+                <div className="text-2xl font-bold text-zinc-900 dark:text-zinc-100">{stats.totalEmployees}</div>
+              </div>
+              
+              <div className="bg-white dark:bg-zinc-800 p-4 rounded-lg shadow-sm border border-green-200 dark:border-green-700">
+                <div className="text-sm text-green-600 dark:text-green-400">✓ Recorded</div>
+                <div className="text-2xl font-bold text-green-700 dark:text-green-300">{stats.recordedCount}</div>
+              </div>
+              
+              <div className="bg-white dark:bg-zinc-800 p-4 rounded-lg shadow-sm border border-blue-200 dark:border-blue-700">
+                <div className="text-sm text-blue-600 dark:text-blue-400">⏱ Checked In Only</div>
+                <div className="text-2xl font-bold text-blue-700 dark:text-blue-300">{stats.checkedInOnlyCount}</div>
+              </div>
+              
+              <div className="bg-white dark:bg-zinc-800 p-4 rounded-lg shadow-sm border border-amber-200 dark:border-amber-700">
+                <div className="text-sm text-amber-600 dark:text-amber-400">⚠ Not Recorded</div>
+                <div className="text-2xl font-bold text-amber-700 dark:text-amber-300">{stats.notRecordedCount}</div>
+              </div>
+              
+              <div className="bg-white dark:bg-zinc-800 p-4 rounded-lg shadow-sm border border-yellow-200 dark:border-yellow-700">
+                <div className="text-sm text-yellow-600 dark:text-yellow-400">✏ Modified</div>
+                <div className="text-2xl font-bold text-yellow-700 dark:text-yellow-300">{stats.modifiedCount}</div>
+              </div>
+            </div>
           </div>
         }
         columns={columns}
