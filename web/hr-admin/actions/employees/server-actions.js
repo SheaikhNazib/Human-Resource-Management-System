@@ -46,56 +46,24 @@ export async function getEmployeesList() {
 // Create a new employee
 export async function createEmployee(employeeData) {
   try {
-    console.log("Creating employee with data:", JSON.stringify(employeeData, null, 2));
-    // Ensure `name` is always a string (API expects a string)
-    const payload = { ...employeeData };
-    if (payload.name === undefined || payload.name === null) {
-      payload.name = "";
-    }
-
+    const payload = { ...employeeData, name: employeeData.name || "" };
     const response = await fetchFromApi(Api_path.EMPLOYEE.CREATE, {
       method: "POST",
       body: payload,
     });
     
-    console.log("Raw API response:", JSON.stringify(response, null, 2));
+    const responseData = response?.data?.data ?? response?.data ?? response;
     
-    let responseData = response?.data;
-    if (responseData?.data) {
-      responseData = responseData.data;
-    }
-    
-    console.log("Extracted responseData:", JSON.stringify(responseData, null, 2));
-    
-    if (responseData?.statusCode && responseData.statusCode >= 400) {
-      const errorMsg = responseData.message || responseData.error || 'Failed to create employee';
-      console.error("API returned error status:", responseData.statusCode, errorMsg);
-      return { success: false, error: errorMsg };
+    if (responseData?.statusCode >= 400) {
+      return { success: false, error: responseData?.message || 'Failed to create employee' };
     }
     if (!responseData?.id) {
-      const errorMsg = responseData?.message || responseData?.error || 'Employee created but no ID returned';
-      console.error("No ID in response:", errorMsg);
-      return { success: false, error: errorMsg };
+      return { success: false, error: 'Employee created but no ID returned' };
     }
     
-    console.log("Employee created successfully with ID:", responseData.id);
     return { success: true, data: responseData };
   } catch (error) {
-    console.error("Error creating employee - Full error:", error);
-    console.error("Error message:", error.message);
-    console.error("Error response data:", error.response?.data);
-    console.error("Error response status:", error.response?.status);
-    
-    let errorMsg = 'Failed to create employee';
-    
-    if (error.response?.data) {
-      const errorData = error.response.data;
-      errorMsg = errorData.message || errorData.error || errorData.statusCode || JSON.stringify(errorData);
-    } else if (error.message) {
-      errorMsg = error.message;
-    }
-    
-    return { success: false, error: errorMsg };
+    return { success: false, error: error.message || 'Failed to create employee' };
   }
 }
 
@@ -116,6 +84,27 @@ export async function getEmployeeById(id) {
   } catch (error) {
     console.error("Error fetching employee:", error);
     return { success: false, error: error.message };
+  }
+}
+
+// Update an employee by ID
+export async function updateEmployee(id, employeeData) {
+  try {
+    const payload = { ...employeeData, name: employeeData.name || "" };
+    const response = await fetchFromApi(Api_path.EMPLOYEE.UPDATE(id), {
+      method: "PATCH",
+      body: payload,
+    });
+    
+    const responseData = response?.data?.data ?? response?.data ?? response;
+    
+    if (responseData?.statusCode >= 400) {
+      return { success: false, error: responseData?.message || 'Failed to update employee' };
+    }
+    
+    return { success: true, data: responseData };
+  } catch (error) {
+    return { success: false, error: error.message || 'Failed to update employee' };
   }
 }
 
