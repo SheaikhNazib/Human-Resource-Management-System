@@ -4,6 +4,7 @@ import React, { useEffect, useState } from "react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { getEmployeeById } from "@/actions/employees/server-actions";
 import { AlertCircle, User, Briefcase, Calendar } from "lucide-react";
+import Loader from "@/components/ui/Loader";
 import { toast } from "sonner";
 import TabBar from "@/components/employee/TabBar";
 import AboutPanel from "@/components/employee/AboutPanel";
@@ -23,7 +24,9 @@ const EmployeeDetailsPage = () => {
   const [employee, setEmployee] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [activeTab, setActiveTab] = useState(searchParams.get("tab") || "about");
+  const [activeTab, setActiveTab] = useState(
+    searchParams.get("tab") || "about"
+  );
   const [visitedTabs, setVisitedTabs] = useState(new Set(["about"]));
 
   useEffect(() => {
@@ -81,8 +84,10 @@ const EmployeeDetailsPage = () => {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
-          <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-          <p className="mt-4 text-gray-600 font-medium">Loading employee details...</p>
+          <Loader size={48} />
+          <p className="mt-4 text-gray-600 font-medium">
+            Loading employee details...
+          </p>
         </div>
       </div>
     );
@@ -132,7 +137,9 @@ const EmployeeDetailsPage = () => {
                       : "bg-gray-100 text-gray-800"
                   }`}
                 >
-                  {employee.current_or_former_emp !== false ? "Active" : "Former"}
+                  {employee.current_or_former_emp !== false
+                    ? "Active"
+                    : "Former"}
                 </span>
               </div>
             </div>
@@ -163,16 +170,19 @@ const EmployeeDetailsPage = () => {
         {activeTab === "about" && (
           <AboutPanel employee={employee} loading={false} error={null} />
         )}
-        
+
         {/* Tasks tab - only mount after first visit, then keep mounted but hidden */}
         {visitedTabs.has("tasks") && (
-          <TasksPanel employeeId={employee.id} isActive={activeTab === "tasks"} />
+          <TasksPanel
+            employeeId={employee.id}
+            isActive={activeTab === "tasks"}
+          />
         )}
-        
+
         {/* Leaves tab - only mount after first visit, then keep mounted but hidden */}
         {visitedTabs.has("leaves") && (
-          <LeavesPanel 
-            employeeId={employee.id} 
+          <LeavesPanel
+            employeeId={employee.id}
             isActive={activeTab === "leaves"}
             employee={employee}
           />

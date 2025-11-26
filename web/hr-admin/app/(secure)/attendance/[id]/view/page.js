@@ -4,6 +4,7 @@ import React, { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { getAttendanceById } from "@/actions/attendances/server-actions";
 import { AlertCircle, Calendar, Clock, MapPin, Info } from "lucide-react";
+import Loader from "@/components/ui/Loader";
 import { toast } from "sonner";
 
 const AttendanceDetailsPage = () => {
@@ -44,8 +45,10 @@ const AttendanceDetailsPage = () => {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
-          <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-          <p className="mt-4 text-gray-600 font-medium">Loading attendance details...</p>
+          <Loader size={48} />
+          <p className="mt-4 text-gray-600 font-medium">
+            Loading attendance details...
+          </p>
         </div>
       </div>
     );
@@ -59,7 +62,9 @@ const AttendanceDetailsPage = () => {
             <AlertCircle className="w-6 h-6 text-red-600" />
           </div>
           <h2 className="text-2xl font-bold text-gray-800 mb-2">Error</h2>
-          <p className="text-gray-600 mb-6">{error || "Attendance not found"}</p>
+          <p className="text-gray-600 mb-6">
+            {error || "Attendance not found"}
+          </p>
           <button
             onClick={() => router.push("/attendance")}
             className="px-6 py-3 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition-all"
@@ -117,7 +122,9 @@ const AttendanceDetailsPage = () => {
               </div>
               <div className="flex space-x-3">
                 <button
-                  onClick={() => router.push(`/attendance/${attendance.id}/edit`)}
+                  onClick={() =>
+                    router.push(`/attendance/${attendance.id}/edit`)
+                  }
                   className="px-6 py-2 bg-white text-blue-600 rounded-lg font-semibold hover:bg-blue-50 transition-all shadow-md"
                 >
                   Edit
@@ -148,7 +155,12 @@ const AttendanceDetailsPage = () => {
             <div className="space-y-4">
               <InfoRow label="Attendance ID" value={attendance.id} />
               <InfoRow label="Date" value={formatDate(attendance.date)} />
-              <InfoRow label="Employee" value={attendance.employeeName || `Employee ${attendance.employee}`} />
+              <InfoRow
+                label="Employee"
+                value={
+                  attendance.employeeName || `Employee ${attendance.employee}`
+                }
+              />
             </div>
           </div>
 
@@ -163,8 +175,14 @@ const AttendanceDetailsPage = () => {
               </h2>
             </div>
             <div className="space-y-4">
-              <InfoRow label="Check In" value={formatTime(attendance.checkIn)} />
-              <InfoRow label="Check Out" value={formatTime(attendance.checkOut)} />
+              <InfoRow
+                label="Check In"
+                value={formatTime(attendance.checkIn)}
+              />
+              <InfoRow
+                label="Check Out"
+                value={formatTime(attendance.checkOut)}
+              />
             </div>
           </div>
 
@@ -179,9 +197,9 @@ const AttendanceDetailsPage = () => {
               </h2>
             </div>
             <div className="space-y-4">
-              <InfoRow 
-                label="Work Location" 
-                value={attendance.onsite_or_remote ? "Onsite" : "Remote"} 
+              <InfoRow
+                label="Work Location"
+                value={attendance.onsite_or_remote ? "Onsite" : "Remote"}
               />
               <InfoRow label="Check In IP" value={attendance.check_in_ip} />
               <InfoRow label="Check Out IP" value={attendance.check_out_ip} />
@@ -199,11 +217,7 @@ const AttendanceDetailsPage = () => {
               </h2>
             </div>
             <div className="space-y-4">
-              <InfoRow 
-                label="Remarks" 
-                value={attendance.remarks} 
-                multiline 
-              />
+              <InfoRow label="Remarks" value={attendance.remarks} multiline />
             </div>
           </div>
         </div>

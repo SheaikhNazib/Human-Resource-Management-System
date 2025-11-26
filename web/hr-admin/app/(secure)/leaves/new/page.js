@@ -4,13 +4,22 @@ import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { createLeaveClient } from "@/actions/leaves/business";
 import { useEmployees } from "@/actions/employees/business";
-import { Calendar, FileText, User, Clock, Briefcase, Heart, Plane } from "lucide-react";
+import {
+  Calendar,
+  FileText,
+  User,
+  Clock,
+  Briefcase,
+  Heart,
+  Plane,
+} from "lucide-react";
+import Loader from "@/components/ui/Loader";
 import AutoComplete from "@/components/ui/autoComplete";
 
 export default function NewLeavePage() {
   const router = useRouter();
   const { employees, loading: loadingEmployees } = useEmployees();
-  
+
   const [formData, setFormData] = useState({
     employee_id: "",
     start_date: "",
@@ -25,7 +34,7 @@ export default function NewLeavePage() {
     { value: "sick", label: "Sick Leave", icon: Heart, color: "green" },
     { value: "annual", label: "Annual Leave", icon: Plane, color: "purple" },
   ];
-  
+
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [errors, setErrors] = useState({});
@@ -79,7 +88,7 @@ export default function NewLeavePage() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     if (!validateForm()) {
       return;
     }
@@ -89,8 +98,13 @@ export default function NewLeavePage() {
 
     // Ensure employee_id is a valid integer
     const employeeId = parseInt(formData.employee_id, 10);
-    console.log("Form employee_id:", formData.employee_id, "Parsed:", employeeId);
-    
+    console.log(
+      "Form employee_id:",
+      formData.employee_id,
+      "Parsed:",
+      employeeId
+    );
+
     if (!employeeId || isNaN(employeeId)) {
       setError("Please select a valid employee");
       setLoading(false);
@@ -104,14 +118,22 @@ export default function NewLeavePage() {
     const leave_days = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
 
     // Map leave_type to reason field for backend compatibility
-    const selectedLeaveType = leaveTypes.find(type => type.value === formData.leave_type);
-    const reasonText = selectedLeaveType ? selectedLeaveType.label : formData.leave_type;
-    
+    const selectedLeaveType = leaveTypes.find(
+      (type) => type.value === formData.leave_type
+    );
+    const reasonText = selectedLeaveType
+      ? selectedLeaveType.label
+      : formData.leave_type;
+
     const leaveData = {
       employee: employeeId,
       start_date: formData.start_date,
       end_date: formData.end_date,
-      reason: reasonText + (formData.additional_notes ? ` - ${formData.additional_notes.trim()}` : ''),
+      reason:
+        reasonText +
+        (formData.additional_notes
+          ? ` - ${formData.additional_notes.trim()}`
+          : ""),
       status: formData.status,
       leave_days: leave_days,
     };
@@ -135,15 +157,15 @@ export default function NewLeavePage() {
 
   const calculateDuration = () => {
     if (!formData.start_date || !formData.end_date) return null;
-    
+
     const start = new Date(formData.start_date);
     const end = new Date(formData.end_date);
-    
+
     if (end < start) return null;
-    
+
     const diffTime = Math.abs(end - start);
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
-    
+
     return diffDays;
   };
 
@@ -165,8 +187,16 @@ export default function NewLeavePage() {
         {/* Error Alert */}
         {error && (
           <div className="mb-6 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg flex items-start gap-3">
-            <svg className="w-5 h-5 text-red-600 dark:text-red-400 shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
-              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+            <svg
+              className="w-5 h-5 text-red-600 dark:text-red-400 shrink-0 mt-0.5"
+              fill="currentColor"
+              viewBox="0 0 20 20"
+            >
+              <path
+                fillRule="evenodd"
+                d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
+                clipRule="evenodd"
+              />
             </svg>
             <p className="text-sm text-red-700 dark:text-red-400">{error}</p>
           </div>
@@ -175,7 +205,9 @@ export default function NewLeavePage() {
         {/* Form Card */}
         <div className="bg-white dark:bg-zinc-800 rounded-2xl shadow-xl overflow-hidden">
           <div className="bg-blue-600 px-6 py-4">
-            <h2 className="text-lg font-semibold text-white">Leave Request Details</h2>
+            <h2 className="text-lg font-semibold text-white">
+              Leave Request Details
+            </h2>
           </div>
 
           <form onSubmit={handleSubmit} className="p-6 space-y-6">
@@ -186,13 +218,17 @@ export default function NewLeavePage() {
                 Employee *
               </label>
               <AutoComplete
-                options={employees.map(emp => ({
+                options={employees.map((emp) => ({
                   id: emp.id,
-                  name: `${emp.firstName} ${emp.lastName} (${emp.email})`
+                  name: `${emp.firstName} ${emp.lastName} (${emp.email})`,
                 }))}
                 value={formData.employee_id}
                 onChange={handleEmployeeChange}
-                placeholder={loadingEmployees ? "Loading employees..." : "Search and select an employee"}
+                placeholder={
+                  loadingEmployees
+                    ? "Loading employees..."
+                    : "Search and select an employee"
+                }
                 disabled={loadingEmployees}
                 error={errors.employee_id}
                 className="w-full"
@@ -218,7 +254,9 @@ export default function NewLeavePage() {
                   }`}
                 />
                 {errors.start_date && (
-                  <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.start_date}</p>
+                  <p className="mt-1 text-sm text-red-600 dark:text-red-400">
+                    {errors.start_date}
+                  </p>
                 )}
               </div>
 
@@ -239,7 +277,9 @@ export default function NewLeavePage() {
                   }`}
                 />
                 {errors.end_date && (
-                  <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.end_date}</p>
+                  <p className="mt-1 text-sm text-red-600 dark:text-red-400">
+                    {errors.end_date}
+                  </p>
                 )}
               </div>
             </div>
@@ -271,42 +311,58 @@ export default function NewLeavePage() {
                       key={type.value}
                       type="button"
                       onClick={() => {
-                        setFormData((prev) => ({ ...prev, leave_type: type.value }));
+                        setFormData((prev) => ({
+                          ...prev,
+                          leave_type: type.value,
+                        }));
                         if (errors.leave_type) {
                           setErrors((prev) => ({ ...prev, leave_type: "" }));
                         }
                       }}
                       className={`
                         p-4 rounded-lg border-2 transition-all text-left
-                        ${isSelected
-                          ? `border-${type.color}-500 bg-${type.color}-50 dark:bg-${type.color}-900/20`
-                          : 'border-gray-300 dark:border-zinc-700 hover:border-gray-400 dark:hover:border-zinc-600'
+                        ${
+                          isSelected
+                            ? `border-${type.color}-500 bg-${type.color}-50 dark:bg-${type.color}-900/20`
+                            : "border-gray-300 dark:border-zinc-700 hover:border-gray-400 dark:hover:border-zinc-600"
                         }
-                        ${errors.leave_type && !isSelected ? 'border-red-300' : ''}
+                        ${
+                          errors.leave_type && !isSelected
+                            ? "border-red-300"
+                            : ""
+                        }
                       `}
                     >
                       <div className="flex items-center gap-3">
-                        <div className={`p-2 rounded-lg ${
-                          isSelected
-                            ? `bg-${type.color}-100 dark:bg-${type.color}-800/30`
-                            : 'bg-gray-100 dark:bg-zinc-800'
-                        }`}>
-                          <Icon className={`w-5 h-5 ${
+                        <div
+                          className={`p-2 rounded-lg ${
                             isSelected
-                              ? `text-${type.color}-600 dark:text-${type.color}-400`
-                              : 'text-gray-600 dark:text-zinc-400'
-                          }`} />
+                              ? `bg-${type.color}-100 dark:bg-${type.color}-800/30`
+                              : "bg-gray-100 dark:bg-zinc-800"
+                          }`}
+                        >
+                          <Icon
+                            className={`w-5 h-5 ${
+                              isSelected
+                                ? `text-${type.color}-600 dark:text-${type.color}-400`
+                                : "text-gray-600 dark:text-zinc-400"
+                            }`}
+                          />
                         </div>
                         <div className="flex-1">
-                          <div className={`font-semibold text-sm ${
-                            isSelected
-                              ? `text-${type.color}-700 dark:text-${type.color}-300`
-                              : 'text-gray-700 dark:text-zinc-300'
-                          }`}>
+                          <div
+                            className={`font-semibold text-sm ${
+                              isSelected
+                                ? `text-${type.color}-700 dark:text-${type.color}-300`
+                                : "text-gray-700 dark:text-zinc-300"
+                            }`}
+                          >
                             {type.label}
                           </div>
                           {isSelected && (
-                            <div className={`text-xs mt-0.5 text-${type.color}-600 dark:text-${type.color}-400`}>
+                            <div
+                              className={`text-xs mt-0.5 text-${type.color}-600 dark:text-${type.color}-400`}
+                            >
                               Selected
                             </div>
                           )}
@@ -317,7 +373,9 @@ export default function NewLeavePage() {
                 })}
               </div>
               {errors.leave_type && (
-                <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.leave_type}</p>
+                <p className="mt-1 text-sm text-red-600 dark:text-red-400">
+                  {errors.leave_type}
+                </p>
               )}
             </div>
 
@@ -354,22 +412,7 @@ export default function NewLeavePage() {
               >
                 {loading ? (
                   <>
-                    <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">
-                      <circle
-                        className="opacity-25"
-                        cx="12"
-                        cy="12"
-                        r="10"
-                        stroke="currentColor"
-                        strokeWidth="4"
-                        fill="none"
-                      />
-                      <path
-                        className="opacity-75"
-                        fill="currentColor"
-                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                      />
-                    </svg>
+                    <Loader size={16} className="inline-flex" />
                     Creating...
                   </>
                 ) : (

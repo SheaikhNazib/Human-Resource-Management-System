@@ -3,11 +3,15 @@
 import React, { useEffect, useState } from "react";
 import { Formik, Form, Field, ErrorMessage } from "formik";
 import * as Yup from "yup";
-import { updateAttendance, getAttendanceById } from "@/actions/attendances/server-actions";
+import {
+  updateAttendance,
+  getAttendanceById,
+} from "@/actions/attendances/server-actions";
 import { getEmployeesList } from "@/actions/employees/server-actions";
 import { useRouter, useParams } from "next/navigation";
 import { toast } from "sonner";
 import { AlertCircle } from "lucide-react";
+import Loader from "@/components/ui/Loader";
 import AutoComplete from "@/components/ui/autoComplete";
 
 const EditAttendancePage = () => {
@@ -30,23 +34,33 @@ const EditAttendancePage = () => {
         // Fetch both attendance and employees
         const [attendanceResponse, employeesResponse] = await Promise.all([
           getAttendanceById(params.id),
-          getEmployeesList()
+          getEmployeesList(),
         ]);
 
         if (attendanceResponse.success) {
           setAttendance(attendanceResponse.data);
         } else {
-          setError(attendanceResponse.error || "Failed to fetch attendance details");
-          toast.error(attendanceResponse.error || "Failed to fetch attendance details");
+          setError(
+            attendanceResponse.error || "Failed to fetch attendance details"
+          );
+          toast.error(
+            attendanceResponse.error || "Failed to fetch attendance details"
+          );
         }
 
-        if (employeesResponse.success && Array.isArray(employeesResponse.data)) {
+        if (
+          employeesResponse.success &&
+          Array.isArray(employeesResponse.data)
+        ) {
           // Format employees for AutoComplete: { id, name }
-          const formattedEmployees = employeesResponse.data.map(emp => {
-            const fullName = `${emp.firstName || ''} ${emp.lastName || ''}`.trim() || emp.name || `Employee ${emp.id}`;
+          const formattedEmployees = employeesResponse.data.map((emp) => {
+            const fullName =
+              `${emp.firstName || ""} ${emp.lastName || ""}`.trim() ||
+              emp.name ||
+              `Employee ${emp.id}`;
             return {
               id: emp.id,
-              name: fullName
+              name: fullName,
             };
           });
           setEmployees(formattedEmployees);
@@ -131,8 +145,10 @@ const EditAttendancePage = () => {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
-          <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-          <p className="mt-4 text-gray-600 font-medium">Loading attendance details...</p>
+          <Loader size={48} />
+          <p className="mt-4 text-gray-600 font-medium">
+            Loading attendance details...
+          </p>
         </div>
       </div>
     );
@@ -146,7 +162,9 @@ const EditAttendancePage = () => {
             <AlertCircle className="w-6 h-6 text-red-600" />
           </div>
           <h2 className="text-2xl font-bold text-gray-800 mb-2">Error</h2>
-          <p className="text-gray-600 mb-6">{error || "Attendance not found"}</p>
+          <p className="text-gray-600 mb-6">
+            {error || "Attendance not found"}
+          </p>
           <button
             onClick={() => router.push("/attendance")}
             className="px-6 py-3 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition-all"
@@ -245,11 +263,15 @@ const EditAttendancePage = () => {
                             <AutoComplete
                               options={employees}
                               value={field.value}
-                              onChange={(value) => form.setFieldValue("employee", value)}
+                              onChange={(value) =>
+                                form.setFieldValue("employee", value)
+                              }
                               placeholder="Search employee..."
                               displayKey="name"
                               valueKey="id"
-                              error={form.touched.employee && form.errors.employee}
+                              error={
+                                form.touched.employee && form.errors.employee
+                              }
                             />
                           )}
                         </Field>
@@ -423,7 +445,8 @@ const EditAttendancePage = () => {
                           </span>
                         </label>
                         <p className="text-xs text-gray-500 mt-2 ml-8">
-                          Check this if the employee was working onsite (uncheck for remote)
+                          Check this if the employee was working onsite (uncheck
+                          for remote)
                         </p>
                       </div>
                     </div>
@@ -437,7 +460,9 @@ const EditAttendancePage = () => {
                     <div className="flex space-x-4 w-full sm:w-auto">
                       <button
                         type="button"
-                        onClick={() => router.push(`/attendance/${params.id}/view`)}
+                        onClick={() =>
+                          router.push(`/attendance/${params.id}/view`)
+                        }
                         className="flex-1 sm:flex-none px-8 py-3 border-2 border-gray-300 rounded-lg text-gray-700 font-semibold hover:bg-gray-50 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
                         disabled={isSubmitting || formikSubmitting}
                       >
@@ -450,26 +475,10 @@ const EditAttendancePage = () => {
                       >
                         {isSubmitting || formikSubmitting ? (
                           <span className="flex items-center justify-center">
-                            <svg
-                              className="animate-spin -ml-1 mr-3 h-5 w-5 text-white"
-                              xmlns="http://www.w3.org/2000/svg"
-                              fill="none"
-                              viewBox="0 0 24 24"
-                            >
-                              <circle
-                                className="opacity-25"
-                                cx="12"
-                                cy="12"
-                                r="10"
-                                stroke="currentColor"
-                                strokeWidth="4"
-                              ></circle>
-                              <path
-                                className="opacity-75"
-                                fill="currentColor"
-                                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                              ></path>
-                            </svg>
+                            <Loader
+                              size={20}
+                              className="inline-flex -ml-1 mr-3"
+                            />
                             Updating...
                           </span>
                         ) : (
