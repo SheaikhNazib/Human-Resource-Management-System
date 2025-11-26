@@ -3,16 +3,28 @@ import React, { useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { useLeaves } from "@/actions/leaves/business";
 import TableArchive from "@/components/core/TableArchive";
+import LeaveStatusDropdown from "@/components/LeaveStatusDropdown";
 
 export default function LeavesPage() {
-  const { leaves, loading, error, refetch, deleteLeave } = useLeaves();
+  const { leaves, loading, error, refetch, deleteLeave, updateLeaveStatus } = useLeaves();
   const [query, setQuery] = useState("");
   const router = useRouter();
+
+  function handleView(id) {
+    router.push(`/leaves/view/${id}`);
+  }
 
   async function handleDelete(id) {
     const result = await deleteLeave(id);
     if (!result.success) {
       alert(result.error || "Delete failed");
+    }
+  }
+
+  async function handleStatusChange(leaveId, newStatus) {
+    const result = await updateLeaveStatus(leaveId, newStatus, "Admin"); // Replace "Admin" with actual user ID/name
+    if (!result.success) {
+      alert(result.error || "Failed to update status");
     }
   }
 
@@ -32,30 +44,15 @@ export default function LeavesPage() {
     {
       header: "Employee",
       accessor: "employeeName",
-      render: (leave) => (
-        <div className="font-medium text-zinc-900 dark:text-zinc-100">
-          {leave.employeeName || leave.raw?.employee?.name || "—"}
-        </div>
-      ),
-    },
-    {
-      header: "Leave Type",
-      accessor: "leaveType",
       render: (leave) => {
-        const type = leave.leaveType || leave.raw?.leave_type || "—";
-        const typeColors = {
-          sick: "bg-red-100 text-red-700",
-          vacation: "bg-blue-100 text-blue-700",
-          personal: "bg-purple-100 text-purple-700",
-          casual: "bg-green-100 text-green-700",
-          annual: "bg-indigo-100 text-indigo-700",
-        };
-        const colorClass = typeColors[type.toLowerCase()] || "bg-gray-100 text-gray-700";
+        const firstName = leave.raw?.employee?.first_name || '';
+        const lastName = leave.raw?.employee?.last_name || '';
+        const displayName = firstName && lastName ? `${firstName} ${lastName}` : firstName || lastName || leave.employeeName || '—';
         
         return (
-          <span className={`px-2 py-1 rounded text-xs font-medium ${colorClass}`}>
-            {type.charAt(0).toUpperCase() + type.slice(1)}
-          </span>
+          <div className="font-medium text-zinc-900 dark:text-zinc-100">
+            {displayName}
+          </div>
         );
       },
     },
@@ -96,18 +93,12 @@ export default function LeavesPage() {
       accessor: "status",
       render: (leave) => {
         const status = leave.status || leave.raw?.status || "pending";
-        const statusColors = {
-          pending: "bg-yellow-100 text-yellow-700",
-          approved: "bg-green-100 text-green-700",
-          rejected: "bg-red-100 text-red-700",
-          cancelled: "bg-gray-100 text-gray-700",
-        };
-        const colorClass = statusColors[status.toLowerCase()] || "bg-gray-100 text-gray-700";
-        
         return (
-          <span className={`px-2 py-1 rounded text-xs font-medium ${colorClass}`}>
-            {status.charAt(0).toUpperCase() + status.slice(1)}
-          </span>
+          <LeaveStatusDropdown
+            currentStatus={status}
+            onStatusChange={handleStatusChange}
+            leaveId={leave.id}
+          />
         );
       },
     },
@@ -128,8 +119,9 @@ export default function LeavesPage() {
     return (
       <TableArchive.Actions
         row={leave}
+        onView={() => handleView(id)}
         onDelete={() => handleDelete(id)}
-        hasViewPermission={false}
+        hasViewPermission={true}
         hasEditPermission={false}
         hasDeletePermission={true}
         deleteConfirmMessage="Delete this leave request? This action cannot be undone."

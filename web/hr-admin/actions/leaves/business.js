@@ -1,9 +1,11 @@
 import { useState, useEffect, useCallback } from "react";
 import {
   getLeavesList,
+  getLeaveById as getLeaveByIdAction,
   deleteLeave as deleteLeaveAction,
   createLeave as createLeaveAction,
   updateLeave as updateLeaveAction,
+  updateLeaveStatus as updateLeaveStatusAction,
 } from "./server-actions";
 
 export const useLeaves = () => {
@@ -73,6 +75,27 @@ export const useLeaves = () => {
     }
   };
 
+  const updateLeaveStatus = async (id, status, approvedBy = null) => {
+    try {
+      const response = await updateLeaveStatusAction(id, status, approvedBy);
+      if (response.success) {
+        // Update the local state immediately for better UX
+        setLeaves((prev) =>
+          prev.map((leave) =>
+            leave.id === id
+              ? { ...leave, status, approvedBy, approvedAt: new Date().toISOString() }
+              : leave
+          )
+        );
+        return { success: true, data: response.data };
+      } else {
+        return { success: false, error: response.error };
+      }
+    } catch (err) {
+      return { success: false, error: err.message };
+    }
+  };
+
   return {
     leaves,
     loading,
@@ -81,5 +104,19 @@ export const useLeaves = () => {
     deleteLeave,
     createLeave,
     updateLeave,
+    updateLeaveStatus,
   };
 };
+
+// Wrapper functions for client-side usage
+export async function createLeaveClient(payload) {
+  return await createLeaveAction(payload);
+}
+
+export async function updateLeaveClient(id, payload) {
+  return await updateLeaveAction(id, payload);
+}
+
+export async function getLeaveByIdClient(id) {
+  return await getLeaveByIdAction(id);
+}
