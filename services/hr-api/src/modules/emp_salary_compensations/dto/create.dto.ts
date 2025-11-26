@@ -1,5 +1,5 @@
 
-import { IsNumber, IsOptional, IsString, IsDateString } from 'class-validator';
+import { IsNumber, IsOptional, IsString, IsDateString, IsNotEmpty } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 export class CreateEmpSalaryCompensationDto {
@@ -26,6 +26,11 @@ export class CreateEmpSalaryCompensationDto {
   @IsNumber()
   @IsOptional()
   net_salary?: number;
+
+  @ApiProperty({ example: '2025-11-01' })
+  @IsDateString()
+  @IsNotEmpty()
+  payable_date: string;
 
   @ApiProperty({ example: '2025-11-01' })
   @IsDateString()
