@@ -151,7 +151,7 @@ export default function AddUserPage() {
               <option value="hr_manager">HR Manager</option>
               <option value="accountant">Accountant</option>
               <option value="manager">Manager</option>
-              <option value="employee">Employee</option>
+              {/* <option value="employee">Employee</option> */}
             </select>
             <p className="text-xs text-zinc-500 mt-1">
               Select the appropriate role for this user

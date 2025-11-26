@@ -21,6 +21,14 @@ export const Api_path = {
     UPDATE: (id) => `/api/v1/emp-departments/${id}`,
   },
 
+  JOB_TITLE: {
+    LIST: "/api/v1/emp-job-titles",
+    GET_ONE: (id) => `/api/v1/emp-job-titles/${id}`,
+    CREATE: "/api/v1/emp-job-titles",
+    UPDATE: (id) => `/api/v1/emp-job-titles/${id}`,
+    DELETE: (id) => `/api/v1/emp-job-titles/${id}`,
+  },
+
   ATTENDANCE: {
     LIST: "/api/v1/emp-attendances",
     CREATE: "/api/v1/emp-attendances",

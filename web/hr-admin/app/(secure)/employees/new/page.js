@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Formik, Form, Field, ErrorMessage } from "formik";
 import * as Yup from "yup";
 import { createEmployee } from "@/actions/employees/server-actions";
@@ -13,10 +13,17 @@ import {
   parsePhoneNumberFromString,
   getExampleNumber,
 } from "libphonenumber-js";
+import AutoComplete from "@/components/ui/autoComplete";
+import { getDepartmentsList } from "@/actions/departments/server-actions";
+import { getJobTitlesList } from "@/actions/job-titles/server-actions";
 
 const AddEmployeePage = () => {
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [departments, setDepartments] = useState([]);
+  const [jobTitles, setJobTitles] = useState([]);
+  const [loadingDepartments, setLoadingDepartments] = useState(true);
+  const [loadingJobTitles, setLoadingJobTitles] = useState(true);
 
   const validationSchema = Yup.object({
     name: Yup.string(),
@@ -81,6 +88,46 @@ const AddEmployeePage = () => {
 
   const [selectedCountry, setSelectedCountry] = useState("bd");
   const [selectedOfficeCountry, setSelectedOfficeCountry] = useState("bd");
+
+  // Fetch departments and job titles on component mount
+  useEffect(() => {
+    const fetchDepartments = async () => {
+      try {
+        setLoadingDepartments(true);
+        const response = await getDepartmentsList();
+        if (response.success && response.data) {
+          setDepartments(response.data);
+        } else {
+          toast.error(response.error || 'Failed to load departments');
+        }
+      } catch (error) {
+        console.error('Error fetching departments:', error);
+        toast.error('Failed to load departments');
+      } finally {
+        setLoadingDepartments(false);
+      }
+    };
+
+    const fetchJobTitles = async () => {
+      try {
+        setLoadingJobTitles(true);
+        const response = await getJobTitlesList();
+        if (response.success && response.data) {
+          setJobTitles(response.data);
+        } else {
+          toast.error(response.error || 'Failed to load job titles');
+        }
+      } catch (error) {
+        console.error('Error fetching job titles:', error);
+        toast.error('Failed to load job titles');
+      } finally {
+        setLoadingJobTitles(false);
+      }
+    };
+
+    fetchDepartments();
+    fetchJobTitles();
+  }, []);
 
   const handleSubmit = async (values, { setSubmitting, resetForm }) => {
     setIsSubmitting(true);
@@ -571,45 +618,39 @@ const AddEmployeePage = () => {
                       </div>
 
                       <div>
-                        <label
-                          htmlFor="emp_department"
-                          className="block text-sm font-semibold text-gray-700 mb-2"
-                        >
-                          Department ID <span className="text-red-500">*</span>
-                        </label>
-                        <Field
-                          type="number"
-                          id="emp_department"
-                          name="emp_department"
-                          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-                          placeholder="e.g., 2 (HR), 5 (Human Resources)"
-                        />
-                        <ErrorMessage
-                          name="emp_department"
-                          component="div"
-                          className="text-red-600 text-xs mt-1.5 font-medium"
-                        />
+                        <Field name="emp_department">
+                          {({ field, form }) => (
+                            <AutoComplete
+                              label="Department"
+                              options={departments}
+                              value={field.value}
+                              onChange={(value) => form.setFieldValue('emp_department', value)}
+                              placeholder={loadingDepartments ? "Loading departments..." : "Select a department"}
+                              displayKey="name"
+                              valueKey="id"
+                              disabled={loadingDepartments}
+                              error={form.touched.emp_department && form.errors.emp_department}
+                            />
+                          )}
+                        </Field>
                       </div>
 
                       <div>
-                        <label
-                          htmlFor="emp_job_title"
-                          className="block text-sm font-semibold text-gray-700 mb-2"
-                        >
-                          Job Title ID <span className="text-red-500">*</span>
-                        </label>
-                        <Field
-                          type="number"
-                          id="emp_job_title"
-                          name="emp_job_title"
-                          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-                          placeholder="e.g., 5 (Software Engineer), 9 (HR Officer)"
-                        />
-                        <ErrorMessage
-                          name="emp_job_title"
-                          component="div"
-                          className="text-red-600 text-xs mt-1.5 font-medium"
-                        />
+                        <Field name="emp_job_title">
+                          {({ field, form }) => (
+                            <AutoComplete
+                              label="Job Title"
+                              options={jobTitles}
+                              value={field.value}
+                              onChange={(value) => form.setFieldValue('emp_job_title', value)}
+                              placeholder={loadingJobTitles ? "Loading job titles..." : "Select a job title"}
+                              displayKey="name"
+                              valueKey="id"
+                              disabled={loadingJobTitles}
+                              error={form.touched.emp_job_title && form.errors.emp_job_title}
+                            />
+                          )}
+                        </Field>
                       </div>
 
                       <div className="md:col-span-2 bg-white rounded-lg p-4 border border-gray-200">
