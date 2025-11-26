@@ -29,11 +29,17 @@ export default function PerformancePage() {
     if (!query) return performances;
     const q = query.toLowerCase();
     return performances.filter((p) => {
-      const name = (p.employeeName || p.raw?.employee?.name || "")
+      const emp = p.employee || p.raw?.employee || {};
+      const name = (
+        p.employeeName ||
+        emp.name ||
+        `${emp.first_name || ""} ${emp.last_name || ""}` ||
+        ""
+      )
         .toString()
         .toLowerCase();
-      const notes = (p.notes || "").toString().toLowerCase();
-      const score = (p.rating || p.raw?.score || "").toString();
+      const notes = (p.feedback || p.notes || "").toString().toLowerCase();
+      const score = (p.score ?? p.rating ?? p.raw?.score ?? "").toString();
       return name.includes(q) || notes.includes(q) || score.includes(q);
     });
   }, [performances, query]);
@@ -41,10 +47,15 @@ export default function PerformancePage() {
   const columns = [
     {
       header: "Employee",
-      accessor: "employeeName",
+      accessor: "employee",
       render: (row) => {
-        const name = row.employeeName || row.raw?.employee?.name || "—";
-        const id = row.employeeId ?? row.raw?.employee?.id ?? "";
+        const emp = row.employee || row.raw?.employee || {};
+        const name =
+          row.employeeName ||
+          emp.name ||
+          `${emp.first_name || ""} ${emp.last_name || ""}` ||
+          "—";
+        const id = row.employeeId ?? emp.id ?? row.raw?.employeeId ?? "";
 
         return (
           <div className="flex items-center gap-3">
@@ -54,7 +65,7 @@ export default function PerformancePage() {
             <div>
               <button
                 type="button"
-                onClick={() => handleView(row.id)}
+                onClick={() => handleView(row.id ?? row.raw?.id)}
                 className="font-medium text-zinc-900 dark:text-zinc-100 text-left hover:underline focus:outline-none cursor-pointer"
               >
                 {name}
@@ -67,39 +78,42 @@ export default function PerformancePage() {
     },
     {
       header: "Score",
-      accessor: "rating",
-      render: (row) => (
-        <div className="flex items-center gap-2">
-          <span
-            className={`inline-block px-2 py-0.5 rounded text-white text-xs ${
-              row.rating <= 3
-                ? "bg-red-500"
-                : row.rating <= 6
-                ? "bg-yellow-400 text-black"
-                : row.rating <= 8
-                ? "bg-amber-400 text-black"
-                : "bg-green-500"
-            }`}
-          >
-            {row.rating}
-          </span>
-          <div className="text-xs text-zinc-500">
-            {row.rating <= 3
-              ? "Poor"
-              : row.rating <= 6
-              ? "Fair"
-              : row.rating <= 8
-              ? "Good"
-              : "Excellent"}
+      accessor: "score",
+      render: (row) => {
+        const s = row.score ?? row.rating ?? row.raw?.score ?? 0;
+        return (
+          <div className="flex items-center gap-2">
+            <span
+              className={`inline-block px-2 py-0.5 rounded text-white text-xs ${
+                s <= 3
+                  ? "bg-red-500"
+                  : s <= 6
+                  ? "bg-yellow-400 text-black"
+                  : s <= 8
+                  ? "bg-amber-400 text-black"
+                  : "bg-green-500"
+              }`}
+            >
+              {s}
+            </span>
+            <div className="text-xs text-zinc-500">
+              {s <= 3
+                ? "Poor"
+                : s <= 6
+                ? "Fair"
+                : s <= 8
+                ? "Good"
+                : "Excellent"}
+            </div>
           </div>
-        </div>
-      ),
+        );
+      },
     },
     {
       header: "Review Date",
-      accessor: "createdAt",
+      accessor: "review_date",
       render: (row) => {
-        const date = row.raw?.review_date ?? row.createdAt;
+        const date = row.review_date ?? row.raw?.review_date ?? row.createdAt;
         return (
           <div className="text-sm text-zinc-700 dark:text-zinc-200">
             {date ? new Date(date).toLocaleDateString() : "—"}
@@ -109,10 +123,10 @@ export default function PerformancePage() {
     },
     {
       header: "Notes",
-      accessor: "notes",
+      accessor: "feedback",
       render: (row) => (
         <div className="text-sm text-zinc-600 dark:text-zinc-400 whitespace-pre-wrap">
-          {row.notes || "—"}
+          {row.feedback || row.notes || "—"}
         </div>
       ),
     },
