@@ -70,9 +70,18 @@ export default function TasksListPage() {
       header: "Status",
       accessor: "task_status",
       render: (t) => {
-        const s = t.task_status ?? t.raw?.task_status ?? t.raw?.status ?? 0;
-        const label = s === 1 ? 'Open' : s === 2 ? 'In Progress' : s === 3 ? 'Done' : 'Unknown';
-        const cls = s === 3 ? 'bg-green-100 text-green-700' : s === 2 ? 'bg-yellow-100 text-yellow-700' : 'bg-zinc-100 text-zinc-700';
+        let s = t.task_status ?? t.raw?.task_status ?? t.raw?.status ?? 0;
+
+        // If backend returned an object like { id: 2, name: 'In Progress' }
+        if (typeof s === 'object' && s !== null) {
+          s = s.id ?? s.value ?? 0;
+        }
+
+        // Coerce strings/numeric-like values to number where possible
+        const sNum = Number.isFinite(Number(s)) ? Number(s) : 0;
+
+        const label = sNum === 1 ? 'Open' : sNum === 2 ? 'In Progress' : sNum === 3 ? 'Done' : 'Unknown';
+        const cls = sNum === 3 ? 'bg-green-100 text-green-700' : sNum === 2 ? 'bg-yellow-100 text-yellow-700' : 'bg-zinc-100 text-zinc-700';
         return <span className={`px-2 py-1 rounded text-xs font-medium ${cls}`}>{label}</span>;
       }
     }
