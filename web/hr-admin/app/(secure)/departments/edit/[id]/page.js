@@ -3,6 +3,7 @@ import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useDepartments } from "@/actions/departments/business";
 import { getDepartment } from "@/actions/departments/server-actions";
+import { toMessage } from "@/lib/utils";
 
 export default function EditDepartmentPage({ params }) {
   const router = useRouter();
@@ -86,7 +87,9 @@ export default function EditDepartmentPage({ params }) {
     return (
       <div className="max-w-3xl mx-auto">
         <div className="p-6 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
-          <p className="text-sm text-red-700 dark:text-red-400">{error}</p>
+          <p className="text-sm text-red-700 dark:text-red-400">
+            {toMessage(error)}
+          </p>
         </div>
       </div>
     );
@@ -105,7 +108,9 @@ export default function EditDepartmentPage({ params }) {
 
       {error && (
         <div className="mb-4 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
-          <p className="text-sm text-red-700 dark:text-red-400">{error}</p>
+          <p className="text-sm text-red-700 dark:text-red-400">
+            {toMessage(error)}
+          </p>
         </div>
       )}
 

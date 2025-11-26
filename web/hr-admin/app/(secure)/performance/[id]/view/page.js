@@ -3,6 +3,8 @@ import React, { useState, useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
 import Link from "next/link";
 import { getPerformance } from "@/actions/performance/server-actions";
+import Loader from "@/components/ui/Loader";
+import { toMessage } from "@/lib/utils";
 
 export default function ViewPerformancePage() {
   const router = useRouter();
@@ -32,7 +34,7 @@ export default function ViewPerformancePage() {
     return (
       <div className="w-full max-w-4xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-4 sm:py-6">
         <div className="flex items-center justify-center py-12">
-          <div className="h-8 w-8 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin"></div>
+          <Loader size={32} />
           <span className="ml-3 text-zinc-500">Loading...</span>
         </div>
       </div>
@@ -43,7 +45,9 @@ export default function ViewPerformancePage() {
     return (
       <div className="w-full max-w-4xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-4 sm:py-6">
         <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4">
-          <p className="text-sm text-red-700 dark:text-red-400">{error}</p>
+          <p className="text-sm text-red-700 dark:text-red-400">
+            {toMessage(error)}
+          </p>
         </div>
         <div className="mt-4">
           <Link
