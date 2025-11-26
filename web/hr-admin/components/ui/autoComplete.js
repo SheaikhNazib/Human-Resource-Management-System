@@ -11,6 +11,7 @@ const AutoComplete = (props = {}) => {
     placeholder = "Search...",
     label = "",
     displayKey = "",
+    valueKey = "",
     error = "",
     disabled = false,
     className = "",

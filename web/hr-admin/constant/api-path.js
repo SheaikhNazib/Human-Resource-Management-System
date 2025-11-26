@@ -13,6 +13,15 @@ export const Api_path = {
     CREATE: "/api/v1/emp-departments",
     UPDATE: (id) => `/api/v1/emp-departments/${id}`,
   },
+
+  ATTENDANCE: {
+    LIST: "/api/v1/emp-attendances",
+    CREATE: "/api/v1/emp-attendances",
+    UPDATE: (id) => `/api/v1/emp-attendances/${id}`,
+    DELETE: (id) => `/api/v1/emp-attendances/${id}`,
+    GET_ONE: (id) => `/api/v1/emp-attendances/${id}`,
+  },
+
   TASK: {
     LIST: "/api/v1/tasks",
     CREATE: "/api/v1/tasks",
@@ -46,4 +55,13 @@ export const Api_path = {
     DELETE: (id) => `/api/v1/emp-performances/${id}`,
     GET_ONE: (id) => `/api/v1/emp-performances/${id}`,
   },
+  DEPARTMENT: {
+    LIST: "/api/v1/emp-departments",
+    GET_ONE: (id) => `/api/v1/emp-departments/${id}`,
+    DELETE: (id) => `/api/v1/emp-departments/${id}`,
+    CREATE: "/api/v1/emp-departments",
+    UPDATE: (id) => `/api/v1/emp-departments/${id}`,
+  }
+
+  
 };
