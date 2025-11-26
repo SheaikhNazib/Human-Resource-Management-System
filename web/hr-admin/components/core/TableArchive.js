@@ -421,6 +421,8 @@ export default function TableArchive({
   searchPlaceholder = "Search...",
   createButtonText = "Add New",
   createButtonHref = "",
+  createButtonOnClick = null,
+  createButtonClassName = "px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors flex items-center gap-2",
   onRefresh = null,
   showSearch = true,
   showCreateButton = true,
@@ -562,26 +564,48 @@ export default function TableArchive({
                 </button>
               )}
 
-              {createButtonHref && showCreateButton && (
-                <Link
-                  href={createButtonHref}
-                  className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors flex items-center gap-2"
-                >
-                  <svg
-                    className="h-4 w-4"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
+              {(createButtonOnClick || createButtonHref) && showCreateButton && (
+                createButtonOnClick ? (
+                  <button
+                    onClick={createButtonOnClick}
+                    className={createButtonClassName}
                   >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M12 4v16m8-8H4"
-                    />
-                  </svg>
-                  {createButtonText}
-                </Link>
+                    <svg
+                      className="h-4 w-4"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M12 4v16m8-8H4"
+                      />
+                    </svg>
+                    {createButtonText}
+                  </button>
+                ) : (
+                  <Link
+                    href={createButtonHref}
+                    className={createButtonClassName}
+                  >
+                    <svg
+                      className="h-4 w-4"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M12 4v16m8-8H4"
+                      />
+                    </svg>
+                    {createButtonText}
+                  </Link>
+                )
               )}
             </div>
           </div>
