@@ -24,7 +24,15 @@ export const Api_path = {
         UPDATE: (itemId) => `/api/v1/task-work-items/${itemId}`,
         DELETE: (itemId) => `/api/v1/task-work-items/${itemId}`,
         GET_ONE: (itemId) => `/api/v1/task-work-items/${itemId}`,
+    },  
+    EMPLOYEE_LEAVE: {
+        LIST: '/api/v1/emp-leaves',
+        CREATE: '/api/v1/emp-leaves',
+        UPDATE: (id) => `/api/v1/emp-leaves/${id}`,
+        DELETE: (id) => `/api/v1/emp-leaves/${id}`,
+        GET_ONE: (id) => `/api/v1/emp-leaves/${id}`,
     }
+    
 }
 export const Department_path = {
     LIST: "/api/v1/emp-departments",
