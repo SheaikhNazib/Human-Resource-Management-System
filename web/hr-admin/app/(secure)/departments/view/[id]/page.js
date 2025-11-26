@@ -113,7 +113,7 @@ export default async function DepartmentDetailPage({ params } = {}) {
         {/* Main content card */}
         <div className="bg-white dark:bg-zinc-900 rounded-xl shadow-lg border border-zinc-200 dark:border-zinc-800 overflow-hidden">
           {/* Department header */}
-          <div className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-zinc-800 dark:to-zinc-800 px-6 py-8 sm:px-8">
+          <div className="bg-linear-to-r from-blue-50 to-indigo-50 dark:from-zinc-800 dark:to-zinc-800 px-6 py-8 sm:px-8">
             <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4">
               <div className="flex-1">
                 <h1 className="text-3xl sm:text-4xl font-bold text-zinc-900 dark:text-zinc-100 mb-2">

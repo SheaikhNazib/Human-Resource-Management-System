@@ -4,7 +4,8 @@ import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { createLeaveClient } from "@/actions/leaves/business";
 import { useEmployees } from "@/actions/employees/business";
-import { Calendar, FileText, User, Clock } from "lucide-react";
+import { Calendar, FileText, User, Clock, Briefcase, Heart, Plane } from "lucide-react";
+import AutoComplete from "@/components/ui/autoComplete";
 
 export default function NewLeavePage() {
   const router = useRouter();
@@ -14,9 +15,16 @@ export default function NewLeavePage() {
     employee_id: "",
     start_date: "",
     end_date: "",
-    reason: "",
+    leave_type: "",
+    additional_notes: "",
     status: "pending",
   });
+
+  const leaveTypes = [
+    { value: "casual", label: "Casual Leave", icon: Briefcase, color: "blue" },
+    { value: "sick", label: "Sick Leave", icon: Heart, color: "green" },
+    { value: "annual", label: "Annual Leave", icon: Plane, color: "purple" },
+  ];
   
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -45,8 +53,8 @@ export default function NewLeavePage() {
       }
     }
 
-    if (!formData.reason.trim()) {
-      newErrors.reason = "Reason is required";
+    if (!formData.leave_type) {
+      newErrors.leave_type = "Leave type is required";
     }
 
     setErrors(newErrors);
@@ -59,6 +67,13 @@ export default function NewLeavePage() {
     // Clear error for this field
     if (errors[name]) {
       setErrors((prev) => ({ ...prev, [name]: "" }));
+    }
+  };
+
+  const handleEmployeeChange = (value) => {
+    setFormData((prev) => ({ ...prev, employee_id: value }));
+    if (errors.employee_id) {
+      setErrors((prev) => ({ ...prev, employee_id: "" }));
     }
   };
 
@@ -88,11 +103,15 @@ export default function NewLeavePage() {
     const diffTime = Math.abs(end - start);
     const leave_days = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
 
+    // Map leave_type to reason field for backend compatibility
+    const selectedLeaveType = leaveTypes.find(type => type.value === formData.leave_type);
+    const reasonText = selectedLeaveType ? selectedLeaveType.label : formData.leave_type;
+    
     const leaveData = {
       employee: employeeId,
       start_date: formData.start_date,
       end_date: formData.end_date,
-      reason: formData.reason.trim(),
+      reason: reasonText + (formData.additional_notes ? ` - ${formData.additional_notes.trim()}` : ''),
       status: formData.status,
       leave_days: leave_days,
     };
@@ -166,29 +185,18 @@ export default function NewLeavePage() {
                 <User className="w-4 h-4" />
                 Employee *
               </label>
-              <select
-                name="employee_id"
+              <AutoComplete
+                options={employees.map(emp => ({
+                  id: emp.id,
+                  name: `${emp.firstName} ${emp.lastName} (${emp.email})`
+                }))}
                 value={formData.employee_id}
-                onChange={handleChange}
+                onChange={handleEmployeeChange}
+                placeholder={loadingEmployees ? "Loading employees..." : "Search and select an employee"}
                 disabled={loadingEmployees}
-                className={`w-full rounded-lg border px-4 py-2.5 text-sm bg-white dark:bg-zinc-900 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all ${
-                  errors.employee_id
-                    ? "border-red-500 dark:border-red-500"
-                    : "border-gray-300 dark:border-zinc-700"
-                }`}
-              >
-                <option value="">
-                  {loadingEmployees ? "Loading employees..." : "Select an employee"}
-                </option>
-                {employees.map((emp) => (
-                  <option key={emp.id} value={emp.id}>
-                    {emp.firstName} {emp.lastName} ({emp.email})
-                  </option>
-                ))}
-              </select>
-              {errors.employee_id && (
-                <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.employee_id}</p>
-              )}
+                error={errors.employee_id}
+                className="w-full"
+              />
             </div>
 
             {/* Date Range */}
@@ -248,27 +256,85 @@ export default function NewLeavePage() {
               </div>
             )}
 
-            {/* Reason */}
+            {/* Leave Type */}
+            <div>
+              <label className="text-sm font-semibold text-gray-700 dark:text-zinc-300 mb-2 flex items-center gap-2">
+                <Briefcase className="w-4 h-4" />
+                Leave Type *
+              </label>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                {leaveTypes.map((type) => {
+                  const Icon = type.icon;
+                  const isSelected = formData.leave_type === type.value;
+                  return (
+                    <button
+                      key={type.value}
+                      type="button"
+                      onClick={() => {
+                        setFormData((prev) => ({ ...prev, leave_type: type.value }));
+                        if (errors.leave_type) {
+                          setErrors((prev) => ({ ...prev, leave_type: "" }));
+                        }
+                      }}
+                      className={`
+                        p-4 rounded-lg border-2 transition-all text-left
+                        ${isSelected
+                          ? `border-${type.color}-500 bg-${type.color}-50 dark:bg-${type.color}-900/20`
+                          : 'border-gray-300 dark:border-zinc-700 hover:border-gray-400 dark:hover:border-zinc-600'
+                        }
+                        ${errors.leave_type && !isSelected ? 'border-red-300' : ''}
+                      `}
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className={`p-2 rounded-lg ${
+                          isSelected
+                            ? `bg-${type.color}-100 dark:bg-${type.color}-800/30`
+                            : 'bg-gray-100 dark:bg-zinc-800'
+                        }`}>
+                          <Icon className={`w-5 h-5 ${
+                            isSelected
+                              ? `text-${type.color}-600 dark:text-${type.color}-400`
+                              : 'text-gray-600 dark:text-zinc-400'
+                          }`} />
+                        </div>
+                        <div className="flex-1">
+                          <div className={`font-semibold text-sm ${
+                            isSelected
+                              ? `text-${type.color}-700 dark:text-${type.color}-300`
+                              : 'text-gray-700 dark:text-zinc-300'
+                          }`}>
+                            {type.label}
+                          </div>
+                          {isSelected && (
+                            <div className={`text-xs mt-0.5 text-${type.color}-600 dark:text-${type.color}-400`}>
+                              Selected
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+              {errors.leave_type && (
+                <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.leave_type}</p>
+              )}
+            </div>
+
+            {/* Additional Notes */}
             <div>
               <label className="text-sm font-semibold text-gray-700 dark:text-zinc-300 mb-2 flex items-center gap-2">
                 <FileText className="w-4 h-4" />
-                Reason *
+                Additional Notes (Optional)
               </label>
               <textarea
-                name="reason"
-                value={formData.reason}
+                name="additional_notes"
+                value={formData.additional_notes}
                 onChange={handleChange}
-                rows={5}
-                placeholder="Please provide a detailed reason for this leave request..."
-                className={`w-full rounded-lg border px-4 py-2.5 text-sm bg-white dark:bg-zinc-900 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all resize-none ${
-                  errors.reason
-                    ? "border-red-500 dark:border-red-500"
-                    : "border-gray-300 dark:border-zinc-700"
-                }`}
+                rows={4}
+                placeholder="Add any additional details about this leave request..."
+                className="w-full rounded-lg border border-gray-300 dark:border-zinc-700 px-4 py-2.5 text-sm bg-white dark:bg-zinc-900 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all resize-none"
               />
-              {errors.reason && (
-                <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.reason}</p>
-              )}
             </div>
 
             {/* Action Buttons */}
