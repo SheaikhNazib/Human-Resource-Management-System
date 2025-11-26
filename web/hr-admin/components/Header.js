@@ -4,6 +4,7 @@ import { useState } from "react";
 import { ChevronDown, Menu, LogOut, User } from "lucide-react";
 import { useAuthContext } from "@/contexts/AuthContext";
 import { toast } from "sonner";
+import ThemeToggle from "./ThemeToggle";
 
 export default function Header({ onOpen }) {
   const { user, logout } = useAuthContext();
@@ -33,12 +34,13 @@ export default function Header({ onOpen }) {
         </button>
 
         {/* Search bar */}
-        <div className="flex-1 flex justify-center">
-
-        </div>
+        <div className="flex-1 flex justify-center"></div>
       </div>
       {/* User area */}
-      <div className="flex items-center gap-3 relative">
+      <div className="flex items-center gap-2 relative">
+        <div className="mr-2">
+          <ThemeToggle />
+        </div>
         {user ? (
           <>
             <div className="hidden sm:flex flex-col items-end">
@@ -57,7 +59,9 @@ export default function Header({ onOpen }) {
                 <img
                   src={user.avatar || "/avatar.png"}
                   alt="User Avatar"
-                  className="w-8 h-8 rounded-full border border-zinc-300 dark:border-zinc-700"
+                  width={32}
+                  height={32}
+                  className="w-8 h-8 rounded-full border border-zinc-300 dark:border-zinc-700 shrink-0 object-cover"
                 />
                 <ChevronDown className="w-4 h-4 text-zinc-400 group-hover:text-zinc-700" />
               </button>
