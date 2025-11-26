@@ -19,6 +19,52 @@ if (typeof window === 'undefined' && process.env.API_SECRET_KEY) {
   instance.defaults.headers.common['Authorization'] = `Bearer ${process.env.API_SECRET_KEY}`;
 }
 
+// Request interceptor to add auth token from cookies (server-side)
+instance.interceptors.request.use(
+  async (config) => {
+    // For server-side requests, try to get token from cookies
+    if (typeof window === 'undefined') {
+      try {
+        const { cookies } = await import('next/headers');
+        const cookieStore = await cookies();
+        const token = cookieStore.get('access_token')?.value;
+        
+        if (token && !config.headers.Authorization) {
+          config.headers.Authorization = `Bearer ${token}`;
+        }
+      } catch (error) {
+        // Cookies might not be available in all contexts
+        console.log('Could not access cookies:', error.message);
+      }
+    }
+    return config;
+  },
+  (error) => {
+    return Promise.reject(error);
+  }
+);
+
+// Response interceptor to handle auth errors
+instance.interceptors.response.use(
+  (response) => response,
+  async (error) => {
+    const originalRequest = error.config;
+    
+    // If 401 Unauthorized and not already retried
+    if (error.response?.status === 401 && !originalRequest._retry) {
+      originalRequest._retry = true;
+      
+      // Clear token and redirect to login on client side
+      if (typeof window !== 'undefined') {
+        // Clear any stored auth state
+        window.location.href = '/login';
+      }
+    }
+    
+    return Promise.reject(error);
+  }
+);
+
 export { instance as axiosInstance };
 
 
