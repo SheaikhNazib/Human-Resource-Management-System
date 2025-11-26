@@ -220,9 +220,10 @@ export default async function DepartmentDetailPage({ params } = {}) {
                     emp.name ||
                     `${emp.first_name || ""} ${emp.last_name || ""}`.trim();
                   return (
-                    <div
+                    <Link
                       key={emp.id}
-                      className="bg-white dark:bg-zinc-900 rounded-lg shadow-sm border border-zinc-200 dark:border-zinc-700 p-4"
+                      href={`/employees/${emp.id}/view`}
+                      className="block bg-white dark:bg-zinc-900 rounded-lg shadow-sm border border-zinc-200 dark:border-zinc-700 p-4 hover:shadow-md hover:bg-zinc-50 dark:hover:bg-zinc-800 cursor-pointer transition-shadow"
                     >
                       <div className="flex items-start justify-between gap-4">
                         <div className="flex-1">
@@ -252,7 +253,7 @@ export default async function DepartmentDetailPage({ params } = {}) {
                           {emp.mobile || emp.office_phone || "-"}
                         </div>
                       </div>
-                    </div>
+                    </Link>
                   );
                 })}
               </div>
