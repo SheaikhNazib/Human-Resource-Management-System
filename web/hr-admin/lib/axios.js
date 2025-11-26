@@ -50,13 +50,28 @@ instance.interceptors.response.use(
   async (error) => {
     const originalRequest = error.config;
     
-    // If 401 Unauthorized and not already retried
+    // If 401 Unauthorized (token expired or invalid)
     if (error.response?.status === 401 && !originalRequest._retry) {
       originalRequest._retry = true;
       
+      // Clear token on server side
+      if (typeof window === 'undefined') {
+        try {
+          const { cookies } = await import('next/headers');
+          const cookieStore = await cookies();
+          cookieStore.delete('access_token');
+          cookieStore.delete('user_data');
+        } catch (e) {
+          console.log('Could not clear cookies:', e.message);
+        }
+      }
+      
       // Clear token and redirect to login on client side
       if (typeof window !== 'undefined') {
-        // Clear any stored auth state
+        console.log('401 Unauthorized - Token expired, redirecting to login');
+        // Trigger a custom event for token expiration
+        window.dispatchEvent(new Event('token-expired'));
+        // Immediate redirect without waiting
         window.location.href = '/login';
       }
     }

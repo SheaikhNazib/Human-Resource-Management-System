@@ -43,9 +43,14 @@ export default function Header({ onOpen }) {
         </div>
         {user ? (
           <>
-            <span className="text-zinc-500 dark:text-zinc-400 text-sm hidden sm:block">
-              {user.email || user.work_email || user.personal_email}
-            </span>
+            <div className="hidden sm:flex flex-col items-end">
+              <span className="text-zinc-700 dark:text-zinc-300 text-sm font-medium">
+                {user.email || user.work_email || user.personal_email}
+              </span>
+              <span className="text-zinc-500 dark:text-zinc-400 text-xs capitalize">
+                {user.role ? user.role.replace('_', ' ') : 'User'}
+              </span>
+            </div>
             <div className="relative">
               <button
                 onClick={() => setShowDropdown(!showDropdown)}
