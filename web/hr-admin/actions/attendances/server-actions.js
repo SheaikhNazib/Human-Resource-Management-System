@@ -316,8 +316,8 @@ export async function getEmployeesWithTodayAttendance() {
         email: emp.email || emp.work_email || emp.personal_email || '',
         jobTitle: emp.emp_job_title?.name || emp.job_title || emp.jobTitle || '',
         department: emp.emp_department?.name || (typeof emp.department === 'string' ? emp.department : emp.department?.name) || emp.department_name || '',
-        checkInTime: existingAttendance ? formatTime(existingAttendance.checkIn) : currentTime,
-        checkOutTime: existingAttendance ? formatTime(existingAttendance.checkOut) : currentTime,
+        checkInTime: existingAttendance && existingAttendance.checkIn ? formatTime(existingAttendance.checkIn) : '',
+        checkOutTime: existingAttendance && existingAttendance.checkOut ? formatTime(existingAttendance.checkOut) : '',
         remarks: existingAttendance ? (existingAttendance.remarks || '') : '',
         date: currentDate,
         attendanceId: existingAttendance?.attendanceId || null
@@ -346,7 +346,7 @@ export async function bulkSaveAttendance(attendanceRecords) {
         const payload = {
           date: record.date,
           checkIn: formatTime(record.checkInTime),
-          checkOut: formatTime(record.checkOutTime),
+          checkOut: record.checkOutTime ? formatTime(record.checkOutTime) : null,
           remarks: record.remarks || "",
           onsite_or_remote: true,
           check_in_ip: "",
@@ -356,6 +356,8 @@ export async function bulkSaveAttendance(attendanceRecords) {
 
         try {
           let response;
+          // Log the payload for debugging before sending to API
+          console.log(`Saving attendance payload for employee ${record.employeeId}:`, JSON.stringify(payload));
           
           // If attendance record exists, update it; otherwise create new
           if (record.attendanceId) {
@@ -372,6 +374,8 @@ export async function bulkSaveAttendance(attendanceRecords) {
 
           const responseData = response?.data?.data ?? response?.data ?? response;
           
+          console.log(`Response for employee ${record.employeeId}:`, JSON.stringify(responseData));
+          
           if (responseData?.statusCode >= 400) {
             throw new Error(responseData?.message || 'Failed to save attendance');
           }
@@ -379,22 +383,29 @@ export async function bulkSaveAttendance(attendanceRecords) {
           return { success: true, employeeId: record.employeeId };
         } catch (err) {
           console.error(`Error saving attendance for employee ${record.employeeId}:`, err);
-          return { success: false, employeeId: record.employeeId, error: err.message };
+          return { success: false, employeeId: record.employeeId, error: err.message || 'Unknown error' };
         }
       })
     );
 
     const successCount = results.filter(r => r.success).length;
     const failCount = results.filter(r => !r.success).length;
+    
+    // Log all errors for debugging
+    const errors = results.filter(r => !r.success);
+    if (errors.length > 0) {
+      console.error("Attendance save errors:", errors);
+    }
 
     return { 
       success: failCount === 0, 
       successCount, 
       failCount,
-      results 
+      results,
+      error: errors.length > 0 ? errors.map(e => `Employee ${e.employeeId}: ${e.error}`).join('; ') : null
     };
   } catch (error) {
     console.error("Error in bulk save attendance:", error);
-    return { success: false, error: error.message };
+    return { success: false, error: error.message || error.toString() };
   }
 }
