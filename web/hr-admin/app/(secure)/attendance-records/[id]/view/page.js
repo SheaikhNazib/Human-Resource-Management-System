@@ -61,7 +61,7 @@ const AttendanceDetailsPage = () => {
           <h2 className="text-2xl font-bold text-gray-800 mb-2">Error</h2>
           <p className="text-gray-600 mb-6">{error || "Attendance not found"}</p>
           <button
-            onClick={() => router.push("/attendance")}
+            onClick={() => router.push("/attendance-records")}
             className="px-6 py-3 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition-all"
           >
             Back to Attendance
@@ -117,13 +117,13 @@ const AttendanceDetailsPage = () => {
               </div>
               <div className="flex space-x-3">
                 <button
-                  onClick={() => router.push(`/attendance/${attendance.id}/edit`)}
+                  onClick={() => router.push(`/attendance-records/${attendance.id}/edit`)}
                   className="px-6 py-2 bg-white text-blue-600 rounded-lg font-semibold hover:bg-blue-50 transition-all shadow-md"
                 >
                   Edit
                 </button>
                 <button
-                  onClick={() => router.push("/attendance")}
+                  onClick={() => router.push("/attendance-records")}
                   className="px-6 py-2 bg-blue-500 text-white rounded-lg font-semibold hover:bg-blue-600 transition-all shadow-md"
                 >
                   Back

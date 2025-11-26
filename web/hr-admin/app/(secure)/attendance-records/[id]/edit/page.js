@@ -111,7 +111,7 @@ const EditAttendancePage = () => {
         resetForm();
         toast.success("Attendance updated successfully");
         setTimeout(() => {
-          router.push(`/attendance/${params.id}/view`);
+          router.push(`/attendance-records/${params.id}/view`);
         }, 1500);
       } else {
         const errorMsg = response.error || "Failed to update attendance";
@@ -148,7 +148,7 @@ const EditAttendancePage = () => {
           <h2 className="text-2xl font-bold text-gray-800 mb-2">Error</h2>
           <p className="text-gray-600 mb-6">{error || "Attendance not found"}</p>
           <button
-            onClick={() => router.push("/attendance")}
+            onClick={() => router.push("/attendance-records")}
             className="px-6 py-3 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition-all"
           >
             Back to Attendance
@@ -437,7 +437,7 @@ const EditAttendancePage = () => {
                     <div className="flex space-x-4 w-full sm:w-auto">
                       <button
                         type="button"
-                        onClick={() => router.push(`/attendance/${params.id}/view`)}
+                        onClick={() => router.push(`/attendance-records/${params.id}/view`)}
                         className="flex-1 sm:flex-none px-8 py-3 border-2 border-gray-300 rounded-lg text-gray-700 font-semibold hover:bg-gray-50 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
                         disabled={isSubmitting || formikSubmitting}
                       >
@@ -445,6 +445,7 @@ const EditAttendancePage = () => {
                       </button>
                       <button
                         type="submit"
+                        onClick={() => router.push(`/attendance-records/${params.id}/view`)}
                         className="flex-1 sm:flex-none px-8 py-3 bg-blue-600 text-white rounded-lg font-semibold transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
                         disabled={isSubmitting || formikSubmitting}
                       >

@@ -44,7 +44,7 @@ export default function Sidebar({ open, onClose }) {
 
     {
       href: "/departments",
-      label: "All Departments",
+      label: "Departments",
       icon: Building2,
     },
 
@@ -52,10 +52,11 @@ export default function Sidebar({ open, onClose }) {
       label: "Employee Management",
       icon: IdCardLanyard,
       children: [
-        { href: "/employees", label: "Employee list", icon: Users },
+        { href: "/employees", label: "Employees", icon: Users },
+        { href: "/attendance", label: "Attendance", icon: CalendarCheck },
         {
-          href: "/attendance",
-          label: "Employee Attendance",
+          href: "/attendance-records",
+          label: "Attendance Records",
           icon: CalendarCheck,
         },
         { href: "/leaves", label: "Leaves", icon: FileText },

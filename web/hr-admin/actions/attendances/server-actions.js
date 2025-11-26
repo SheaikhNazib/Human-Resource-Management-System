@@ -234,3 +234,167 @@ export async function deleteAttendance(id) {
     return { success: false, error: error.message };
   }
 }
+
+// Get employees with their attendance for today
+export async function getEmployeesWithTodayAttendance() {
+  try {
+    // Get current date
+    const now = new Date();
+    const currentTime = now.toTimeString().slice(0, 5);
+    const currentDate = now.toISOString().split('T')[0];
+
+    // Fetch employees and today's attendance in parallel
+    const [employeesResponse, attendanceResponse] = await Promise.all([
+      fetchFromApi(Api_path.EMPLOYEE.LIST),
+      fetchFromApi(`${Api_path.ATTENDANCE.LIST}?date=${currentDate}`)
+    ]);
+
+    // Parse employees
+    const employeeBody = employeesResponse?.data ?? employeesResponse;
+    let employeesList = [];
+    if (Array.isArray(employeeBody)) {
+      employeesList = employeeBody;
+    } else if (Array.isArray(employeeBody.data)) {
+      employeesList = employeeBody.data;
+    } else if (Array.isArray(employeeBody?.data?.data)) {
+      employeesList = employeeBody.data.data;
+    }
+
+    // Parse attendance records
+    let attendanceRecords = [];
+    try {
+      const attendanceBody = attendanceResponse?.data ?? attendanceResponse;
+      if (Array.isArray(attendanceBody)) {
+        attendanceRecords = attendanceBody;
+      } else if (Array.isArray(attendanceBody.data)) {
+        attendanceRecords = attendanceBody.data;
+      } else if (Array.isArray(attendanceBody?.data?.data)) {
+        attendanceRecords = attendanceBody.data.data;
+      }
+    } catch (err) {
+      console.log('No attendance records found for today:', err.message);
+    }
+
+    // Create a map of attendance records by employee ID
+    const attendanceMap = new Map();
+    attendanceRecords.forEach(record => {
+      const empId = record.employee?.id || record.employee;
+      if (empId) {
+        attendanceMap.set(empId, {
+          checkIn: record.check_in || record.checkIn,
+          checkOut: record.check_out || record.checkOut,
+          remarks: record.remarks || record.note || "",
+          attendanceId: record.id
+        });
+      }
+    });
+
+    // Helper to format time from various formats
+    const formatTime = (timeStr) => {
+      if (!timeStr) return currentTime;
+      // If time includes date (ISO format), extract time part
+      if (timeStr.includes('T')) {
+        const date = new Date(timeStr);
+        return date.toTimeString().slice(0, 5);
+      }
+      // If time is in HH:MM:SS format, take first 5 chars
+      if (timeStr.length >= 5) {
+        return timeStr.slice(0, 5);
+      }
+      return timeStr;
+    };
+
+    // Merge employees with their attendance
+    const data = employeesList.map(emp => {
+      const existingAttendance = attendanceMap.get(emp.id);
+      
+      return {
+        id: emp.id,
+        firstName: emp.first_name || emp.firstName || '',
+        lastName: emp.last_name || emp.lastName || '',
+        name: `${emp.first_name || emp.firstName || ''} ${emp.last_name || emp.lastName || ''}`.trim() || emp.name || `Employee ${emp.id}`,
+        email: emp.email || emp.work_email || emp.personal_email || '',
+        jobTitle: emp.emp_job_title?.name || emp.job_title || emp.jobTitle || '',
+        department: emp.emp_department?.name || (typeof emp.department === 'string' ? emp.department : emp.department?.name) || emp.department_name || '',
+        checkInTime: existingAttendance ? formatTime(existingAttendance.checkIn) : currentTime,
+        checkOutTime: existingAttendance ? formatTime(existingAttendance.checkOut) : currentTime,
+        remarks: existingAttendance ? (existingAttendance.remarks || '') : '',
+        date: currentDate,
+        attendanceId: existingAttendance?.attendanceId || null
+      };
+    });
+
+    return { success: true, data };
+  } catch (error) {
+    console.error("Error fetching employees with attendance:", error);
+    return { success: false, error: error.message };
+  }
+}
+
+// Bulk create or update attendance records
+export async function bulkSaveAttendance(attendanceRecords) {
+  try {
+    const formatTime = (time) => {
+      if (!time) return null;
+      // Add seconds if not present
+      if (time.length === 5) return `${time}:00`;
+      return time;
+    };
+
+    const results = await Promise.all(
+      attendanceRecords.map(async (record) => {
+        const payload = {
+          date: record.date,
+          checkIn: formatTime(record.checkInTime),
+          checkOut: formatTime(record.checkOutTime),
+          remarks: record.remarks || "",
+          onsite_or_remote: true,
+          check_in_ip: "",
+          check_out_ip: "",
+          employee: record.employeeId,
+        };
+
+        try {
+          let response;
+          
+          // If attendance record exists, update it; otherwise create new
+          if (record.attendanceId) {
+            response = await fetchFromApi(Api_path.ATTENDANCE.UPDATE(record.attendanceId), {
+              method: "PATCH",
+              body: payload,
+            });
+          } else {
+            response = await fetchFromApi(Api_path.ATTENDANCE.CREATE, {
+              method: "POST",
+              body: payload,
+            });
+          }
+
+          const responseData = response?.data?.data ?? response?.data ?? response;
+          
+          if (responseData?.statusCode >= 400) {
+            throw new Error(responseData?.message || 'Failed to save attendance');
+          }
+
+          return { success: true, employeeId: record.employeeId };
+        } catch (err) {
+          console.error(`Error saving attendance for employee ${record.employeeId}:`, err);
+          return { success: false, employeeId: record.employeeId, error: err.message };
+        }
+      })
+    );
+
+    const successCount = results.filter(r => r.success).length;
+    const failCount = results.filter(r => !r.success).length;
+
+    return { 
+      success: failCount === 0, 
+      successCount, 
+      failCount,
+      results 
+    };
+  } catch (error) {
+    console.error("Error in bulk save attendance:", error);
+    return { success: false, error: error.message };
+  }
+}
