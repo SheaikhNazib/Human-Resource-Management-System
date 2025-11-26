@@ -50,7 +50,7 @@ export class AuthController {
       console.error(error);
       return res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({
         success: false, data: null, message: 'Internal server error occurred. Please try again later!'
-      });
+      }); 
     }
   }
 }
