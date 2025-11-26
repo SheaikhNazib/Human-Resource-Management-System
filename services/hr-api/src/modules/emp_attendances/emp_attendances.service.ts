@@ -99,4 +99,48 @@ export class EmpAttendancesService {
     });
     return totalAttendance;
   }
+
+  async getAttendanceOverview(startDate: string, endDate: string) {
+    // Standard check-in time threshold (9:00 AM)
+    const standardCheckInTime = '09:00:00';
+    
+    // Format dates to YYYY-MM-DD format
+    const formattedStartDate = startDate.split('T')[0];
+    const formattedEndDate = endDate.split('T')[0];
+
+    // Query builder for more complex filtering
+    const queryBuilder = this.repo.createQueryBuilder('attendance')
+      .where('attendance.date >= :startDate', { startDate: formattedStartDate })
+      .andWhere('attendance.date <= :endDate', { endDate: formattedEndDate });
+
+    // Count On Time: checkIn <= 09:00:00 AND onsite_or_remote = true
+    const onTimeQuery = queryBuilder.clone()
+      .andWhere('attendance.checkIn <= :standardTime', { standardTime: standardCheckInTime })
+      .andWhere('attendance.onsite_or_remote = :onsite', { onsite: true });
+    const onTimeCount = await onTimeQuery.getCount();
+
+    // Count Late: checkIn > 09:00:00 AND onsite_or_remote = true
+    const lateQuery = queryBuilder.clone()
+      .andWhere('attendance.checkIn > :standardTime', { standardTime: standardCheckInTime })
+      .andWhere('attendance.onsite_or_remote = :onsite', { onsite: true });
+    const lateCount = await lateQuery.getCount();
+
+    // Count Remote: onsite_or_remote = false
+    const remoteQuery = queryBuilder.clone()
+      .andWhere('attendance.onsite_or_remote = :remote', { remote: false });
+    const remoteCount = await remoteQuery.getCount();
+
+    return {
+      dateRange: {
+        startDate: formattedStartDate,
+        endDate: formattedEndDate,
+      },
+      statistics: {
+        onTime: onTimeCount,
+        late: lateCount,
+        remote: remoteCount,
+        total: onTimeCount + lateCount + remoteCount,
+      },
+    };
+  }
 }

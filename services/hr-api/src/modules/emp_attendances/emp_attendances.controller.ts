@@ -7,6 +7,7 @@ import { EmployeesService } from '../employees/employees.service';
 import { Response } from 'express';
 import { JwtAuthGuard } from 'src/common/guards/jwt-auth.guard';
 import { RolesGuard } from 'src/common/guards/roles.guard';
+import { getDateExamples } from './emp_attendances.function';
 
 
 @ApiTags('EmployeeAttendances')
@@ -21,7 +22,7 @@ export class EmpAttendancesController {
   @ApiBody({ type: CreateEmpAttendanceDto })
   @ApiResponse({ status: 201, description: 'Attendance created' })
   async create(@Body() createDto: CreateEmpAttendanceDto) {
-    const getEmployee = await this.employeesService.findOneById(createDto.employee);
+    // const getEmployee = await this.employeesService.findOneById(createDto.employee);
     return this.empAttendancesService.create(createDto);
   }
 
@@ -63,6 +64,66 @@ export class EmpAttendancesController {
       console.error(error);
       return res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({
         success: false, data: null, message: 'Internal server error occurred. Please try again later!'
+      });
+    }
+  }
+
+  @Get('attendance-overview')
+  @ApiOperation({ summary: 'Get attendance overview statistics (On Time, Late, Remote counts)' })
+  @ApiQuery({ name: 'startDate', type: String, required: true, example: getDateExamples().startDate, description: 'Start date in YYYY-MM-DD format' })
+  @ApiQuery({ name: 'endDate', type: String, required: true, example: getDateExamples().endDate, description: 'End date in YYYY-MM-DD format' })
+  @ApiResponse({ status: 200, description: 'Attendance overview statistics' })
+  async getAttendanceOverview(@Query('startDate') startDate: string, @Query('endDate') endDate: string, @Res() res: Response
+  ) {
+    try {
+      if (!startDate) {
+        return res.status(HttpStatus.BAD_REQUEST).json({
+          success: false,
+          data: null,
+          message: 'startDate parameter is required'
+        });
+      }
+
+      if (!endDate) {
+        return res.status(HttpStatus.BAD_REQUEST).json({
+          success: false,
+          data: null,
+          message: 'endDate parameter is required'
+        });
+      }
+
+      // Validate date format and ensure endDate is not before startDate
+      const start = new Date(startDate.split('T')[0]);
+      const end = new Date(endDate.split('T')[0]);
+      
+      if (isNaN(start.getTime()) || isNaN(end.getTime())) {
+        return res.status(HttpStatus.BAD_REQUEST).json({
+          success: false,
+          data: null,
+          message: 'Invalid date format. Please use YYYY-MM-DD format'
+        });
+      }
+
+      if (end < start) {
+        return res.status(HttpStatus.BAD_REQUEST).json({
+          success: false,
+          data: null,
+          message: 'endDate must be greater than or equal to startDate'
+        });
+      }
+
+      const response = await this.empAttendancesService.getAttendanceOverview(startDate, endDate);
+      return res.status(HttpStatus.OK).json({
+        success: true,
+        data: response,
+        message: 'Attendance overview fetched successfully!'
+      });
+    } catch (error) {
+      console.error(error);
+      return res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({
+        success: false,
+        data: null,
+        message: 'Internal server error occurred. Please try again later!'
       });
     }
   }
