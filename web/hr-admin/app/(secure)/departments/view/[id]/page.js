@@ -66,6 +66,26 @@ export default async function DepartmentDetailPage({ params } = {}) {
       updatedAt: dept.updatedAt || dept.updated_at || null,
     };
 
+    // Fetch employees for this department (filtered by emp_department)
+    let employees = [];
+    try {
+      const empRes = await fetchFromApi(
+        `${Api_path.EMPLOYEE.LIST}?emp_department=${encodeURIComponent(id)}`
+      );
+      const empBody = empRes?.data ?? empRes;
+      if (empBody && typeof empBody === "object") {
+        if (Array.isArray(empBody.data)) {
+          employees = empBody.data;
+        } else if (Array.isArray(empBody?.data?.data)) {
+          employees = empBody.data.data;
+        } else if (Array.isArray(empBody)) {
+          employees = empBody;
+        }
+      }
+    } catch (err) {
+      console.error("Error fetching employees for department:", err);
+    }
+
     return (
       <div className="w-full max-w-7xl mx-auto px-6 sm:px-8 lg:px-12 py-10">
         {/* Header with Back and Edit buttons */}
@@ -177,6 +197,66 @@ export default async function DepartmentDetailPage({ params } = {}) {
                 </p>
               </div>
             </div>
+          </div>
+          {/* Employees list section */}
+          <div className="px-8 pb-10 sm:px-10 sm:py-10 border-t border-zinc-100 dark:border-zinc-800">
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-lg font-semibold text-zinc-900 dark:text-zinc-100">
+                Employees
+              </h3>
+              <div className="text-sm text-zinc-500">
+                {employees.length} found
+              </div>
+            </div>
+
+            {employees.length === 0 ? (
+              <div className="text-zinc-600 dark:text-zinc-400 italic">
+                No employees in this department.
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                {employees.map((emp) => {
+                  const fullName =
+                    emp.name ||
+                    `${emp.first_name || ""} ${emp.last_name || ""}`.trim();
+                  return (
+                    <div
+                      key={emp.id}
+                      className="bg-white dark:bg-zinc-900 rounded-lg shadow-sm border border-zinc-200 dark:border-zinc-700 p-4"
+                    >
+                      <div className="flex items-start justify-between gap-4">
+                        <div className="flex-1">
+                          <div className="text-sm text-zinc-500">
+                            {emp.role || "Employee"}
+                          </div>
+                          <div className="text-lg font-medium text-zinc-900 dark:text-zinc-100">
+                            {fullName || "—"}
+                          </div>
+                          <div className="text-sm text-zinc-600 dark:text-zinc-400">
+                            {emp?.emp_job_title?.name || "-"}
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="mt-3 text-sm text-zinc-600 dark:text-zinc-400 space-y-1">
+                        <div>
+                          <strong className="text-zinc-700 dark:text-zinc-200 mr-2">
+                            Email:
+                          </strong>
+                          {emp.work_email || emp.personal_email || "-"}
+                        </div>
+                        <div>
+                          <strong className="text-zinc-700 dark:text-zinc-200 mr-2">
+                            Mobile:
+                          </strong>
+                          {emp.mobile || emp.office_phone || "-"}
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
           </div>
         </div>
       </div>
