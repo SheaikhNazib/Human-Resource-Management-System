@@ -34,12 +34,12 @@ const AutoComplete = (props = {}) => {
 
     // Auto-detect common patterns
     const keys = Object.keys(firstOption);
-    const displayKey = keys.find(k => ["name", "label", "title"].includes(k.toLowerCase())) || 
-                       keys.find(k => typeof firstOption[k] === "string") ||
-                       keys[0];
-    const valueKey = keys.find(k => ["id", "value", "code"].includes(k.toLowerCase())) || displayKey;
+    const autoDetectedDisplayKey = keys.find(k => ["name", "label", "title"].includes(k.toLowerCase())) || 
+                                    keys.find(k => typeof firstOption[k] === "string") ||
+                                    keys[0];
+    const valueKey = keys.find(k => ["id", "value", "code"].includes(k.toLowerCase())) || autoDetectedDisplayKey;
 
-    return { display: displayKey, value: valueKey };
+    return { display: autoDetectedDisplayKey, value: valueKey };
   };
 
   const { display: displayKeyAuto, value: valueKeyAuto } = getKeys();
