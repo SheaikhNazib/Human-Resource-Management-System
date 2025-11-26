@@ -113,7 +113,7 @@ export default async function DepartmentDetailPage({ params } = {}) {
         {/* Main content card */}
         <div className="bg-white dark:bg-zinc-900 rounded-xl shadow-lg border border-zinc-200 dark:border-zinc-800 overflow-hidden">
           {/* Department header */}
-          <div className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-zinc-900 dark:to-zinc-800 px-8 py-10 sm:px-10">
+          <div className="bg-linear-to-r from-blue-50 to-indigo-50 dark:from-zinc-900 dark:to-zinc-800 px-8 py-10 sm:px-10">
             <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-6">
               <div className="flex-1">
                 <h1 className="text-4xl sm:text-5xl font-bold text-zinc-900 dark:text-zinc-100 mb-3">
@@ -128,7 +128,7 @@ export default async function DepartmentDetailPage({ params } = {}) {
 
               {/* Timestamps */}
               <div className="flex flex-col sm:flex-row gap-4 text-sm sm:text-base lg:items-end">
-                <div className="bg-white dark:bg-zinc-900 rounded-lg px-5 py-3 shadow-sm border border-zinc-200 dark:border-zinc-700 min-w-[10rem] text-center">
+                <div className="bg-white dark:bg-zinc-900 rounded-lg px-5 py-3 shadow-sm border border-zinc-200 dark:border-zinc-700 min-w-40 text-center">
                   <div className="text-xs sm:text-sm font-medium text-zinc-500 dark:text-zinc-400 mb-1">
                     Created
                   </div>
@@ -136,7 +136,7 @@ export default async function DepartmentDetailPage({ params } = {}) {
                     {d.createdAt ? new Date(d.createdAt).toLocaleString() : "-"}
                   </div>
                 </div>
-                <div className="bg-white dark:bg-zinc-900 rounded-lg px-5 py-3 shadow-sm border border-zinc-200 dark:border-zinc-700 min-w-[10rem] text-center">
+                <div className="bg-white dark:bg-zinc-900 rounded-lg px-5 py-3 shadow-sm border border-zinc-200 dark:border-zinc-700 min-w-40 text-center">
                   <div className="text-xs sm:text-sm font-medium text-zinc-500 dark:text-zinc-400 mb-1">
                     Last Updated
                   </div>
