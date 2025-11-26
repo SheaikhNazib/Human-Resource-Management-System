@@ -11,11 +11,11 @@ export default function AttendancePage() {
     const router = useRouter();
 
     function handleView(id) {
-        router.push(`/attendance/${id}/view`);
+        router.push(`/attendance-records/${id}/view`);
     }
 
     function handleEdit(id) {
-        router.push(`/attendance/${id}/edit`);
+        router.push(`/attendance-records/${id}/edit`);
     }
 
     async function handleDelete(id) {
