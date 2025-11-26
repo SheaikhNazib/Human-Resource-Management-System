@@ -6,14 +6,14 @@ import { EmpJobTitles } from '../../models/emp_job_titles.entity';
 import { Employees } from '../../models/employees.entity';
 import { UpdateEmployeeDto } from './dto/update.dto';
 import { CreateEmployeeDto } from './dto/create.dto';
-import { Roles } from 'src/common/guards/roles.enum';
+import * as bcrypt from 'bcrypt';
 
 @Injectable()
 export class EmployeesService {
   constructor(
     @InjectRepository(Employees)
     private readonly repo: Repository<Employees>,
-  ) {}
+  ) { }
 
   async create(createDto: CreateEmployeeDto) {
     try {
@@ -59,6 +59,11 @@ export class EmployeesService {
       if (jobTitle) {
         createData.emp_job_title = { id: createDto.emp_job_title } as EmpJobTitles;
       }
+      if (createData.password) {
+        createData.password = await bcrypt.hash(createData.password, 10);
+      } else {
+        createData.password = await bcrypt.hash('123456', 10); // Default password is 123456
+      }
       const employee = this.repo.create(createData);
       return await this.repo.save(employee);
     } catch (error: any) {
@@ -82,9 +87,9 @@ export class EmployeesService {
   }
 
   async findAll(
-    page: number, 
-    limit: number, 
-    sortBy: string, 
+    page: number,
+    limit: number,
+    sortBy: string,
     sortOrder: string = 'asc',
     filters?: {
       first_name?: string;
@@ -168,7 +173,7 @@ export class EmployeesService {
     // Optimize count query - use a separate lightweight query without joins/selects
     const countQuery = this.repo.createQueryBuilder('employee')
       .where('employee.deletedAt IS NULL');
-    
+
     if (filterConditions.length > 0) {
       countQuery.andWhere(`(${filterConditions.join(' AND ')})`, filterParams);
     }
@@ -180,16 +185,16 @@ export class EmployeesService {
         // Apply sorting (ASC = newest first (DESC order), DESC = oldest first (ASC order))
         const orderDirection = sortOrder.toLowerCase() === 'asc' ? 'DESC' : 'ASC';
         queryBuilder.orderBy(`employee.${sortBy}`, orderDirection);
-        
+
         // Apply pagination
         queryBuilder.skip((page - 1) * limit).take(limit);
-        
+
         return await queryBuilder.getMany();
       })()
     ]);
 
     const totalPages = Math.ceil(allTotal / limit);
-    
+
     return {
       metaData: {
         page: +page || 1,
@@ -206,11 +211,15 @@ export class EmployeesService {
   }
 
   findOneByEmail(email: string) {
-    return this.repo.findOne({ where: { work_email: email }});
+    return this.repo
+      .createQueryBuilder('employee')
+      .where('employee.work_email = :email', { email })
+      .orWhere('employee.personal_email = :email', { email })
+      .getOne();
   }
 
   async findOneById(id: number) {
-    const employee = await this.repo.findOneBy({ id });
+    const employee = await this.repo.findOne({ where: { id }, select: ['id', 'name', 'first_name', 'last_name'] });
     return employee;
   }
 

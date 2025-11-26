@@ -1,5 +1,5 @@
 
-import { IsString, IsOptional, IsEmail, IsDateString, IsBoolean } from 'class-validator';
+import { IsString, IsOptional, IsEmail, IsDateString, IsBoolean, IsNotEmpty, MinLength } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 export class CreateEmployeeDto {
@@ -27,6 +27,11 @@ export class CreateEmployeeDto {
   @IsString()
   @IsOptional()
   mobile?: string;
+
+  @ApiPropertyOptional({ example: '123456' })
+  @IsString()
+  @IsOptional()
+  password?: string;
 
   @ApiPropertyOptional({ example: '+0987654321' })
   @IsString()
