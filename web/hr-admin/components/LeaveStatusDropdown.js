@@ -4,7 +4,9 @@ import React, { useState, useRef, useEffect } from "react";
 const LeaveStatusDropdown = ({ currentStatus, onStatusChange, leaveId, disabled = false }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [isUpdating, setIsUpdating] = useState(false);
+  const [dropdownPosition, setDropdownPosition] = useState({ top: 0, left: 0, openUpward: false });
   const dropdownRef = useRef(null);
+  const menuRef = useRef(null);
 
   const statusOptions = [
     { value: "pending", label: "Pending", color: "bg-yellow-100 text-yellow-700 hover:bg-yellow-200" },
@@ -32,6 +34,25 @@ const LeaveStatusDropdown = ({ currentStatus, onStatusChange, leaveId, disabled 
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
     };
+  }, [isOpen]);
+
+  useEffect(() => {
+    if (isOpen && dropdownRef.current) {
+      const rect = dropdownRef.current.getBoundingClientRect();
+      const menuHeight = 200; // Approximate height of dropdown menu
+      const viewportHeight = window.innerHeight;
+      const spaceBelow = viewportHeight - rect.bottom;
+      const spaceAbove = rect.top;
+      
+      // Determine if dropdown should open upward
+      const openUpward = spaceBelow < menuHeight && spaceAbove > spaceBelow;
+      
+      setDropdownPosition({
+        top: openUpward ? rect.top + window.scrollY - menuHeight - 8 : rect.bottom + window.scrollY + 8,
+        left: rect.left + window.scrollX,
+        openUpward
+      });
+    }
   }, [isOpen]);
 
   const handleStatusChange = async (newStatus) => {
@@ -99,10 +120,14 @@ const LeaveStatusDropdown = ({ currentStatus, onStatusChange, leaveId, disabled 
       </button>
 
       {isOpen && !disabled && !isUpdating && (
-        <div className="fixed z-9999 mt-2 w-40 rounded-lg shadow-xl bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 overflow-hidden" 
+        <div 
+          ref={menuRef}
+          className="fixed z-9999 w-40 rounded-lg shadow-xl bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 overflow-hidden" 
           style={{
-            top: dropdownRef.current?.getBoundingClientRect().bottom + window.scrollY + 8 + 'px',
-            left: dropdownRef.current?.getBoundingClientRect().left + window.scrollX + 'px'
+            top: `${dropdownPosition.top}px`,
+            left: `${dropdownPosition.left}px`,
+            maxHeight: '240px',
+            overflowY: 'auto'
           }}>
           <div className="py-1">
             {statusOptions.map((option) => (

@@ -1,6 +1,7 @@
 "use client";
 import React, { useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { useLeaves } from "@/actions/leaves/business";
 import TableArchive from "@/components/core/TableArchive";
 import LeaveStatusDropdown from "@/components/LeaveStatusDropdown";
@@ -48,8 +49,13 @@ export default function LeavesPage() {
         const firstName = leave.raw?.employee?.first_name || '';
         const lastName = leave.raw?.employee?.last_name || '';
         const displayName = firstName && lastName ? `${firstName} ${lastName}` : firstName || lastName || leave.employeeName || '—';
+        const employeeId = leave.raw?.employee?.id;
         
-        return (
+        return employeeId ? (
+          <Link href={`/employees/${employeeId}/view`} className="font-medium text-zinc-900 dark:text-zinc-100 hover:underline">
+            {displayName}
+          </Link>
+        ) : (
           <div className="font-medium text-zinc-900 dark:text-zinc-100">
             {displayName}
           </div>
