@@ -8,6 +8,7 @@ import { updateSalaryCompensation } from "@/actions/salary-compensations/server-
 import TableArchive from "@/components/core/TableArchive";
 import { toast } from "sonner";
 import Loader from "@/components/ui/Loader";
+import * as XLSX from "xlsx";
 import {
   calculateTotalDeduction,
   getApprovedLeaveDays,
@@ -22,8 +23,12 @@ export default function SalaryCompensationsPage() {
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [deleteItemId, setDeleteItemId] = useState(null);
-  const [selectedMonth, setSelectedMonth] = useState("");
-  const [selectedYear, setSelectedYear] = useState("");
+  const today = new Date();
+  const defaultMonth = String(today.getMonth() + 1); // 1-12 as string
+  const defaultYear = String(today.getFullYear());
+
+  const [selectedMonth, setSelectedMonth] = useState(defaultMonth);
+  const [selectedYear, setSelectedYear] = useState(defaultYear);
   const router = useRouter();
 
   // Build date filter for API
@@ -237,6 +242,97 @@ export default function SalaryCompensationsPage() {
       toast.error("An error occurred during auto-calculation");
     } finally {
       setIsCalculating(false);
+    }
+  }
+
+  function handleExportToExcel() {
+    if (!filtered || filtered.length === 0) {
+      toast.error("No data to export");
+      return;
+    }
+
+    try {
+      // Prepare data for Excel
+      const excelData = filtered.map((item) => {
+        const firstName = item.raw?.employee?.first_name || "";
+        const lastName = item.raw?.employee?.last_name || "";
+        const displayName =
+          firstName && lastName
+            ? `${firstName} ${lastName}`
+            : firstName || lastName || item.employeeName || "—";
+        const empId = item.employeeId || item.raw?.employee?.id || "";
+
+        // Calculate prorated salary if applicable
+        let baseSalaryDisplay = item.baseSalary;
+        let proratedNote = "";
+        if (item.effectiveDate && item.payableDate) {
+          const effectiveDate = new Date(item.effectiveDate);
+          const payableDate = new Date(item.payableDate);
+          const diffTime = Math.abs(payableDate - effectiveDate);
+          const daysWorked = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
+          if (daysWorked < 30) {
+            baseSalaryDisplay = (item.baseSalary / 30) * daysWorked;
+            proratedNote = `${daysWorked}d prorated`;
+          }
+        }
+
+        return {
+          "Employee Name": displayName,
+          "Employee ID": empId || "N/A",
+          "Base Salary": parseFloat(baseSalaryDisplay).toFixed(2),
+          "Prorated Info": proratedNote,
+          Bonus: parseFloat(item.bonus || 0).toFixed(2),
+          Allowance: parseFloat(item.allowance || 0).toFixed(2),
+          Deduction: parseFloat(item.deduction || 0).toFixed(2),
+          "Net Salary": parseFloat(item.netSalary || 0).toFixed(2),
+          "Payable Date": item.payableDate
+            ? new Date(item.payableDate).toLocaleDateString("en-US")
+            : "—",
+          "Effective Date": item.effectiveDate
+            ? new Date(item.effectiveDate).toLocaleDateString("en-US")
+            : "—",
+          Remarks: item.remarks || "",
+        };
+      });
+
+      // Create workbook and worksheet
+      const wb = XLSX.utils.book_new();
+      const ws = XLSX.utils.json_to_sheet(excelData);
+
+      // Set column widths
+      const colWidths = [
+        { wch: 20 }, // Employee Name
+        { wch: 12 }, // Employee ID
+        { wch: 12 }, // Base Salary
+        { wch: 15 }, // Prorated Info
+        { wch: 10 }, // Bonus
+        { wch: 12 }, // Allowance
+        { wch: 12 }, // Deduction
+        { wch: 12 }, // Net Salary
+        { wch: 15 }, // Payable Date
+        { wch: 15 }, // Effective Date
+        { wch: 30 }, // Remarks
+      ];
+      ws["!cols"] = colWidths;
+
+      // Add worksheet to workbook
+      XLSX.utils.book_append_sheet(wb, ws, "Salary Compensations");
+
+      // Generate filename with date
+      const dateStr = new Date().toISOString().split("T")[0];
+      const filterStr =
+        selectedMonth && selectedYear
+          ? `_${monthNames[selectedMonth - 1]}_${selectedYear}`
+          : "";
+      const filename = `Salary_Compensations${filterStr}_${dateStr}.xlsx`;
+
+      // Write and download file
+      XLSX.writeFile(wb, filename);
+
+      toast.success(`Excel file downloaded: ${filename}`);
+    } catch (error) {
+      console.error("Error exporting to Excel:", error);
+      toast.error("Failed to export to Excel");
     }
   }
 
@@ -604,97 +700,117 @@ export default function SalaryCompensationsPage() {
 
       {/* Professional Filters and Actions */}
       <div className="mb-6 bg-white dark:bg-zinc-800 rounded-lg border border-zinc-200 dark:border-zinc-700 p-4">
-        <div className="flex flex-col lg:flex-row gap-4 justify-between items-start lg:items-center">
-          <div className="flex gap-3 items-center flex-wrap">
-            <span className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-center">
+          <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+            <span className="text-sm font-medium text-zinc-700 dark:text-zinc-300 shrink-0">
               Filter by:
             </span>
 
-            <select
-              value={selectedYear}
-              onChange={(e) => {
-                setSelectedYear(e.target.value);
-                if (!e.target.value) setSelectedMonth("");
-              }}
-              className="px-3 py-2 border border-zinc-300 dark:border-zinc-600 rounded-md bg-white dark:bg-zinc-700 text-sm text-zinc-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
-            >
-              <option value="">All Years</option>
-              {availableMonthsYears.years.map((year) => (
-                <option key={year} value={year}>
-                  {year}
-                </option>
-              ))}
-            </select>
+            <div className="flex gap-2 flex-wrap w-full sm:w-auto">
+              <select
+                value={selectedYear}
+                onChange={(e) => {
+                  setSelectedYear(e.target.value);
+                  if (!e.target.value) setSelectedMonth("");
+                }}
+                className="w-full sm:w-40 px-3 py-2 border border-zinc-300 dark:border-zinc-600 rounded-md bg-white dark:bg-zinc-700 text-sm text-zinc-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+              >
+                <option value="">All Years</option>
+                {availableMonthsYears.years.map((year) => (
+                  <option key={year} value={year}>
+                    {year}
+                  </option>
+                ))}
+              </select>
 
-            <select
-              value={selectedMonth}
-              onChange={(e) => setSelectedMonth(e.target.value)}
-              disabled={!selectedYear}
-              className="px-3 py-2 border border-zinc-300 dark:border-zinc-600 rounded-md bg-white dark:bg-zinc-700 text-sm text-zinc-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-            >
-              <option value="">All Months</option>
-              {availableMonthsYears.months.map((month) => (
-                <option key={month} value={month}>
-                  {monthNames[month - 1]}
-                </option>
-              ))}
-            </select>
+              <select
+                value={selectedMonth}
+                onChange={(e) => setSelectedMonth(e.target.value)}
+                disabled={!selectedYear}
+                className="w-full sm:w-40 px-3 py-2 border border-zinc-300 dark:border-zinc-600 rounded-md bg-white dark:bg-zinc-700 text-sm text-zinc-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              >
+                <option value="">All Months</option>
+                {availableMonthsYears.months.map((month) => (
+                  <option key={month} value={month}>
+                    {monthNames[month - 1]}
+                  </option>
+                ))}
+              </select>
 
-            {(selectedMonth || selectedYear) && (
               <button
                 onClick={() => {
                   setSelectedMonth("");
                   setSelectedYear("");
                 }}
-                className="inline-flex items-center gap-1.5 px-3 py-2 text-sm font-medium text-zinc-700 dark:text-zinc-300 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-700 rounded-md transition-colors"
+                className="sm:hidden inline-flex items-center gap-1 px-3 py-2 text-sm font-medium text-zinc-700 dark:text-zinc-300 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-700 rounded-md transition-colors"
               >
-                <svg
-                  className="w-4 h-4"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M6 18L18 6M6 6l12 12"
-                  />
-                </svg>
                 Clear
               </button>
-            )}
+            </div>
+
+            <button
+              onClick={() => {
+                setSelectedMonth("");
+                setSelectedYear("");
+              }}
+              className="hidden sm:inline-flex items-center gap-1.5 px-3 py-2 text-sm font-medium text-zinc-700 dark:text-zinc-300 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-700 rounded-md transition-colors"
+            >
+              Clear
+            </button>
           </div>
 
-          <button
-            onClick={handleAutoCalculateAll}
-            disabled={isCalculating || !items || items.length === 0}
-            className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-zinc-400 text-white text-sm font-medium rounded-md transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
-          >
-            {isCalculating ? (
-              <>
-                <Loader size="sm" />
-                <span>Calculating...</span>
-              </>
-            ) : (
-              <>
-                <svg
-                  className="w-4 h-4"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"
-                  />
-                </svg>
-                <span>Recalculate Deductions</span>
-              </>
-            )}
-          </button>
+          <div className="flex flex-col sm:flex-row sm:justify-end gap-3">
+            <button
+              onClick={handleAutoCalculateAll}
+              disabled={isCalculating || !items || items.length === 0}
+              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-zinc-400 text-white text-sm font-medium rounded-md transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+            >
+              {isCalculating ? (
+                <>
+                  <Loader size="sm" />
+                  <span>Calculating...</span>
+                </>
+              ) : (
+                <>
+                  <svg
+                    className="w-4 h-4"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"
+                    />
+                  </svg>
+                  <span>Recalculate</span>
+                </>
+              )}
+            </button>
+
+            <button
+              onClick={handleExportToExcel}
+              disabled={!filtered || filtered.length === 0}
+              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-700 disabled:bg-zinc-400 text-white text-sm font-medium rounded-md transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+            >
+              <svg
+                className="w-4 h-4"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                />
+              </svg>
+              <span>Export</span>
+            </button>
+          </div>
         </div>
       </div>
 
