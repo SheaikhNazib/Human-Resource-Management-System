@@ -249,23 +249,6 @@ const SalaryCompensationViewPage = () => {
     );
   }
 
-  const payableDate = compensation.payableDate ? new Date(compensation.payableDate) : null;
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  
-  let paymentStatus = "Pending";
-  let statusColor = "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400";
-  
-  if (payableDate) {
-    if (payableDate <= today) {
-      paymentStatus = "Paid";
-      statusColor = "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400";
-    } else {
-      paymentStatus = "Scheduled";
-      statusColor = "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400";
-    }
-  }
-
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-zinc-950 pb-12">
       {/* Header */}
@@ -273,7 +256,7 @@ const SalaryCompensationViewPage = () => {
         <div className="max-w-6xl mx-auto px-4 py-6">
           <div className="flex items-center justify-between flex-wrap gap-4">
             <div className="flex items-center space-x-4">
-              <div className="w-16 h-16 rounded-full bg-gradient-to-br from-emerald-500 to-teal-500 flex items-center justify-center text-xl font-bold text-white shadow-lg">
+              <div className="w-16 h-16 rounded-full bg-emerald-500 flex items-center justify-center text-xl font-bold text-white shadow-lg">
                 {getInitials()}
               </div>
               <div>
@@ -283,9 +266,6 @@ const SalaryCompensationViewPage = () => {
                 <p className="text-gray-600 dark:text-zinc-400 text-sm md:text-base mt-1">
                   {compensation.employeeName || "Unknown Employee"}
                 </p>
-                <span className={`inline-block mt-2 px-3 py-1 rounded-full text-xs font-semibold ${statusColor}`}>
-                  {paymentStatus}
-                </span>
               </div>
             </div>
             <div className="flex items-center gap-3">
@@ -311,11 +291,11 @@ const SalaryCompensationViewPage = () => {
       {/* Content */}
       <div className="max-w-6xl mx-auto px-4 py-8">
         {/* Net Salary Card - Prominent */}
-        <div className="bg-gradient-to-br from-emerald-500 to-teal-600 rounded-2xl shadow-2xl p-8 mb-8 text-white">
+        <div className="bg-emerald-600 rounded-2xl shadow-2xl p-4 mb-4 text-white">
           <div className="flex items-center justify-between flex-wrap gap-4">
             <div>
               <div className="text-emerald-100 text-sm font-medium mb-2">Net Salary</div>
-              <div className="text-5xl font-bold">{formatCurrency(compensation.netSalary)}</div>
+              <div className="text-3xl font-bold">{formatCurrency(compensation.netSalary)}</div>
               <div className="text-emerald-100 text-sm mt-2">
                 After all additions and deductions
               </div>
