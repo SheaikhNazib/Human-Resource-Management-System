@@ -160,6 +160,31 @@ export class EmployeesService {
       .getOne();
   }
 
+  findByEmails(emails: string[]) {
+    if (!emails || emails.length === 0) return Promise.resolve([]);
+    return this.repo
+      .createQueryBuilder('employee')
+      .where('employee.work_email IN (:...emails)', { emails })
+      .orWhere('employee.personal_email IN (:...emails)', { emails })
+      .getMany();
+  }
+
+  async bulkCreate(createDtos: CreateEmployeeDto[]) {
+    try {
+      const employees = createDtos.map(dto => 
+        this.repo.create({
+          ...dto,
+          emp_department: { id: dto.emp_department },
+          emp_job_title: { id: dto.emp_job_title },
+        })
+      );
+      return await this.repo.save(employees);
+    } catch (error: any) {
+      console.error('Bulk create error:', error);
+      return null;
+    }
+  }
+
   async findOneById(id: number) {
     const employee = await this.repo.findOne({ where: { id }, select: ['id', 'name', 'first_name', 'last_name'] });
     return employee;
