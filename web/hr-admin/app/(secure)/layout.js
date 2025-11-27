@@ -1,14 +1,15 @@
 "use client";
 import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import Sidebar from "../../components/Sidebar";
 import Header from "../../components/Header";
 import { AuthProvider, useAuthContext } from "@/contexts/AuthContext";
 
 function SecureLayoutContent({ children }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const { isAuthenticated, loading } = useAuthContext();
+  const { isAuthenticated, loading, user } = useAuthContext();
   const router = useRouter();
+  const pathname = usePathname();
 
   // Redirect to login if not authenticated
   useEffect(() => {
@@ -20,6 +21,78 @@ function SecureLayoutContent({ children }) {
       }
     }
   }, [isAuthenticated, loading]);
+
+  // Role-based route protection
+  useEffect(() => {
+    if (!loading && isAuthenticated && user) {
+      // Define allowed routes for accountant role
+      const accountantAllowedRoutes = [
+        '/dashboard',
+        '/salary-compensations/salary-list',
+        '/salary-compensations/view',
+        '/salary-compensations/edit',
+        '/salary-compensations/new',
+      ];
+
+      // Define allowed routes for hr_manager role
+      const hrManagerAllowedRoutes = [
+        '/dashboard',
+        '/departments',
+        '/employees',
+        '/attendance',
+        '/attendance-records',
+        '/leaves',
+        '/performance',
+      ];
+
+      // Define allowed routes for manager role
+      const managerAllowedRoutes = [
+        '/dashboard',
+        '/departments',
+        '/employees',
+        '/attendance',
+        '/attendance-records',
+        '/leaves',
+        '/performance',
+      ];
+
+      // Check if user is accountant and trying to access unauthorized route
+      if (user.role === 'accountant') {
+        const isAllowedRoute = accountantAllowedRoutes.some((route) => 
+          pathname.startsWith(route)
+        );
+
+        if (!isAllowedRoute) {
+          console.log('Accountant accessing unauthorized route, redirecting to dashboard');
+          router.push('/dashboard');
+        }
+      }
+
+      // Check if user is hr_manager and trying to access unauthorized route
+      if (user.role === 'hr_manager') {
+        const isAllowedRoute = hrManagerAllowedRoutes.some((route) => 
+          pathname.startsWith(route)
+        );
+
+        if (!isAllowedRoute) {
+          console.log('HR Manager accessing unauthorized route, redirecting to dashboard');
+          router.push('/dashboard');
+        }
+      }
+
+      // Check if user is manager and trying to access unauthorized route
+      if (user.role === 'manager') {
+        const isAllowedRoute = managerAllowedRoutes.some((route) => 
+          pathname.startsWith(route)
+        );
+
+        if (!isAllowedRoute) {
+          console.log('Manager accessing unauthorized route, redirecting to dashboard');
+          router.push('/dashboard');
+        }
+      }
+    }
+  }, [isAuthenticated, loading, user, pathname, router]);
 
   if (loading) {
     return (
