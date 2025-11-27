@@ -89,7 +89,7 @@ export default function Sidebar({ open, onClose }) {
       href: "/tasks",
       label: "Tasks",
       icon: Calendar,
-      allowedRoles: ["super_admin", "admin", "hr", "employee"],
+      allowedRoles: ["super_admin", "admin", "hr", "hr_manager", "manager", "employee"],
     },
 
     // Admin access - only visible to super_admin
