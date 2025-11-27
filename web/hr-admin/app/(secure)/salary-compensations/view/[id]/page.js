@@ -294,7 +294,7 @@ const SalaryCompensationViewPage = () => {
         <div className="bg-emerald-600 rounded-2xl shadow-2xl p-4 mb-4 text-white">
           <div className="flex items-center justify-between flex-wrap gap-4">
             <div>
-              <div className="text-emerald-100 text-sm font-medium mb-2">Net Salary</div>
+              <div className="text-emerald-100 text-sm font-medium mb-2">Total Salary</div>
               <div className="text-3xl font-bold">{formatCurrency(compensation.netSalary)}</div>
               <div className="text-emerald-100 text-sm mt-2">
                 After all additions and deductions
