@@ -5,9 +5,12 @@ import { CreateTaskDto } from './dto/create.dto';
 import { UpdateTaskDto } from './dto/update.dto';
 import { RolesGuard } from 'src/common/guards/roles.guard';
 import { JwtAuthGuard } from 'src/common/guards/jwt-auth.guard';
+import { RequireRoles } from 'src/common/guards/roles.decorator';
+import { Roles } from 'src/common/guards/roles.enum';
 
 @ApiTags('Tasks')
 @UseGuards(JwtAuthGuard, RolesGuard)
+@RequireRoles(Roles.SUPER_ADMIN, Roles.HR_MANAGER, Roles.MANAGER, Roles.EMPLOYEE)
 @ApiBearerAuth('JWT-auth')
 @Controller('tasks')
 export class TasksController {

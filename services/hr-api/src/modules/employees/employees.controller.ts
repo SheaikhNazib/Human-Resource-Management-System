@@ -10,6 +10,8 @@ import { Response } from 'express';
 import * as bcrypt from 'bcrypt';
 import { EmpDepartmentsService } from '../emp_departments/emp_departments.service';
 import { EmpJobTitlesService } from '../emp_job_titles/emp_job_titles.service';
+import { RequireRoles } from 'src/common/guards/roles.decorator';
+import { Roles } from 'src/common/guards/roles.enum';
 
 @ApiTags('Employees')
 @UseGuards(JwtAuthGuard, RolesGuard)
@@ -23,6 +25,7 @@ export class EmployeesController {
   ) { }
 
   @Post()
+  @RequireRoles(Roles.SUPER_ADMIN, Roles.HR_MANAGER, Roles.MANAGER)
   @ApiOperation({ summary: 'Create employee' })
   @ApiBody({ type: CreateEmployeeDto })
   @ApiResponse({ status: 201, description: 'Employee created successfully.' })
@@ -74,6 +77,7 @@ export class EmployeesController {
   }
 
   @Post('bulk-create')
+  @RequireRoles(Roles.SUPER_ADMIN, Roles.HR_MANAGER, Roles.MANAGER)
   @ApiOperation({ summary: 'Bulk create employees' })
   @ApiBody({ type: [CreateEmployeeDto] })
   @ApiResponse({ status: 201, description: 'Employee created successfully.' })
@@ -160,6 +164,7 @@ export class EmployeesController {
   }
 
   @Get()
+  @RequireRoles(Roles.SUPER_ADMIN, Roles.HR_MANAGER, Roles.MANAGER)
   @ApiOperation({ summary: 'Get all employees' })
   @ApiResponse({ status: 200, description: 'List of employees.' })
   async findAll(
@@ -189,6 +194,7 @@ export class EmployeesController {
   }
 
   @Get(':id')
+  @RequireRoles(Roles.SUPER_ADMIN, Roles.HR_MANAGER, Roles.MANAGER)
   @ApiOperation({ summary: 'Get employee by ID' })
   @ApiParam({ name: 'id', type: Number })
   @ApiResponse({ status: 200, description: 'Employee details.' })
@@ -212,6 +218,7 @@ export class EmployeesController {
   }
 
   @Patch(':id')
+  @RequireRoles(Roles.SUPER_ADMIN, Roles.HR_MANAGER, Roles.MANAGER)
   @ApiOperation({ summary: 'Update employee' })
   @ApiParam({ name: 'id', type: Number })
   @ApiBody({ type: UpdateEmployeeDto })
@@ -236,6 +243,7 @@ export class EmployeesController {
   }
 
   @Delete(':id')
+  @RequireRoles(Roles.SUPER_ADMIN)
   @ApiOperation({ summary: 'Delete employee' })
   @ApiParam({ name: 'id', type: Number })
   @ApiResponse({ status: 200, description: 'Employee deleted successfully.' })

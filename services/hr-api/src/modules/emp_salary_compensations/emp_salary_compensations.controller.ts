@@ -6,16 +6,19 @@ import { UpdateEmpSalaryCompensationDto } from './dto/update.dto';
 import { EmpSalaryCompensationsService } from './emp_salary_compensations.service';
 import { RolesGuard } from 'src/common/guards/roles.guard';
 import { JwtAuthGuard } from 'src/common/guards/jwt-auth.guard';
+import { RequireRoles } from 'src/common/guards/roles.decorator';
+import { Roles } from 'src/common/guards/roles.enum';
 
 @ApiTags('EmployeeSalaryCompensations')
 @UseGuards(JwtAuthGuard, RolesGuard)
+@RequireRoles(Roles.SUPER_ADMIN, Roles.HR_MANAGER, Roles.MANAGER)
 @ApiBearerAuth('JWT-auth')
 @Controller('emp-salary-compensations')
 export class EmpSalaryCompensationsController {
   constructor(private readonly empSalaryCompensationsService: EmpSalaryCompensationsService) {}
 
 
-  @Post()
+  @Post() 
   @ApiOperation({ summary: 'Create employee salary compensation' })
   @ApiBody({ type: CreateEmpSalaryCompensationDto })
   @ApiResponse({ status: 201, description: 'Created' })
