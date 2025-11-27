@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Repository, In } from 'typeorm';
 import { EmpDepartments } from '../../models/emp_departments.entity';
 import { CreateEmpDepartmentDto } from './dto/create.dto';
 import { UpdateEmpDepartmentDto } from './dto/update.dto';
@@ -52,6 +52,11 @@ export class EmpDepartmentsService {
 
   findOne(id: number) {
     return this.repo.findOneBy({ id });
+  }
+
+  findByIds(ids: number[]) {
+    if (!ids || ids.length === 0) return Promise.resolve([]);
+    return this.repo.findBy({ id: In(ids) });
   }
 
   update(id: number, updateDto: UpdateEmpDepartmentDto) {

@@ -136,7 +136,7 @@ export function getApprovedLeaveDays(leaves, employeeId, month, year) {
   return leaves
     .filter(leave => {
       // Only count approved leaves
-      if (leave.status !== 'approved') return false;
+      if (leave.status !== 'unpaid approved') return false;
       
       // Check if leave belongs to the employee (compare as numbers)
       const leaveEmpId = Number(leave.employeeId || leave.employee);
