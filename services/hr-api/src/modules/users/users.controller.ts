@@ -9,6 +9,10 @@ import { Roles } from 'src/common/guards/roles.enum';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import * as bcrypt from 'bcrypt';
+import { EmployeesService } from '../employees/employees.service';
+import { EmpDepartmentsService } from '../emp_departments/emp_departments.service';
+import { EmpJobTitlesService } from '../emp_job_titles/emp_job_titles.service';
+import { createEmployeeObjectForUser } from '../employees/employees.function';
 
 @ApiTags('Users')
 @UseGuards(JwtAuthGuard, RolesGuard)
@@ -16,7 +20,12 @@ import * as bcrypt from 'bcrypt';
 @ApiBearerAuth('JWT-auth')
 @Controller('users')
 export class UsersController {
-    constructor(private readonly usersService: UsersService) { }
+    constructor(
+        private readonly usersService: UsersService,
+        private readonly employeesService: EmployeesService,
+        private readonly empDepartmentsService: EmpDepartmentsService,
+        private readonly empJobTitlesService: EmpJobTitlesService
+    ) { }
 
     @Post()
     @ApiOperation({ summary: 'Create user' })
@@ -24,19 +33,45 @@ export class UsersController {
     @ApiResponse({ status: 201, description: 'User created' })
     async create(@Body() createDto: CreateUserDto, @Res() res: Response) {
         try {
-            const user = await this.usersService.findOneByEmail(createDto.email);
-            if (user) {
+            const [user, employee, department, jobTitle] = await Promise.all([
+                this.usersService.findOneByEmail(createDto.email),
+                this.employeesService.findOneByEmail(createDto.email),
+                this.empDepartmentsService.findOne(createDto.emp_department),
+                this.empJobTitlesService.findOne(createDto.emp_job_title)
+            ]);
+            if(employee) {
                 return res.status(HttpStatus.BAD_REQUEST).json({
-                    success: false, data: null, message: 'User already exists!'
+                    success: false, data: null, message: 'Email already exists as an employee!'
                 });
             }
+            if (user) {
+                return res.status(HttpStatus.BAD_REQUEST).json({
+                    success: false, data: null, message: 'Email already exists as a user!'
+                });
+            }
+            if (!department) {
+                return res.status(HttpStatus.BAD_REQUEST).json({
+                    success: false, data: null, message: 'Department not found!'
+                });
+            }
+            if (!jobTitle || !jobTitle.data) {
+                return res.status(HttpStatus.BAD_REQUEST).json({
+                    success: false, data: null, message: 'Job title not found!'
+                });
+            }
+
+            const employeeData = createEmployeeObjectForUser({ ...createDto, emp_department: department.id, emp_job_title: jobTitle.data.id });
+
             createDto.password = await bcrypt.hash(createDto.password, 10);
             const createdUser = await this.usersService.create(createDto);
+            await this.employeesService.create(employeeData);
+
             return res.status(HttpStatus.CREATED).json({
                 success: true, data: createdUser, message: 'User created successfully!'
             });
         }
         catch (error) {
+            console.log('abc ========> ', error);
             return res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({
                 success: false, data: null, message: 'Internal server error occurred. Please try again later!'
             });
