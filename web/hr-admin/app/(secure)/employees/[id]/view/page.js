@@ -18,11 +18,12 @@ import TabBar from "@/components/employee/TabBar";
 import AboutPanel from "@/components/employee/AboutPanel";
 import TasksPanel from "@/components/employee/TasksPanel";
 import LeavesPanel from "@/components/employee/LeavesPanel";
+import { UserCircle, ClipboardList, CalendarDays } from "lucide-react";
 
 const TABS = [
-  { id: "about", label: "About", icon: "👤" },
-  { id: "tasks", label: "My Tasks", icon: "📋" },
-  { id: "leaves", label: "Leaves", icon: "📅" },
+  { id: "about", label: "About", icon: UserCircle },
+  { id: "tasks", label: "My Tasks", icon: ClipboardList },
+  { id: "leaves", label: "Leaves", icon: CalendarDays },
 ];
 
 const EmployeeDetailsPage = () => {
@@ -188,24 +189,34 @@ const EmployeeDetailsPage = () => {
       <div className="bg-gray-50 dark:bg-zinc-950 min-h-screen">
         {/* About tab - always rendered since it's the default */}
         {activeTab === "about" && (
-          <AboutPanel employee={employee} loading={false} error={null} />
+          <div className="animate-tabFadeIn">
+            <AboutPanel employee={employee} loading={false} error={null} />
+          </div>
         )}
 
         {/* Tasks tab - only mount after first visit, then keep mounted but hidden */}
         {visitedTabs.has("tasks") && (
-          <TasksPanel
-            employeeId={employee.id}
-            isActive={activeTab === "tasks"}
-          />
+          <div
+            className={activeTab === "tasks" ? "animate-tabFadeIn" : "hidden"}
+          >
+            <TasksPanel
+              employeeId={employee.id}
+              isActive={activeTab === "tasks"}
+            />
+          </div>
         )}
 
         {/* Leaves tab - only mount after first visit, then keep mounted but hidden */}
         {visitedTabs.has("leaves") && (
-          <LeavesPanel
-            employeeId={employee.id}
-            isActive={activeTab === "leaves"}
-            employee={employee}
-          />
+          <div
+            className={activeTab === "leaves" ? "animate-tabFadeIn" : "hidden"}
+          >
+            <LeavesPanel
+              employeeId={employee.id}
+              isActive={activeTab === "leaves"}
+              employee={employee}
+            />
+          </div>
         )}
       </div>
     </div>
