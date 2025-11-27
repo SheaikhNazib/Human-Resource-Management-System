@@ -121,7 +121,15 @@ export const AuthProvider = ({ children }) => {
       if (response.success) {
         setIsAuthenticated(true);
         setUser(response.data.user);
-        router.push("/dashboard");
+        
+        // Redirect based on role
+        const userRole = response.data.user?.role;
+        if (userRole === 'employee') {
+          router.push("/employee-dashboard");
+        } else {
+          router.push("/dashboard");
+        }
+        
         return { success: true };
       } else {
         return { success: false, error: response.error };
