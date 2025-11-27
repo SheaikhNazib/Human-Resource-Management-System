@@ -1,21 +1,70 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { createUser } from "@/actions/users";
+import { getDepartmentsList } from "@/actions/departments/server-actions";
+import { getJobTitlesList } from "@/actions/job-titles/server-actions";
 import { toast } from "sonner";
 import { ArrowLeft, UserPlus, Loader2 } from "lucide-react";
 import Link from "next/link";
+import AutoComplete from "@/components/ui/autoComplete";
 
 export default function AddUserPage() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
+  const [departments, setDepartments] = useState([]);
+  const [jobTitles, setJobTitles] = useState([]);
+  const [loadingDepartments, setLoadingDepartments] = useState(true);
+  const [loadingJobTitles, setLoadingJobTitles] = useState(true);
   const [formData, setFormData] = useState({
     email: "",
     password: "",
     role: "hr_manager",
     isActive: true,
+    emp_department: "",
+    emp_job_title: "",
   });
+
+  // Fetch departments and job titles on component mount
+  useEffect(() => {
+    const fetchDepartments = async () => {
+      try {
+        setLoadingDepartments(true);
+        const response = await getDepartmentsList();
+        if (response.success && response.data) {
+          setDepartments(response.data);
+        } else {
+          toast.error(response.error || 'Failed to load departments');
+        }
+      } catch (error) {
+        console.error('Error fetching departments:', error);
+        toast.error('Failed to load departments');
+      } finally {
+        setLoadingDepartments(false);
+      }
+    };
+
+    const fetchJobTitles = async () => {
+      try {
+        setLoadingJobTitles(true);
+        const response = await getJobTitlesList();
+        if (response.success && response.data) {
+          setJobTitles(response.data);
+        } else {
+          toast.error(response.error || 'Failed to load job titles');
+        }
+      } catch (error) {
+        console.error('Error fetching job titles:', error);
+        toast.error('Failed to load job titles');
+      } finally {
+        setLoadingJobTitles(false);
+      }
+    };
+
+    fetchDepartments();
+    fetchJobTitles();
+  }, []);
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -36,6 +85,16 @@ export default function AddUserPage() {
 
     if (formData.password.length < 6) {
       toast.error("Password must be at least 6 characters");
+      return;
+    }
+
+    if (!formData.emp_department) {
+      toast.error("Department is required");
+      return;
+    }
+
+    if (!formData.emp_job_title) {
+      toast.error("Job title is required");
       return;
     }
 
@@ -155,6 +214,42 @@ export default function AddUserPage() {
             </select>
             <p className="text-xs text-zinc-500 mt-1">
               Select the appropriate role for this user
+            </p>
+          </div>
+
+          {/* Department Field */}
+          <div>
+            <AutoComplete
+              label="Department"
+              options={departments}
+              value={formData.emp_department}
+              onChange={(value) => setFormData((prev) => ({ ...prev, emp_department: value }))}
+              placeholder={loadingDepartments ? "Loading departments..." : "Select a department"}
+              displayKey="name"
+              valueKey="id"
+              disabled={loading || loadingDepartments}
+              required
+            />
+            <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1">
+              Select the department for this user
+            </p>
+          </div>
+
+          {/* Job Title Field */}
+          <div>
+            <AutoComplete
+              label="Job Title"
+              options={jobTitles}
+              value={formData.emp_job_title}
+              onChange={(value) => setFormData((prev) => ({ ...prev, emp_job_title: value }))}
+              placeholder={loadingJobTitles ? "Loading job titles..." : "Select a job title"}
+              displayKey="name"
+              valueKey="id"
+              disabled={loading || loadingJobTitles}
+              required
+            />
+            <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1">
+              Select the job title for this user
             </p>
           </div>
 
