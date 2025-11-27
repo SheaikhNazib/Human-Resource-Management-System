@@ -1,5 +1,5 @@
-import { IsNotEmpty, IsString, IsBoolean, IsEnum, MinLength } from 'class-validator';
-import { ApiProperty } from '@nestjs/swagger';
+import { IsNotEmpty, IsString, IsBoolean, IsEnum, MinLength, IsOptional, IsInt } from 'class-validator';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Roles } from 'src/common/guards/roles.enum';
 
 export class CreateUserDto {
@@ -22,4 +22,14 @@ export class CreateUserDto {
   @IsEnum(Roles)
   @IsNotEmpty()
   role: Roles;
+
+  @ApiProperty({ example: 11 })
+  @IsInt()
+  @IsNotEmpty()
+  emp_department: number;
+
+  @ApiProperty({ example: 11 })
+  @IsInt()
+  @IsNotEmpty()
+  emp_job_title: number;
 }

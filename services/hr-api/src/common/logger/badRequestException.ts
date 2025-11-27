@@ -7,8 +7,21 @@ export class BadRequestExceptionFilter implements ExceptionFilter {
         const ctx = host.switchToHttp();
         const response = ctx.getResponse<Response>();
         const responseBody = exception.getResponse();
-        response.status(HttpStatus.BAD_REQUEST).json({
-            success: false, data: null, message: 'Bad request!'
-        });
+        
+        let message = 'Bad request!';
+        if (typeof responseBody === 'string') {
+            message = responseBody;
+        } else if (typeof responseBody === 'object' && responseBody !== null) {
+            const resObj = responseBody as any;
+            if (resObj.message) {
+                // Handle array of validation errors
+                if (Array.isArray(resObj.message)) {
+                    message = resObj.message.join(', ');
+                } else {
+                    message = resObj.message;
+                }
+            }
+        }
+        response.status(HttpStatus.BAD_REQUEST).json({ success: false, data: null, message });
     }
 }
