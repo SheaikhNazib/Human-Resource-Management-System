@@ -28,7 +28,6 @@ function SecureLayoutContent({ children }) {
       // Define allowed routes for employee role
       const employeeAllowedRoutes = [
         '/employee-dashboard',
-        '/tasks',
       ];
 
       // Define allowed routes for accountant role
@@ -66,19 +65,30 @@ function SecureLayoutContent({ children }) {
 
       // Check if user is employee and trying to access unauthorized route
       if (user.role === 'employee') {
-        const isAllowedRoute = employeeAllowedRoutes.some((route) => 
-          pathname.startsWith(route)
-        );
+        // Special handling for task routes - only allow view pages
+        if (pathname.startsWith('/tasks/')) {
+          const isTaskViewPage = pathname.match(/^\/tasks\/\d+\/view/);
+          if (!isTaskViewPage) {
+            console.log('Employee trying to access non-view task page, redirecting');
+            router.push('/employee-dashboard');
+            return;
+          }
+        } else {
+          // Check normal allowed routes
+          const isAllowedRoute = employeeAllowedRoutes.some((route) =>
+            pathname.startsWith(route)
+          );
 
-        if (!isAllowedRoute) {
-          console.log('Employee accessing unauthorized route, redirecting to employee dashboard');
-          router.push('/employee-dashboard');
+          if (!isAllowedRoute) {
+            console.log('Employee accessing unauthorized route, redirecting to employee dashboard');
+            router.push('/employee-dashboard');
+          }
         }
       }
 
       // Check if user is accountant and trying to access unauthorized route
       if (user.role === 'accountant') {
-        const isAllowedRoute = accountantAllowedRoutes.some((route) => 
+        const isAllowedRoute = accountantAllowedRoutes.some((route) =>
           pathname.startsWith(route)
         );
 
@@ -90,7 +100,7 @@ function SecureLayoutContent({ children }) {
 
       // Check if user is hr_manager and trying to access unauthorized route
       if (user.role === 'hr_manager') {
-        const isAllowedRoute = hrManagerAllowedRoutes.some((route) => 
+        const isAllowedRoute = hrManagerAllowedRoutes.some((route) =>
           pathname.startsWith(route)
         );
 
@@ -102,7 +112,7 @@ function SecureLayoutContent({ children }) {
 
       // Check if user is manager and trying to access unauthorized route
       if (user.role === 'manager') {
-        const isAllowedRoute = managerAllowedRoutes.some((route) => 
+        const isAllowedRoute = managerAllowedRoutes.some((route) =>
           pathname.startsWith(route)
         );
 
@@ -128,7 +138,23 @@ function SecureLayoutContent({ children }) {
   if (!isAuthenticated) {
     return null;
   }
-  
+
+  // Check if user is an employee - they get a different layout without sidebar
+  const isEmployee = user?.role === 'employee';
+
+  if (isEmployee) {
+    return (
+      <div className="flex flex-col min-h-screen bg-zinc-50 dark:bg-zinc-900">
+        {/* Header only - no sidebar toggle for employees */}
+        <Header onOpen={null} />
+        {/* Content Area - full width without sidebar */}
+        <main className="flex-1 p-4 lg:p-8 bg-zinc-100 dark:bg-zinc-900 overflow-y-auto">
+          {children}
+        </main>
+      </div>
+    );
+  }
+
   return (
     <div className="flex min-h-screen bg-zinc-50 dark:bg-zinc-900">
       {/* Sidebar */}

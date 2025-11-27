@@ -19,9 +19,9 @@ import TasksPanel from "@/components/employee/TasksPanel";
 import LeavesPanel from "@/components/employee/LeavesPanel";
 
 const TABS = [
-  { id: "about", label: "About", icon: "👤" },
-  { id: "tasks", label: "My Tasks", icon: "📋" },
-  { id: "leaves", label: "Leaves", icon: "📅" },
+  { id: "about", label: "About", icon: User },
+  { id: "tasks", label: "My Tasks", icon: Briefcase },
+  { id: "leaves", label: "Leaves", icon: Calendar },
 ];
 
 const EmployeeDashboardPage = () => {
@@ -183,6 +183,7 @@ const EmployeeDashboardPage = () => {
             employeeId={employee.id}
             isActive={activeTab === "leaves"}
             employee={employee}
+            canRequestLeave={true}
           />
         )}
       </div>
