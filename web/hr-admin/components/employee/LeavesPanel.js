@@ -23,6 +23,7 @@ const LeavesPanel = ({ employeeId, isActive, employee }) => {
     approved: 0,
     pending: 0,
     denied: 0,
+    unpaid: 0,
   });
 
   // Calculate leave policy based on employee's hire date
@@ -52,6 +53,9 @@ const LeavesPanel = ({ employeeId, isActive, employee }) => {
       ).length,
       denied: filtered.filter((l) =>
         ["denied", "rejected"].includes(String(l.status).toLowerCase())
+      ).length,
+      unpaid: filtered.filter(
+        (l) => String(l.status).toLowerCase() === "unpaid approved"
       ).length,
     };
 
@@ -102,26 +106,31 @@ const LeavesPanel = ({ employeeId, isActive, employee }) => {
         <LeaveSummaryCard leavePolicy={leavePolicy} employee={employee} />
 
         {/* Status Summary Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
           <SummaryCard
             label="Total Requests"
             value={summary.total}
-            color="bg-blue-100 text-blue-800"
+            color="bg-blue-100 text-blue-800 dark:bg-blue-900/20 dark:text-blue-400"
           />
           <SummaryCard
             label="Approved"
             value={summary.approved}
-            color="bg-green-100 text-green-800"
+            color="bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400"
           />
           <SummaryCard
             label="Pending"
             value={summary.pending}
-            color="bg-yellow-100 text-yellow-800"
+            color="bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-400"
           />
           <SummaryCard
             label="Denied"
             value={summary.denied}
-            color="bg-red-100 text-red-800"
+            color="bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-400"
+          />
+          <SummaryCard
+            label="Unpaid Leaves"
+            value={summary.unpaid}
+            color="bg-orange-100 text-orange-800 dark:bg-orange-900/20 dark:text-orange-400"
           />
         </div>
 
@@ -160,8 +169,8 @@ const LoadingSkeleton = () => {
   return (
     <div className="max-w-6xl mx-auto px-4 py-6">
       {/* Summary skeleton */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-        {[1, 2, 3, 4].map((i) => (
+      <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
+        {[1, 2, 3, 4, 5].map((i) => (
           <div
             key={i}
             className="bg-white dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 rounded-lg p-4"
