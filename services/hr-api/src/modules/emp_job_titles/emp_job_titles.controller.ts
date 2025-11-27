@@ -21,7 +21,7 @@ export class EmpJobTitlesController {
   ) { }
 
   @Post()
-  @RequireRoles(Roles.SUPER_ADMIN, Roles.HR_MANAGER, Roles.MANAGER)
+  @RequireRoles(Roles.SUPER_ADMIN, Roles.HR_MANAGER, Roles.MANAGER, Roles.ACCOUNTANT)
   @ApiOperation({ summary: 'Create job title' })
   @ApiBody({ type: CreateEmpJobTitleDto })
   @ApiResponse({ status: 201, description: 'Job title created' })
@@ -50,7 +50,7 @@ export class EmpJobTitlesController {
   }
 
   @Get()
-  @RequireRoles(Roles.SUPER_ADMIN, Roles.HR_MANAGER, Roles.MANAGER, Roles.EMPLOYEE)
+  @RequireRoles(Roles.SUPER_ADMIN, Roles.HR_MANAGER, Roles.MANAGER, Roles.ACCOUNTANT, Roles.EMPLOYEE)
   @ApiOperation({ summary: 'Get all job titles' })
   @ApiResponse({ status: 200, description: 'List of job titles' })
   async findAll(@Res() res: Response) {
@@ -67,7 +67,7 @@ export class EmpJobTitlesController {
   }
 
   @Get(':id')
-  @RequireRoles(Roles.SUPER_ADMIN, Roles.HR_MANAGER, Roles.MANAGER, Roles.EMPLOYEE)
+  @RequireRoles(Roles.SUPER_ADMIN, Roles.HR_MANAGER, Roles.MANAGER, Roles.ACCOUNTANT, Roles.EMPLOYEE)
   @ApiOperation({ summary: 'Get job title by id' })
   @ApiParam({ name: 'id', type: Number })
   @ApiResponse({ status: 200, description: 'Job title found' })
@@ -90,7 +90,7 @@ export class EmpJobTitlesController {
   }
 
   @Patch(':id')
-  @RequireRoles(Roles.SUPER_ADMIN, Roles.HR_MANAGER, Roles.MANAGER)
+  @RequireRoles(Roles.SUPER_ADMIN, Roles.HR_MANAGER, Roles.MANAGER, Roles.ACCOUNTANT)
   @ApiOperation({ summary: 'Update job title by id' })
   @ApiParam({ name: 'id', type: Number })
   @ApiBody({ type: UpdateEmpJobTitleDto })

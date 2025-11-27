@@ -19,7 +19,7 @@ export class EmpSalaryCompensationsController {
 
 
   @Post()
-  @RequireRoles(Roles.SUPER_ADMIN, Roles.HR_MANAGER, Roles.MANAGER)
+  @RequireRoles(Roles.SUPER_ADMIN, Roles.HR_MANAGER, Roles.MANAGER, Roles.ACCOUNTANT)
   @ApiOperation({ summary: 'Create employee salary compensation' })
   @ApiBody({ type: CreateEmpSalaryCompensationDto })
   @ApiResponse({ status: 201, description: 'Created' })
