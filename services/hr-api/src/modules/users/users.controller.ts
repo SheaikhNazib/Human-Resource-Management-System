@@ -16,7 +16,6 @@ import { createEmployeeObjectForUser } from '../employees/employees.function';
 
 @ApiTags('Users')
 @UseGuards(JwtAuthGuard, RolesGuard)
-@RequireRoles(Roles.SUPER_ADMIN)
 @ApiBearerAuth('JWT-auth')
 @Controller('users')
 export class UsersController {
@@ -28,6 +27,7 @@ export class UsersController {
     ) { }
 
     @Post()
+    @RequireRoles(Roles.SUPER_ADMIN, Roles.HR_MANAGER, Roles.MANAGER)
     @ApiOperation({ summary: 'Create user' })
     @ApiBody({ type: CreateUserDto })
     @ApiResponse({ status: 201, description: 'User created' })
@@ -79,6 +79,7 @@ export class UsersController {
     }
 
     @Get()
+    @RequireRoles(Roles.SUPER_ADMIN, Roles.HR_MANAGER, Roles.MANAGER)
     @ApiOperation({ summary: 'Get all users' })
     @ApiResponse({ status: 200, description: 'List of users' })
     async findAll(@Res() res: Response) {
@@ -96,6 +97,7 @@ export class UsersController {
     }
 
     @Get(':id')
+    @RequireRoles(Roles.SUPER_ADMIN, Roles.HR_MANAGER, Roles.MANAGER)
     @ApiOperation({ summary: 'Get user by id' })
     @ApiParam({ name: 'id', type: Number })
     @ApiResponse({ status: 200, description: 'User found' })
@@ -119,6 +121,7 @@ export class UsersController {
     }
 
     @Patch(':id')
+    @RequireRoles(Roles.SUPER_ADMIN, Roles.HR_MANAGER, Roles.MANAGER)
     @ApiOperation({ summary: 'Update user by id' })
     @ApiParam({ name: 'id', type: Number })
     @ApiBody({ type: UpdateUserDto })
@@ -159,6 +162,7 @@ export class UsersController {
     }
 
     @Delete(':id')
+    @RequireRoles(Roles.SUPER_ADMIN)
     @ApiOperation({ summary: 'Delete user by id' })
     @ApiParam({ name: 'id', type: Number })
     @ApiResponse({ status: 200, description: 'User deleted' })

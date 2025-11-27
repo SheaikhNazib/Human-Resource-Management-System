@@ -16,6 +16,10 @@ export class AuthService {
     return await this.usersService.findOne(userId);
   }
 
+  async validateEmployee(userId: number) {
+    return await this.employeesService.findOne(userId);
+  }
+
   async validateUserByEmail(email: string) {
     return await this.usersService.findOneByEmail(email);
   }
