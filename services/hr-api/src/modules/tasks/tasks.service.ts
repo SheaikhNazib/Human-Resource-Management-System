@@ -65,6 +65,15 @@ export class TasksService {
   }
 
   async update(id: number, updateDto: UpdateTaskDto) {
+    // Load the task with relations first
+    const task = await this.repo.findOne({ where: { id }, relations: ['assigned_employees', 'task_status'] });
+    if (!task) {
+      return {
+        message: 'Task not found.',
+        data: null,
+      };
+    }
+
     let employees;
     if (updateDto.assigned_employees) {
       employees = await this.empRepo.findBy({ id: In(updateDto.assigned_employees) });
@@ -74,7 +83,10 @@ export class TasksService {
           data: null,
         };
       }
+      // Update the assigned_employees relation
+      task.assigned_employees = employees;
     }
+    
     let status;
     if (updateDto.task_status) {
       status = await this.statusRepo.findOneBy({ id: updateDto.task_status });
@@ -84,23 +96,26 @@ export class TasksService {
           data: null,
         };
       }
+      // Update the task_status relation
+      task.task_status = status;
     }
-    const updateData: any = { ...updateDto };
-    if (employees) updateData.assigned_employees = employees;
-    if (status) updateData.task_status = status;
-    const result = await this.repo.update(id, updateData);
-    if (result.affected && result.affected > 0) {
-      const updated = await this.repo.findOne({ where: { id }, relations: ['assigned_employees', 'task_status'] });
-      return {
-        message: 'Task updated successfully.',
-        data: updated,
-      };
-    } else {
-      return {
-        message: 'Task not found or not updated.',
-        data: null,
-      };
-    }
+
+    // Update other fields
+    if (updateDto.title !== undefined) task.title = updateDto.title;
+    if (updateDto.description !== undefined) task.description = updateDto.description;
+    if (updateDto.start_date_time !== undefined) task.start_date_time = updateDto.start_date_time ? new Date(updateDto.start_date_time) : undefined;
+    if (updateDto.end_date_time !== undefined) task.end_date_time = updateDto.end_date_time ? new Date(updateDto.end_date_time) : undefined;
+    if (updateDto.estimated_time !== undefined) task.estimated_time = updateDto.estimated_time;
+
+    // Save the entity (this properly handles many-to-many relationships)
+    await this.repo.save(task);
+    
+    // Fetch with relations to return complete data
+    const result = await this.repo.findOne({ where: { id }, relations: ['assigned_employees', 'task_status'] });
+    return {
+      message: 'Task updated successfully.',
+      data: result,
+    };
   }
 
   async remove(id: number) {
