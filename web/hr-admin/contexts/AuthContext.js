@@ -2,12 +2,7 @@
 
 import { createContext, useContext, useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import {
-  loginUser,
-  logoutUser,
-  getCurrentUser,
-  verifyAuth,
-} from "@/actions/auth";
+import { loginUser, getCurrentUser, verifyAuth } from "@/actions/auth";
 
 const AuthContext = createContext({
   user: null,
@@ -32,6 +27,7 @@ export const AuthProvider = ({ children }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const router = useRouter();
 
+  
   // Check authentication status on mount
   useEffect(() => {
     checkAuth();
@@ -145,8 +141,16 @@ export const AuthProvider = ({ children }) => {
       setIsAuthenticated(false);
       setUser(null);
       
-      // Call server action to clear cookies
-      await logoutUser();
+      // Call frontend API route to clear cookies server-side
+      try {
+        const resp = await fetch('/api/auth/logout', { method: 'POST' });
+        if (!resp.ok) {
+          const errBody = await resp.json().catch(() => ({}));
+          console.error('Logout API returned error:', resp.status, errBody);
+        }
+      } catch (err) {
+        console.error('Failed to call /api/auth/logout:', err);
+      }
       
       // Force navigation to login page
       router.push("/login");

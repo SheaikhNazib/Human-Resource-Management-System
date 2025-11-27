@@ -28,7 +28,6 @@ function SecureLayoutContent({ children }) {
       // Define allowed routes for employee role
       const employeeAllowedRoutes = [
         '/employee-dashboard',
-        '/tasks',
       ];
 
       // Define allowed routes for accountant role
@@ -66,7 +65,7 @@ function SecureLayoutContent({ children }) {
 
       // Check if user is employee and trying to access unauthorized route
       if (user.role === 'employee') {
-        const isAllowedRoute = employeeAllowedRoutes.some((route) => 
+        const isAllowedRoute = employeeAllowedRoutes.some((route) =>
           pathname.startsWith(route)
         );
 
@@ -78,7 +77,7 @@ function SecureLayoutContent({ children }) {
 
       // Check if user is accountant and trying to access unauthorized route
       if (user.role === 'accountant') {
-        const isAllowedRoute = accountantAllowedRoutes.some((route) => 
+        const isAllowedRoute = accountantAllowedRoutes.some((route) =>
           pathname.startsWith(route)
         );
 
@@ -90,7 +89,7 @@ function SecureLayoutContent({ children }) {
 
       // Check if user is hr_manager and trying to access unauthorized route
       if (user.role === 'hr_manager') {
-        const isAllowedRoute = hrManagerAllowedRoutes.some((route) => 
+        const isAllowedRoute = hrManagerAllowedRoutes.some((route) =>
           pathname.startsWith(route)
         );
 
@@ -102,7 +101,7 @@ function SecureLayoutContent({ children }) {
 
       // Check if user is manager and trying to access unauthorized route
       if (user.role === 'manager') {
-        const isAllowedRoute = managerAllowedRoutes.some((route) => 
+        const isAllowedRoute = managerAllowedRoutes.some((route) =>
           pathname.startsWith(route)
         );
 
@@ -128,7 +127,23 @@ function SecureLayoutContent({ children }) {
   if (!isAuthenticated) {
     return null;
   }
-  
+
+  // Check if user is an employee - they get a different layout without sidebar
+  const isEmployee = user?.role === 'employee';
+
+  if (isEmployee) {
+    return (
+      <div className="flex flex-col min-h-screen bg-zinc-50 dark:bg-zinc-900">
+        {/* Header only - no sidebar toggle for employees */}
+        <Header onOpen={null} />
+        {/* Content Area - full width without sidebar */}
+        <main className="flex-1 p-4 lg:p-8 bg-zinc-100 dark:bg-zinc-900 overflow-y-auto">
+          {children}
+        </main>
+      </div>
+    );
+  }
+
   return (
     <div className="flex min-h-screen bg-zinc-50 dark:bg-zinc-900">
       {/* Sidebar */}
