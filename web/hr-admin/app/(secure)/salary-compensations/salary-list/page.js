@@ -355,34 +355,6 @@ export default function SalaryCompensationsPage() {
         </div>
       ),
     },
-    {
-      header: "Status",
-      accessor: "status",
-      render: (item) => {
-        const payableDate = item.payableDate ? new Date(item.payableDate) : null;
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
-        
-        let status = "Pending";
-        let colorClass = "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400";
-        
-        if (payableDate) {
-          if (payableDate <= today) {
-            status = "Paid";
-            colorClass = "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400";
-          } else {
-            status = "Scheduled";
-            colorClass = "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400";
-          }
-        }
-        
-        return (
-          <span className={`px-2 py-1 rounded-full text-xs font-medium ${colorClass}`}>
-            {status}
-          </span>
-        );
-      },
-    },
   ];
 
   const renderActions = (item) => {
