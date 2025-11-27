@@ -32,6 +32,7 @@ export const Api_path = {
   ATTENDANCE: {
     LIST: "/api/v1/emp-attendances",
     CREATE: "/api/v1/emp-attendances",
+    BULK_CREATE: "/api/v1/emp-attendances/bulk",
     UPDATE: (id) => `/api/v1/emp-attendances/${id}`,
     DELETE: (id) => `/api/v1/emp-attendances/${id}`,
     GET_ONE: (id) => `/api/v1/emp-attendances/${id}`,

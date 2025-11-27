@@ -422,22 +422,52 @@ export async function getEmployeesWithTodayAttendance() {
 
     console.log("Fetching attendance for date:", currentDate);
 
-    // Fetch employees and ALL attendance records
-    const [employeesResponse, attendanceResponse] = await Promise.all([
-      fetchFromApi(Api_path.EMPLOYEE.LIST),
-      fetchFromApi(Api_path.ATTENDANCE.LIST),
-    ]);
-
-    // Parse employees
-    const employeeBody = employeesResponse?.data ?? employeesResponse;
+    // Fetch all employees using pagination (max limit is 100)
     let employeesList = [];
-    if (Array.isArray(employeeBody)) {
-      employeesList = employeeBody;
-    } else if (Array.isArray(employeeBody.data)) {
-      employeesList = employeeBody.data;
-    } else if (Array.isArray(employeeBody?.data?.data)) {
-      employeesList = employeeBody.data.data;
+    let currentPage = 1;
+    let totalPages = 1;
+
+    // Fetch first page to get total pages
+    const firstPageResponse = await fetchFromApi(
+      `${Api_path.EMPLOYEE.LIST}?limit=100&page=1`
+    );
+    const firstPageBody = firstPageResponse?.data ?? firstPageResponse;
+
+    if (firstPageBody.success && Array.isArray(firstPageBody.data)) {
+      employeesList = firstPageBody.data;
+      totalPages = firstPageBody.metaData?.totalPages || 1;
+      console.log(
+        `Fetched page 1/${totalPages}, employees: ${employeesList.length}`
+      );
+
+      // Fetch remaining pages if there are more
+      if (totalPages > 1) {
+        const remainingPages = [];
+        for (let page = 2; page <= totalPages; page++) {
+          remainingPages.push(
+            fetchFromApi(`${Api_path.EMPLOYEE.LIST}?limit=100&page=${page}`)
+          );
+        }
+
+        const remainingResponses = await Promise.all(remainingPages);
+        remainingResponses.forEach((response, index) => {
+          const body = response?.data ?? response;
+          if (body.success && Array.isArray(body.data)) {
+            employeesList = employeesList.concat(body.data);
+            console.log(
+              `Fetched page ${index + 2}/${totalPages}, total employees: ${
+                employeesList.length
+              }`
+            );
+          }
+        });
+      }
     }
+
+    // Fetch ALL attendance records
+    const attendanceResponse = await fetchFromApi(Api_path.ATTENDANCE.LIST);
+
+    console.log("Total employees fetched:", employeesList.length);
 
     // Parse attendance records
     let attendanceRecords = [];
@@ -574,8 +604,76 @@ export async function bulkSaveAttendance(attendanceRecords) {
       return time;
     };
 
-    const results = await Promise.all(
-      attendanceRecords.map(async (record) => {
+    // Separate records into new (no attendanceId) and existing (has attendanceId)
+    const newRecords = attendanceRecords.filter(
+      (record) => !record.attendanceId
+    );
+    const existingRecords = attendanceRecords.filter(
+      (record) => record.attendanceId
+    );
+
+    const results = [];
+
+    // Handle new records with bulk create
+    if (newRecords.length > 0) {
+      const attendances = newRecords.map((record) => ({
+        date: record.date,
+        checkIn: formatTime(record.checkInTime),
+        checkOut: record.checkOutTime ? formatTime(record.checkOutTime) : null,
+        remarks: record.remarks || "",
+        onsite_or_remote: true,
+        check_in_ip: "",
+        check_out_ip: "",
+        employee: record.employeeId,
+      }));
+
+      console.log(
+        `Bulk creating ${newRecords.length} new attendance records:`,
+        JSON.stringify({ attendances }, null, 2)
+      );
+
+      try {
+        const response = await fetchFromApi(Api_path.ATTENDANCE.BULK_CREATE, {
+          method: "POST",
+          body: { attendances },
+        });
+
+        console.log("Bulk create response:", JSON.stringify(response, null, 2));
+
+        const responseData = response?.data ?? response;
+
+        // Check for successful response
+        if (
+          responseData?.success ||
+          response?.status === 201 ||
+          responseData?.statusCode === 201
+        ) {
+          newRecords.forEach((record) => {
+            results.push({
+              success: true,
+              employeeId: record.employeeId,
+            });
+          });
+        } else {
+          throw new Error(
+            responseData?.message || "Failed to create attendances"
+          );
+        }
+      } catch (error) {
+        console.error("Bulk create error:", error);
+        newRecords.forEach((record) => {
+          results.push({
+            success: false,
+            employeeId: record.employeeId,
+            error: error.message || "Failed to create attendance",
+          });
+        });
+      }
+    }
+
+    // Handle existing records with individual PATCH requests
+    if (existingRecords.length > 0) {
+      const updatePromises = existingRecords.map(async (record) => {
         const payload = {
           date: record.date,
           checkIn: formatTime(record.checkInTime),
@@ -590,57 +688,53 @@ export async function bulkSaveAttendance(attendanceRecords) {
         };
 
         try {
-          let response;
-          // Log the payload for debugging before sending to API
           console.log(
-            `Saving attendance payload for employee ${record.employeeId}:`,
-            JSON.stringify(payload)
+            `Updating attendance ${record.attendanceId} for employee ${record.employeeId}:`,
+            JSON.stringify(payload, null, 2)
           );
 
-          // If attendance record exists, update it; otherwise create new
-          if (record.attendanceId) {
-            response = await fetchFromApi(
-              Api_path.ATTENDANCE.UPDATE(record.attendanceId),
-              {
-                method: "PATCH",
-                body: payload,
-              }
-            );
-          } else {
-            response = await fetchFromApi(Api_path.ATTENDANCE.CREATE, {
-              method: "POST",
+          const response = await fetchFromApi(
+            Api_path.ATTENDANCE.UPDATE(record.attendanceId),
+            {
+              method: "PATCH",
               body: payload,
-            });
-          }
+            }
+          );
 
           const responseData =
             response?.data?.data ?? response?.data ?? response;
 
           console.log(
-            `Response for employee ${record.employeeId}:`,
-            JSON.stringify(responseData)
+            `Update response for employee ${record.employeeId}:`,
+            JSON.stringify(responseData, null, 2)
           );
 
           if (responseData?.statusCode >= 400) {
             throw new Error(
-              responseData?.message || "Failed to save attendance"
+              responseData?.message || "Failed to update attendance"
             );
           }
 
-          return { success: true, employeeId: record.employeeId };
-        } catch (err) {
+          return {
+            success: true,
+            employeeId: record.employeeId,
+          };
+        } catch (error) {
           console.error(
-            `Error saving attendance for employee ${record.employeeId}:`,
-            err
+            `Error updating attendance for employee ${record.employeeId}:`,
+            error
           );
           return {
             success: false,
             employeeId: record.employeeId,
-            error: err.message || "Unknown error",
+            error: error.message || "Failed to update attendance",
           };
         }
-      })
-    );
+      });
+
+      const updateResults = await Promise.all(updatePromises);
+      results.push(...updateResults);
+    }
 
     const successCount = results.filter((r) => r.success).length;
     const failCount = results.filter((r) => !r.success).length;
@@ -663,6 +757,18 @@ export async function bulkSaveAttendance(attendanceRecords) {
     };
   } catch (error) {
     console.error("Error in bulk save attendance:", error);
-    return { success: false, error: error.message || error.toString() };
+
+    // Return failure for all records
+    return {
+      success: false,
+      successCount: 0,
+      failCount: attendanceRecords.length,
+      results: attendanceRecords.map((record) => ({
+        success: false,
+        employeeId: record.employeeId,
+        error: error.message || error.toString(),
+      })),
+      error: error.message || error.toString(),
+    };
   }
 }
