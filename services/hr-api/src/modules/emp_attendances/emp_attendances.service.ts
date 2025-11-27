@@ -1,7 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Repository, In } from 'typeorm';
 import { EmpAttendances } from '../../models/emp_attendances.entity';
+import { Employees } from '../../models/employees.entity';
 import { CreateEmpAttendanceDto } from './dto/create.dto';
 import { UpdateEmpAttendanceDto } from './dto/update.dto';
 
@@ -10,6 +11,8 @@ export class EmpAttendancesService {
   constructor(
     @InjectRepository(EmpAttendances)
     private readonly repo: Repository<EmpAttendances>,
+    @InjectRepository(Employees)
+    private readonly employeesRepo: Repository<Employees>,
   ) {}
 
   async create(createDto: CreateEmpAttendanceDto) {
@@ -22,30 +25,106 @@ export class EmpAttendancesService {
     }
   }
 
+  async bulkCreate(createDtos: CreateEmpAttendanceDto[]) {
+    try {
+      // Get all unique employee IDs from the request
+      const employeeIds = [...new Set(createDtos.map(dto => dto.employee))];
+      
+      // Validate that all employee IDs exist
+      const existingEmployees = await this.employeesRepo.find({
+        where: { id: In(employeeIds) },
+        select: ['id'],
+      });
+      
+      const existingEmployeeIds = new Set(existingEmployees.map(emp => emp.id));
+      const invalidEmployeeIds = employeeIds.filter(id => !existingEmployeeIds.has(id));
+      
+      if (invalidEmployeeIds.length > 0) {
+        return {
+          success: false,
+          statusCode: 400,
+          message: `The following employee IDs do not exist: ${invalidEmployeeIds.join(', ')}`,
+          invalidEmployeeIds,
+          data: null,
+          totalCreated: 0,
+        };
+      }
+      
+      // Create attendance records
+      const attendances = createDtos.map(dto => 
+        this.repo.create({ ...dto, employee: { id: dto.employee } })
+      );
+      
+      // Save all attendances
+      const savedAttendances = await this.repo.save(attendances);
+      
+      return {
+        success: true,
+        message: `Successfully created ${savedAttendances.length} attendance record(s)`,
+        data: savedAttendances,
+        totalCreated: savedAttendances.length,
+      };
+    } catch (error) {
+      const errMsg = (error instanceof Error) ? error.message : 'Internal server error';
+      return {
+        success: false,
+        statusCode: 500,
+        message: errMsg,
+        data: null,
+        totalCreated: 0,
+      };
+    }
+  }
 
-  async findAll(page: number, limit: number, sortBy: string, sortOrder: string = 'asc'): Promise<any> {
-    const allTotal = await this.repo.count();
-    const totalPages = Math.ceil(allTotal / limit);
-    
+  async findAll(page: number, limit: number, sortBy: string, sortOrder: string = 'asc', date?: string): Promise<any> {
     // ASC = newest first (DESC order), DESC = oldest first (ASC order)
     const orderDirection = sortOrder.toLowerCase() === 'asc' ? 'DESC' : 'ASC';
     
-    const data = await this.repo.find({ 
-      relations: ['employee'], 
-      skip: (page - 1) * limit, 
-      take: limit, 
-      order: { [sortBy]: orderDirection } 
-    });
+    let queryBuilder = this.repo.createQueryBuilder('attendance')
+      .leftJoinAndSelect('attendance.employee', 'employee');
     
-    return {
-      metaData: {
-        page: +page || 1,
-        limit: +limit || 10,
-        allTotal: +allTotal || 0,
-        totalPages: +totalPages || 0,
-      },
-      data,
-    };
+    // If date is provided, filter by date
+    if (date) {
+      const formattedDate = date.split('T')[0];
+      queryBuilder = queryBuilder.where('attendance.date = :date', { date: formattedDate });
+    }
+    
+    // Get total count
+    const allTotal = await queryBuilder.getCount();
+    
+    // Apply ordering
+    queryBuilder = queryBuilder.orderBy(`attendance.${sortBy}`, orderDirection);
+    
+    // Apply pagination only if date is not provided (if date is provided, return all records for that date)
+    if (!date) {
+      const totalPages = Math.ceil(allTotal / limit);
+      queryBuilder = queryBuilder
+        .skip((page - 1) * limit)
+        .take(limit);
+      
+      const data = await queryBuilder.getMany();
+      
+      return {
+        metaData: {
+          page: +page || 1,
+          limit: +limit || 10,
+          allTotal: +allTotal || 0,
+          totalPages: +totalPages || 0,
+        },
+        data,
+      };
+    } else {
+      // If date is provided, return all records for that date
+      const data = await queryBuilder.getMany();
+      
+      return {
+        metaData: {
+          date: date.split('T')[0],
+          totalRecords: +allTotal || 0,
+        },
+        data,
+      };
+    }
   }
 
   async findOne(id: number) {

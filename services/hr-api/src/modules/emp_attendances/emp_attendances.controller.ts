@@ -1,6 +1,7 @@
 import { Controller, Get, Post, Body, Param, Put, Delete, Patch, Query, HttpStatus, Res, UseGuards } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBody, ApiParam, ApiQuery, ApiBearerAuth } from '@nestjs/swagger';
 import { CreateEmpAttendanceDto } from './dto/create.dto';
+import { BulkCreateEmpAttendanceDto } from './dto/bulk-create.dto';
 import { UpdateEmpAttendanceDto } from './dto/update.dto';
 import { EmpAttendancesService } from './emp_attendances.service';
 import { EmployeesService } from '../employees/employees.service';
@@ -29,6 +30,43 @@ export class EmpAttendancesController {
     return this.empAttendancesService.create(createDto);
   }
 
+  @Post('bulk')
+  @RequireRoles(Roles.SUPER_ADMIN, Roles.HR_MANAGER, Roles.MANAGER)
+  @ApiOperation({ summary: 'Bulk create employee attendances' })
+  @ApiBody({ type: BulkCreateEmpAttendanceDto })
+  @ApiResponse({ status: 201, description: 'Attendances created successfully' })
+  async bulkCreate(@Body() bulkCreateDto: BulkCreateEmpAttendanceDto, @Res() res: Response) {
+    try {
+      const response = await this.empAttendancesService.bulkCreate(bulkCreateDto.attendances);
+      if (response.success) {
+        return res.status(HttpStatus.CREATED).json({
+          success: true,
+          data: response.data,
+          message: response.message,
+          metaData: {
+            totalCreated: response.totalCreated,
+          },
+        });
+      } else {
+        // Handle validation errors (400) vs server errors (500)
+        const statusCode = response.statusCode === 400 ? HttpStatus.BAD_REQUEST : HttpStatus.INTERNAL_SERVER_ERROR;
+        return res.status(statusCode).json({
+          success: false,
+          data: null,
+          message: response.message || 'Failed to create attendances',
+          ...(response.invalidEmployeeIds && { invalidEmployeeIds: response.invalidEmployeeIds }),
+        });
+      }
+    } catch (error) {
+      console.error(error);
+      return res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({
+        success: false,
+        data: null,
+        message: 'Internal server error occurred. Please try again later!',
+      });
+    }
+  }
+
   @Get()
   @RequireRoles(Roles.SUPER_ADMIN, Roles.HR_MANAGER, Roles.MANAGER)
   @ApiOperation({ summary: 'Get all employee attendances' })
@@ -37,14 +75,16 @@ export class EmpAttendancesController {
   @ApiQuery({ name: 'limit', type: Number, required: false, example: 10 })
   @ApiQuery({ name: 'sortBy', type: String, required: false, enum: ['createdAt', 'updatedAt'], example: 'createdAt' })
   @ApiQuery({ name: 'sortOrder', type: String, required: false, enum: ['asc', 'desc'], example: 'asc' })
+  @ApiQuery({ name: 'date', type: String, required: false, example: '2025-11-26', description: 'Filter by date in YYYY-MM-DD format. If provided, returns all attendances for that date.' })
   async findAll(
     @Query('page') page: number = 1,
     @Query('limit') limit: number = 10,
     @Query('sortBy') sortBy: string = 'createdAt',
     @Query('sortOrder') sortOrder: string = 'asc',
+    @Query('date') date: string | undefined = undefined,
     @Res() res: Response
   ) {
-    const response = await this.empAttendancesService.findAll(page, limit, sortBy, sortOrder);
+    const response = await this.empAttendancesService.findAll(page, limit, sortBy, sortOrder, date);
     return res.status(HttpStatus.OK).json({
       success: true, data: response.data, metaData: response.metaData,
       message: response.data.length > 0 ? 'Attendances fetched successfully!' : 'No attendances found!'
