@@ -8,7 +8,7 @@ import {
   Title,
   Tooltip,
 } from "chart.js";
-import { Calendar, MoreVertical } from "lucide-react";
+import { MoreVertical } from "lucide-react";
 import { Bar } from "react-chartjs-2";
 
 ChartJS.register(
@@ -20,6 +20,7 @@ ChartJS.register(
   Legend
 );
 
+// no React hooks needed
 // Helper: format employee name
 function formatEmployeeName(emp) {
   if (!emp) return "Unknown";
@@ -73,7 +74,7 @@ export default function DashboardPage({
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 p-4">
       {/* Stats Row */}
-      <div className="lg:col-span-2 flex flex-col gap-6">
+      <div className="lg:col-span-3 flex flex-col gap-6">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <DashboardStat
             title="Total Employee"
@@ -228,47 +229,7 @@ export default function DashboardPage({
         </div>
       </div>
 
-      {/* Right: Schedule & Calendar (unchanged) */}
-      <div className="w-full lg:w-auto shrink-0 flex flex-col gap-6">
-        <div className="bg-white dark:bg-zinc-900 rounded-xl shadow p-6 flex flex-col gap-4">
-          <div className="flex items-center justify-between mb-2">
-            <h2 className="font-semibold text-lg text-zinc-900 dark:text-zinc-100">
-              My Schedule
-            </h2>
-            <Calendar className="w-5 h-5 text-zinc-400 dark:text-zinc-500" />
-          </div>
-          {/* Calendar Placeholder (kept minimal to preserve layout) */}
-          <div className="flex justify-center mb-2">
-            <div className="rounded-lg border border-zinc-200 dark:border-zinc-700 p-2 w-full">
-              <div className="flex justify-between items-center mb-2">
-                <span className="text-sm font-medium text-zinc-900 dark:text-zinc-100">
-                  July, 2023
-                </span>
-                <div className="flex gap-1">
-                  <button className="rounded p-1 hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-700 dark:text-zinc-300">
-                    {" "}
-                    <span className="sr-only">Prev</span>&lt;{" "}
-                  </button>
-                  <button className="rounded p-1 hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-700 dark:text-zinc-300">
-                    {" "}
-                    <span className="sr-only">Next</span>&gt;{" "}
-                  </button>
-                </div>
-              </div>
-              <div className="grid grid-cols-7 gap-1 text-xs text-center">
-                {["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"].map((d, i) => (
-                  <div
-                    key={i}
-                    className="font-medium text-zinc-400 dark:text-zinc-500"
-                  >
-                    {d}
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
+      {/* Right column removed: My Schedule and CalendarWidget */}
     </div>
   );
 }
