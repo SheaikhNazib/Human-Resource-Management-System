@@ -11,14 +11,14 @@ import { Roles } from 'src/common/guards/roles.enum';
 
 @ApiTags('EmployeeSalaryCompensations')
 @UseGuards(JwtAuthGuard, RolesGuard)
-@RequireRoles(Roles.SUPER_ADMIN, Roles.HR_MANAGER, Roles.MANAGER)
 @ApiBearerAuth('JWT-auth')
 @Controller('emp-salary-compensations')
 export class EmpSalaryCompensationsController {
   constructor(private readonly empSalaryCompensationsService: EmpSalaryCompensationsService) {}
 
 
-  @Post() 
+  @Post()
+  @RequireRoles(Roles.SUPER_ADMIN, Roles.HR_MANAGER, Roles.MANAGER)
   @ApiOperation({ summary: 'Create employee salary compensation' })
   @ApiBody({ type: CreateEmpSalaryCompensationDto })
   @ApiResponse({ status: 201, description: 'Created' })
@@ -28,6 +28,7 @@ export class EmpSalaryCompensationsController {
 
 
   @Get()
+  @RequireRoles(Roles.SUPER_ADMIN, Roles.HR_MANAGER, Roles.MANAGER, Roles.EMPLOYEE)
   @ApiOperation({ summary: 'Get all employee salary compensations' })
   @ApiResponse({ status: 200, description: 'List of salary compensations' })
   findAll() {
@@ -36,6 +37,7 @@ export class EmpSalaryCompensationsController {
 
 
   @Get(':id')
+  @RequireRoles(Roles.SUPER_ADMIN, Roles.HR_MANAGER, Roles.MANAGER, Roles.EMPLOYEE)
   @ApiOperation({ summary: 'Get a salary compensation by ID' })
   @ApiParam({ name: 'id', type: Number })
   @ApiResponse({ status: 200, description: 'Salary compensation detail' })
@@ -45,6 +47,7 @@ export class EmpSalaryCompensationsController {
 
 
   @Patch(':id')
+  @RequireRoles(Roles.SUPER_ADMIN, Roles.HR_MANAGER, Roles.MANAGER)
   @ApiOperation({ summary: 'Update a salary compensation' })
   @ApiParam({ name: 'id', type: Number })
   @ApiBody({ type: UpdateEmpSalaryCompensationDto })
@@ -54,6 +57,7 @@ export class EmpSalaryCompensationsController {
   }
 
   @Delete(':id')
+  @RequireRoles(Roles.SUPER_ADMIN)
   @ApiOperation({ summary: 'Delete a salary compensation' })
   @ApiParam({ name: 'id', type: Number })
   @ApiResponse({ status: 200, description: 'Deleted' })
