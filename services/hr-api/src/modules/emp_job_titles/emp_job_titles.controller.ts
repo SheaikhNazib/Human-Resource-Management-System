@@ -12,7 +12,6 @@ import { EmpDepartmentsService } from '../emp_departments/emp_departments.servic
 
 @ApiTags('EmployeeJobTitles')
 @UseGuards(JwtAuthGuard, RolesGuard)
-@RequireRoles(Roles.SUPER_ADMIN, Roles.HR_MANAGER, Roles.MANAGER)
 @ApiBearerAuth('JWT-auth')
 @Controller('emp-job-titles')
 export class EmpJobTitlesController {
@@ -22,6 +21,7 @@ export class EmpJobTitlesController {
   ) { }
 
   @Post()
+  @RequireRoles(Roles.SUPER_ADMIN, Roles.HR_MANAGER, Roles.MANAGER)
   @ApiOperation({ summary: 'Create job title' })
   @ApiBody({ type: CreateEmpJobTitleDto })
   @ApiResponse({ status: 201, description: 'Job title created' })
@@ -50,6 +50,7 @@ export class EmpJobTitlesController {
   }
 
   @Get()
+  @RequireRoles(Roles.SUPER_ADMIN, Roles.HR_MANAGER, Roles.MANAGER, Roles.EMPLOYEE)
   @ApiOperation({ summary: 'Get all job titles' })
   @ApiResponse({ status: 200, description: 'List of job titles' })
   async findAll(@Res() res: Response) {
@@ -66,6 +67,7 @@ export class EmpJobTitlesController {
   }
 
   @Get(':id')
+  @RequireRoles(Roles.SUPER_ADMIN, Roles.HR_MANAGER, Roles.MANAGER, Roles.EMPLOYEE)
   @ApiOperation({ summary: 'Get job title by id' })
   @ApiParam({ name: 'id', type: Number })
   @ApiResponse({ status: 200, description: 'Job title found' })
@@ -88,6 +90,7 @@ export class EmpJobTitlesController {
   }
 
   @Patch(':id')
+  @RequireRoles(Roles.SUPER_ADMIN, Roles.HR_MANAGER, Roles.MANAGER)
   @ApiOperation({ summary: 'Update job title by id' })
   @ApiParam({ name: 'id', type: Number })
   @ApiBody({ type: UpdateEmpJobTitleDto })
@@ -125,6 +128,7 @@ export class EmpJobTitlesController {
   }
 
   @Delete(':id')
+  @RequireRoles(Roles.SUPER_ADMIN)
   @ApiOperation({ summary: 'Delete job title by id' })
   @ApiParam({ name: 'id', type: Number })
   @ApiResponse({ status: 200, description: 'Job title deleted' })
