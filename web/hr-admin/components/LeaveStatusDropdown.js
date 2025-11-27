@@ -9,8 +9,9 @@ const LeaveStatusDropdown = ({ currentStatus, onStatusChange, leaveId, disabled 
   const statusOptions = [
     { value: "pending", label: "Pending", color: "bg-yellow-100 text-yellow-700 hover:bg-yellow-200" },
     { value: "approved", label: "Approved", color: "bg-green-100 text-green-700 hover:bg-green-200" },
+    { value: "unpaid approved", label: "Unpaid Approved", color: "bg-amber-100 text-amber-800 hover:bg-amber-200" },
     { value: "rejected", label: "Rejected", color: "bg-red-100 text-red-700 hover:bg-red-200" },
-    { value: "cancelled", label: "Cancelled", color: "bg-gray-100 text-gray-700 hover:bg-gray-200" },
+
   ];
 
   const currentStatusObj = statusOptions.find(
@@ -155,6 +156,12 @@ const StatusIcon = ({ status }) => {
           <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
         </svg>
       );
+    case "unpaid approved":
+      return (
+        <svg className={iconClass} fill="currentColor" viewBox="0 0 20 20">
+          <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+        </svg>
+      );
     case "rejected":
       return (
         <svg className={iconClass} fill="currentColor" viewBox="0 0 20 20">
@@ -178,6 +185,8 @@ const getTextColor = (status) => {
       return "text-yellow-700 dark:text-yellow-300";
     case "approved":
       return "text-green-700 dark:text-green-300";
+    case "unpaid approved":
+      return "text-amber-700 dark:text-amber-300";
     case "rejected":
       return "text-red-700 dark:text-red-300";
     case "cancelled":
