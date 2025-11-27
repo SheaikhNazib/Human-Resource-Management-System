@@ -65,13 +65,24 @@ function SecureLayoutContent({ children }) {
 
       // Check if user is employee and trying to access unauthorized route
       if (user.role === 'employee') {
-        const isAllowedRoute = employeeAllowedRoutes.some((route) =>
-          pathname.startsWith(route)
-        );
+        // Special handling for task routes - only allow view pages
+        if (pathname.startsWith('/tasks/')) {
+          const isTaskViewPage = pathname.match(/^\/tasks\/\d+\/view/);
+          if (!isTaskViewPage) {
+            console.log('Employee trying to access non-view task page, redirecting');
+            router.push('/employee-dashboard');
+            return;
+          }
+        } else {
+          // Check normal allowed routes
+          const isAllowedRoute = employeeAllowedRoutes.some((route) =>
+            pathname.startsWith(route)
+          );
 
-        if (!isAllowedRoute) {
-          console.log('Employee accessing unauthorized route, redirecting to employee dashboard');
-          router.push('/employee-dashboard');
+          if (!isAllowedRoute) {
+            console.log('Employee accessing unauthorized route, redirecting to employee dashboard');
+            router.push('/employee-dashboard');
+          }
         }
       }
 
