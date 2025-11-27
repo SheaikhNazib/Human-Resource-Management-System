@@ -199,7 +199,7 @@ export async function getAttendanceOverview({ start, end } = {}) {
 }
 
 // Get recent attendance rows for a specific date (defaults to today)
-export async function getRecentAttendances({ date, limit = 10 } = {}) {
+export async function getRecentAttendances({ date, limit = 100 } = {}) {
   try {
     const now = new Date();
     const pad = (n) => String(n).padStart(2, "0");
@@ -207,16 +207,18 @@ export async function getRecentAttendances({ date, limit = 10 } = {}) {
       `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
     const dstr = date ? date : fmt(now);
 
+    // Use the API endpoint with proper query parameters
     const response = await fetchFromApi(
-      `${Api_path.ATTENDANCE.LIST}?date=${dstr}&limit=${limit}`
+      `${Api_path.ATTENDANCE.LIST}?date=${dstr}&page=1&limit=${limit}&sortBy=createdAt&sortOrder=desc`
     );
+
     const body = response?.data ?? response;
-    const rows = Array.isArray(body)
-      ? body
-      : Array.isArray(body?.data)
+
+    // Handle the new response structure
+    const rows = Array.isArray(body?.data)
       ? body.data
-      : Array.isArray(body?.data?.data)
-      ? body.data.data
+      : Array.isArray(body)
+      ? body
       : [];
 
     return { success: true, data: rows };
