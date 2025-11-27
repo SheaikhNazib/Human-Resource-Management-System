@@ -153,32 +153,9 @@ export default async function DepartmentDetailPage({ params } = {}) {
                 <h1 className="text-4xl sm:text-5xl font-bold text-zinc-900 dark:text-zinc-100 mb-3">
                   {d.name}
                 </h1>
-                <div className="flex items-center gap-3 text-sm sm:text-base text-zinc-600 dark:text-zinc-400">
-                  <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300">
-                    ID: {d.id}
-                  </span>
-                </div>
               </div>
 
-              {/* Timestamps */}
-              <div className="flex flex-col sm:flex-row gap-4 text-sm sm:text-base lg:items-end">
-                <div className="bg-white dark:bg-zinc-900 rounded-lg px-5 py-3 shadow-sm border border-zinc-200 dark:border-zinc-700 min-w-40 text-center">
-                  <div className="text-xs sm:text-sm font-medium text-zinc-500 dark:text-zinc-400 mb-1">
-                    Created
-                  </div>
-                  <div className="text-zinc-900 dark:text-zinc-100 font-semibold">
-                    {d.createdAt ? new Date(d.createdAt).toLocaleString() : "-"}
-                  </div>
-                </div>
-                <div className="bg-white dark:bg-zinc-900 rounded-lg px-5 py-3 shadow-sm border border-zinc-200 dark:border-zinc-700 min-w-40 text-center">
-                  <div className="text-xs sm:text-sm font-medium text-zinc-500 dark:text-zinc-400 mb-1">
-                    Last Updated
-                  </div>
-                  <div className="text-zinc-900 dark:text-zinc-100 font-semibold">
-                    {d.updatedAt ? new Date(d.updatedAt).toLocaleString() : "-"}
-                  </div>
-                </div>
-              </div>
+              {/* (Timestamps removed) */}
             </div>
           </div>
 
