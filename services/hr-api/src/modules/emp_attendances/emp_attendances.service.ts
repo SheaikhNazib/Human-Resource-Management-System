@@ -101,8 +101,10 @@ export class EmpAttendancesService {
   }
 
   async getAttendanceOverview(startDate: string, endDate: string) {
-    // Standard check-in time threshold (9:00 AM)
-    const standardCheckInTime = '09:00:00';
+    // Standard check-in time threshold (10:00 AM)
+    const standardCheckInTime = '10:00:00';
+    // Late threshold (10:30 AM)
+    const lateThresholdTime = '10:30:00';
     
     // Format dates to YYYY-MM-DD format
     const formattedStartDate = startDate.split('T')[0];
@@ -113,15 +115,15 @@ export class EmpAttendancesService {
       .where('attendance.date >= :startDate', { startDate: formattedStartDate })
       .andWhere('attendance.date <= :endDate', { endDate: formattedEndDate });
 
-    // Count On Time: checkIn <= 09:00:00 AND onsite_or_remote = true
+    // Count On Time: checkIn <= 10:00:00 AND onsite_or_remote = true
     const onTimeQuery = queryBuilder.clone()
       .andWhere('attendance.checkIn <= :standardTime', { standardTime: standardCheckInTime })
       .andWhere('attendance.onsite_or_remote = :onsite', { onsite: true });
     const onTimeCount = await onTimeQuery.getCount();
 
-    // Count Late: checkIn > 09:00:00 AND onsite_or_remote = true
+    // Count Late: checkIn > 10:30:00 AND onsite_or_remote = true
     const lateQuery = queryBuilder.clone()
-      .andWhere('attendance.checkIn > :standardTime', { standardTime: standardCheckInTime })
+      .andWhere('attendance.checkIn > :lateThreshold', { lateThreshold: lateThresholdTime })
       .andWhere('attendance.onsite_or_remote = :onsite', { onsite: true });
     const lateCount = await lateQuery.getCount();
 
