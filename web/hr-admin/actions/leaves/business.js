@@ -17,13 +17,17 @@ export const useLeaves = () => {
     setLoading(true);
     try {
       const response = await getLeavesList();
-      if (response.success) {
+      console.debug("useLeaves: getLeavesList response:", response);
+      if (response && response.success) {
         setLeaves(Array.isArray(response.data) ? response.data : []);
       } else {
-        setError(response.error);
+        const errMsg = response && response.error ? response.error : "Unknown error fetching leaves";
+        console.debug("useLeaves: getLeavesList error:", errMsg);
+        setError(errMsg);
       }
     } catch (err) {
-      setError(err.message);
+      console.error("useLeaves: exception fetching leaves:", err);
+      setError(err?.message || String(err));
     } finally {
       setLoading(false);
     }

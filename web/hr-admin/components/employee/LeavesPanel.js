@@ -15,8 +15,9 @@ import { useLeavePolicy } from "@/hooks/useLeavePolicy";
  * @param {Object} props.employee - Employee data with hire_date
  */
 const LeavesPanel = ({ employeeId, isActive, employee }) => {
-  const { leaves: allLeaves, loading, error } = useLeaves();
+  const { leaves: allLeaves, loading, error, refetch } = useLeaves();
   const [hasLoaded, setHasLoaded] = useState(false);
+  const [timedOut, setTimedOut] = useState(false);
 
   // Memoize filtered leaves to avoid recalculation on every render
   const employeeLeaves = React.useMemo(() => {
@@ -80,18 +81,35 @@ const LeavesPanel = ({ employeeId, isActive, employee }) => {
     }
   }, [employeeLeaves.length, loading, hasLoaded]);
 
+  // Failsafe: if loading takes too long, show an error message instead of an infinite skeleton
+  useEffect(() => {
+    let t;
+    if (loading) {
+      setTimedOut(false);
+      t = setTimeout(() => {
+        console.warn("LeavesPanel: loading timeout reached");
+        setTimedOut(true);
+      }, 20000); // 12s (slightly longer than axios default timeout)
+    } else {
+      setTimedOut(false);
+    }
+    return () => clearTimeout(t);
+  }, [loading]);
+
   if (!isActive) {
     // Keep component mounted but hidden to preserve cached data
     return <div className="hidden" />;
   }
 
-  // Only show loading skeleton if data hasn't been loaded yet
-  if (loading && !hasLoaded) {
+  // Only show loading skeleton if data hasn't been loaded yet and there's no error/timeout
+  if (loading && !hasLoaded && !error && !timedOut) {
     return <LoadingSkeleton />;
   }
 
-  if (error && !hasLoaded) {
-    return <ErrorState message={error} />;
+  // Show error if the hook reported an error or if loading timed out
+  if ((error || timedOut) && !hasLoaded) {
+    const msg = timedOut ? "Loading leaves is taking longer than usual. Please try again." : error;
+    return <ErrorState message={msg} onRetry={() => refetch && refetch()} />;
   }
 
   if (employeeLeaves.length === 0 && hasLoaded) {
@@ -222,7 +240,7 @@ const LoadingSkeleton = () => {
 };
 
 // Error state component
-const ErrorState = ({ message }) => {
+const ErrorState = ({ message, onRetry }) => {
   return (
     <div className="max-w-6xl mx-auto px-4 py-12">
       <div className="bg-red-50 border border-red-200 rounded-lg p-6 text-center">
@@ -233,6 +251,16 @@ const ErrorState = ({ message }) => {
           Error Loading Leaves
         </h3>
         <p className="text-red-700">{message}</p>
+        {onRetry ? (
+          <div className="mt-4">
+            <button
+              onClick={onRetry}
+              className="inline-flex items-center px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
+            >
+              Retry
+            </button>
+          </div>
+        ) : null}
       </div>
     </div>
   );
