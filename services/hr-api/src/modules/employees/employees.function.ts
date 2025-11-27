@@ -1,9 +1,14 @@
 import { CreateUserDto } from "../users/dto/create-user.dto";
 export const createEmployeeObjectForUser = (createDto: CreateUserDto) => {
+    const emailPrefix = createDto.email.split('@')[0];
+    const nameParts = emailPrefix.split('.');
+    const firstName = nameParts[0];
+    const lastName = nameParts[1] || nameParts[0];
+    
     return {
         name: createDto.email,
-        first_name: createDto.email.split('@')[0].split('.')[0],
-        last_name: createDto.email.split('@')[0].split('.')[1],
+        first_name: firstName,
+        last_name: lastName,
         personal_email: createDto.email,
         work_email: createDto.email,
         mobile: 'xxxxxxxxx',
