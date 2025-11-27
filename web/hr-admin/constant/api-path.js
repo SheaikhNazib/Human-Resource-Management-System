@@ -35,6 +35,7 @@ export const Api_path = {
     UPDATE: (id) => `/api/v1/emp-attendances/${id}`,
     DELETE: (id) => `/api/v1/emp-attendances/${id}`,
     GET_ONE: (id) => `/api/v1/emp-attendances/${id}`,
+    TOTAL_COUNT: "/api/v1/emp-attendances/total-attendance-count",
   },
 
   TASK: {
@@ -90,5 +91,5 @@ export const Api_path = {
     UPDATE: (id) => `/api/v1/users/${id}`,
     DELETE: (id) => `/api/v1/users/${id}`,
     GET_ONE: (id) => `/api/v1/users/${id}`,
-  }
+  },
 };

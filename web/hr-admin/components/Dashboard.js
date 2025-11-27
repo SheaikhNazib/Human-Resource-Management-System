@@ -98,36 +98,31 @@ const attendanceRows = [
   },
 ];
 
-export default function DashboardPage() {
+export default function DashboardPage({
+  stats = { totalEmployees: 0, totalAttendances: 0 },
+}) {
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 p-4">
-      {/* Left: Stats and Attendance Overview */}
+      {/* Stats Row */}
       <div className="lg:col-span-2 flex flex-col gap-6">
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <DashboardStat
             title="Total Employee"
-            value="560"
-            trend="+12%"
-            date="July 16, 2023"
-          />
-          <DashboardStat
-            title="Total Applicant"
-            value="1050"
-            trend="+5%"
-            date="July 14, 2023"
+            value={stats.totalEmployees.toString()}
+            date={new Date().toLocaleDateString("en-US", {
+              year: "numeric",
+              month: "long",
+              day: "numeric",
+            })}
           />
           <DashboardStat
             title="Today Attendance"
-            value="470"
-            trend="-6%"
-            date="July 16, 2023"
-            negative
-          />
-          <DashboardStat
-            title="Total Projects"
-            value="250"
-            trend="+12%"
-            date="July 10, 2023"
+            value={stats.totalAttendances.toString()}
+            date={new Date().toLocaleDateString("en-US", {
+              year: "numeric",
+              month: "long",
+              day: "numeric",
+            })}
           />
         </div>
         {/* Attendance Overview Chart Placeholder */}
@@ -352,20 +347,11 @@ export default function DashboardPage() {
   );
 }
 
-function DashboardStat({ title, value, trend, date, negative }) {
+function DashboardStat({ title, value, date }) {
   return (
     <div className="bg-white dark:bg-zinc-900 rounded-xl shadow p-4 flex flex-col gap-2">
       <div className="flex items-center gap-2 text-zinc-500 dark:text-zinc-400 text-xs">
         <span>{title}</span>
-        <span
-          className={`ml-auto text-xs font-semibold ${
-            negative
-              ? "text-red-600 dark:text-red-400"
-              : "text-green-600 dark:text-green-400"
-          }`}
-        >
-          {trend}
-        </span>
       </div>
       <div className="text-2xl font-bold text-zinc-900 dark:text-zinc-100">
         {value}
