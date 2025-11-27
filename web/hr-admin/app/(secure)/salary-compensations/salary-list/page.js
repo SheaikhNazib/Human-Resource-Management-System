@@ -8,6 +8,7 @@ import { updateSalaryCompensation } from "@/actions/salary-compensations/server-
 import TableArchive from "@/components/core/TableArchive";
 import { toast } from "sonner";
 import Loader from "@/components/ui/Loader";
+import * as XLSX from "xlsx";
 import {
   calculateTotalDeduction,
   getApprovedLeaveDays,
@@ -15,8 +16,6 @@ import {
 } from "@/lib/salary-calculations";
 
 export default function SalaryCompensationsPage() {
-  const { items, loading, error, refetch, deleteSalaryCompensation } =
-    useSalaryCompensations();
   const [query, setQuery] = useState("");
   const [leaves, setLeaves] = useState([]);
   const [attendances, setAttendances] = useState([]);
@@ -24,9 +23,33 @@ export default function SalaryCompensationsPage() {
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [deleteItemId, setDeleteItemId] = useState(null);
-  const [selectedMonth, setSelectedMonth] = useState("");
-  const [selectedYear, setSelectedYear] = useState("");
+  const today = new Date();
+  const defaultMonth = String(today.getMonth() + 1); // 1-12 as string
+  const defaultYear = String(today.getFullYear());
+
+  const [selectedMonth, setSelectedMonth] = useState(defaultMonth);
+  const [selectedYear, setSelectedYear] = useState(defaultYear);
   const router = useRouter();
+
+  // Build date filter for API
+  const apiFilters = useMemo(() => {
+    const filters = {};
+
+    // If month and year are selected, create a date string for API
+    if (selectedMonth && selectedYear) {
+      // Format as YYYY-MM-DD (using first day of month)
+      const date = `${selectedYear}-${String(selectedMonth).padStart(
+        2,
+        "0"
+      )}-01`;
+      filters.date = date;
+    }
+
+    return filters;
+  }, [selectedMonth, selectedYear]);
+
+  const { items, loading, error, refetch, deleteSalaryCompensation } =
+    useSalaryCompensations(apiFilters);
 
   // Fetch leaves and attendances on component mount
   useEffect(() => {
@@ -222,22 +245,101 @@ export default function SalaryCompensationsPage() {
     }
   }
 
+  function handleExportToExcel() {
+    if (!filtered || filtered.length === 0) {
+      toast.error("No data to export");
+      return;
+    }
+
+    try {
+      // Prepare data for Excel
+      const excelData = filtered.map((item) => {
+        const firstName = item.raw?.employee?.first_name || "";
+        const lastName = item.raw?.employee?.last_name || "";
+        const displayName =
+          firstName && lastName
+            ? `${firstName} ${lastName}`
+            : firstName || lastName || item.employeeName || "—";
+        const empId = item.employeeId || item.raw?.employee?.id || "";
+
+        // Calculate prorated salary if applicable
+        let baseSalaryDisplay = item.baseSalary;
+        let proratedNote = "";
+        if (item.effectiveDate && item.payableDate) {
+          const effectiveDate = new Date(item.effectiveDate);
+          const payableDate = new Date(item.payableDate);
+          const diffTime = Math.abs(payableDate - effectiveDate);
+          const daysWorked = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
+          if (daysWorked < 30) {
+            baseSalaryDisplay = (item.baseSalary / 30) * daysWorked;
+            proratedNote = `${daysWorked}d prorated`;
+          }
+        }
+
+        return {
+          "Employee Name": displayName,
+          "Employee ID": empId || "N/A",
+          "Base Salary": parseFloat(baseSalaryDisplay).toFixed(2),
+          "Prorated Info": proratedNote,
+          Bonus: parseFloat(item.bonus || 0).toFixed(2),
+          Allowance: parseFloat(item.allowance || 0).toFixed(2),
+          Deduction: parseFloat(item.deduction || 0).toFixed(2),
+          "Net Salary": parseFloat(item.netSalary || 0).toFixed(2),
+          "Payable Date": item.payableDate
+            ? new Date(item.payableDate).toLocaleDateString("en-US")
+            : "—",
+          "Effective Date": item.effectiveDate
+            ? new Date(item.effectiveDate).toLocaleDateString("en-US")
+            : "—",
+          Remarks: item.remarks || "",
+        };
+      });
+
+      // Create workbook and worksheet
+      const wb = XLSX.utils.book_new();
+      const ws = XLSX.utils.json_to_sheet(excelData);
+
+      // Set column widths
+      const colWidths = [
+        { wch: 20 }, // Employee Name
+        { wch: 12 }, // Employee ID
+        { wch: 12 }, // Base Salary
+        { wch: 15 }, // Prorated Info
+        { wch: 10 }, // Bonus
+        { wch: 12 }, // Allowance
+        { wch: 12 }, // Deduction
+        { wch: 12 }, // Net Salary
+        { wch: 15 }, // Payable Date
+        { wch: 15 }, // Effective Date
+        { wch: 30 }, // Remarks
+      ];
+      ws["!cols"] = colWidths;
+
+      // Add worksheet to workbook
+      XLSX.utils.book_append_sheet(wb, ws, "Salary Compensations");
+
+      // Generate filename with date
+      const dateStr = new Date().toISOString().split("T")[0];
+      const filterStr =
+        selectedMonth && selectedYear
+          ? `_${monthNames[selectedMonth - 1]}_${selectedYear}`
+          : "";
+      const filename = `Salary_Compensations${filterStr}_${dateStr}.xlsx`;
+
+      // Write and download file
+      XLSX.writeFile(wb, filename);
+
+      toast.success(`Excel file downloaded: ${filename}`);
+    } catch (error) {
+      console.error("Error exporting to Excel:", error);
+      toast.error("Failed to export to Excel");
+    }
+  }
+
   const filtered = useMemo(() => {
     let result = items;
 
-    // Filter by month/year if selected
-    if (selectedMonth && selectedYear) {
-      result = result.filter((item) => {
-        if (!item.effectiveDate) return false;
-        const date = new Date(item.effectiveDate);
-        return (
-          date.getMonth() + 1 === parseInt(selectedMonth) &&
-          date.getFullYear() === parseInt(selectedYear)
-        );
-      });
-    }
-
-    // Filter by search query
+    // Filter by search query (month/year filtering is now handled by API)
     if (query) {
       const q = query.toLowerCase();
       result = result.filter(
@@ -250,7 +352,7 @@ export default function SalaryCompensationsPage() {
     }
 
     return result;
-  }, [items, query, selectedMonth, selectedYear]);
+  }, [items, query]);
 
   const formatCurrency = (amount) => {
     if (!amount && amount !== 0) return "—";
@@ -286,7 +388,7 @@ export default function SalaryCompensationsPage() {
 
         return (
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center text-xs font-bold text-white">
+            <div className="w-8 h-8 rounded-md bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center text-xs font-medium text-blue-700 dark:text-blue-400">
               {displayName
                 .split(" ")
                 .map((n) => n[0])
@@ -298,7 +400,7 @@ export default function SalaryCompensationsPage() {
               <button
                 type="button"
                 onClick={() => handleView(item.id)}
-                className="font-medium text-zinc-900 dark:text-zinc-100 text-left hover:underline focus:outline-none cursor-pointer"
+                className="font-medium text-zinc-900 dark:text-zinc-100 text-left hover:text-blue-600 dark:hover:text-blue-400 focus:outline-none cursor-pointer transition-colors text-sm"
               >
                 {displayName}
               </button>
@@ -327,11 +429,22 @@ export default function SalaryCompensationsPage() {
 
           return (
             <div>
-              <span className="font-semibold text-zinc-900 dark:text-zinc-100">
+              <span className="font-bold text-base text-zinc-900 dark:text-zinc-100">
                 {formatCurrency(proratedSalary)}
               </span>
               {isProrated && (
-                <div className="text-xs text-amber-600 dark:text-amber-400 mt-0.5">
+                <div className="inline-flex items-center gap-1 text-xs text-amber-700 dark:text-amber-400 mt-1 px-2 py-0.5 bg-amber-100 dark:bg-amber-900/30 rounded-md border border-amber-200 dark:border-amber-800/50">
+                  <svg
+                    className="w-3 h-3"
+                    fill="currentColor"
+                    viewBox="0 0 20 20"
+                  >
+                    <path
+                      fillRule="evenodd"
+                      d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z"
+                      clipRule="evenodd"
+                    />
+                  </svg>
                   {daysWorked}d prorated
                 </div>
               )}
@@ -350,7 +463,7 @@ export default function SalaryCompensationsPage() {
       header: "Bonus",
       accessor: "bonus",
       render: (item) => (
-        <span className="text-green-600 dark:text-green-400">
+        <span className="text-sm font-medium text-green-700 dark:text-green-400">
           {item.bonus > 0
             ? `+${formatCurrency(item.bonus)}`
             : formatCurrency(0)}
@@ -361,7 +474,7 @@ export default function SalaryCompensationsPage() {
       header: "Allowance",
       accessor: "allowance",
       render: (item) => (
-        <span className="text-blue-600 dark:text-blue-400">
+        <span className="text-sm font-medium text-blue-700 dark:text-blue-400">
           {item.allowance > 0
             ? `+${formatCurrency(item.allowance)}`
             : formatCurrency(0)}
@@ -372,7 +485,7 @@ export default function SalaryCompensationsPage() {
       header: "Deduction",
       accessor: "deduction",
       render: (item) => (
-        <span className="text-red-600 dark:text-red-400">
+        <span className="text-sm font-medium text-red-700 dark:text-red-400">
           {item.deduction > 0
             ? `-${formatCurrency(item.deduction)}`
             : formatCurrency(0)}
@@ -383,7 +496,7 @@ export default function SalaryCompensationsPage() {
       header: "Net Salary",
       accessor: "netSalary",
       render: (item) => (
-        <span className="font-bold text-lg text-emerald-600 dark:text-emerald-400">
+        <span className="text-sm font-semibold text-blue-700 dark:text-blue-400">
           {formatCurrency(item.netSalary)}
         </span>
       ),
@@ -392,14 +505,18 @@ export default function SalaryCompensationsPage() {
       header: "Payable Date",
       accessor: "payableDate",
       render: (item) => (
-        <div className="text-sm">{formatDate(item.payableDate)}</div>
+        <span className="text-sm text-zinc-700 dark:text-zinc-300">
+          {formatDate(item.payableDate)}
+        </span>
       ),
     },
     {
       header: "Effective Date",
       accessor: "effectiveDate",
       render: (item) => (
-        <div className="text-sm">{formatDate(item.effectiveDate)}</div>
+        <span className="text-sm text-zinc-700 dark:text-zinc-300">
+          {formatDate(item.effectiveDate)}
+        </span>
       ),
     },
   ];
@@ -446,159 +563,98 @@ export default function SalaryCompensationsPage() {
     );
 
     return (
-      <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-6">
-        <div className="min-h-[110px] flex flex-col justify-between bg-white dark:bg-zinc-800 rounded-xl p-5 shadow-sm border border-zinc-200 dark:border-zinc-700 hover:shadow-md transition-shadow">
-          <div className="flex items-center gap-2 mb-3">
-            <div className="w-8 h-8 rounded-lg bg-zinc-100 dark:bg-zinc-700/70 flex items-center justify-center">
-              <svg
-                className="w-4 h-4 text-zinc-600 dark:text-zinc-300"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                />
-              </svg>
-            </div>
-            <div className="text-xs text-zinc-500 dark:text-zinc-300 font-semibold uppercase tracking-wider">
-              Base Salary
-            </div>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 mb-6">
+        {/* Base Salary Card */}
+        <div className="min-h-[100px] flex flex-col justify-between bg-white dark:bg-zinc-800 rounded-lg p-4 border border-zinc-200 dark:border-zinc-700">
+          <div className="text-xs font-medium text-zinc-600 dark:text-zinc-400 mb-2">
+            Base Salary
           </div>
-          <div className="text-2xl font-bold text-zinc-900 dark:text-white">
+          <div className="text-xl font-semibold text-zinc-900 dark:text-white">
             {formatCurrency(totalBaseSalary)}
           </div>
         </div>
-        <div className="min-h-[110px] flex flex-col justify-between bg-linear-to-br from-green-50 to-emerald-50 dark:from-green-950/30 dark:to-emerald-950/30 rounded-xl p-5 shadow-sm border border-green-200 dark:border-green-800/50 hover:shadow-md transition-shadow">
-          <div className="flex items-center gap-2 mb-3">
-            <div className="w-8 h-8 rounded-lg bg-green-100 dark:bg-green-900/50 flex items-center justify-center">
-              <svg
-                className="w-4 h-4 text-green-600 dark:text-green-300"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M12 8v13m0-13V6a2 2 0 112 2h-2zm0 0V5.5A2.5 2.5 0 109.5 8H12zm-7 4h14M5 12a2 2 0 110-4h14a2 2 0 110 4M5 12v7a2 2 0 002 2h10a2 2 0 002-2v-7"
-                />
-              </svg>
-            </div>
-            <div className="text-xs text-green-700 dark:text-green-300 font-semibold uppercase tracking-wider">
-              Bonus
-            </div>
+
+        {/* Bonus Card */}
+        <div className="min-h-[100px] flex flex-col justify-between bg-white dark:bg-zinc-800 rounded-lg p-4 border border-green-200 dark:border-green-800">
+          <div className="text-xs font-medium text-green-700 dark:text-green-400 mb-2">
+            Bonus
           </div>
-          <div className="text-2xl font-bold text-green-700 dark:text-green-300">
-            {formatCurrency(totalBonus)}
+          <div className="text-xl font-semibold text-green-700 dark:text-green-400">
+            +{formatCurrency(totalBonus)}
           </div>
         </div>
-        <div className="min-h-[110px] flex flex-col justify-between bg-linear-to-br from-blue-50 to-cyan-50 dark:from-blue-950/20 dark:to-cyan-950/20 rounded-xl p-5 shadow-sm border border-blue-200 dark:border-blue-800/30 hover:shadow-md transition-shadow">
-          <div className="flex items-center gap-2 mb-3">
-            <div className="w-8 h-8 rounded-lg bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
-              <svg
-                className="w-4 h-4 text-blue-600 dark:text-blue-400"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"
-                />
-              </svg>
-            </div>
-            <div className="text-xs text-blue-700 dark:text-blue-400 font-semibold uppercase tracking-wider">
-              Allowance
-            </div>
+
+        {/* Allowance Card */}
+        <div className="min-h-[100px] flex flex-col justify-between bg-white dark:bg-zinc-800 rounded-lg p-4 border border-blue-200 dark:border-blue-800">
+          <div className="text-xs font-medium text-blue-700 dark:text-blue-400 mb-2">
+            Allowance
           </div>
-          <div className="text-2xl font-bold text-blue-700 dark:text-blue-400">
-            {formatCurrency(totalAllowance)}
+          <div className="text-xl font-semibold text-blue-700 dark:text-blue-400">
+            +{formatCurrency(totalAllowance)}
           </div>
         </div>
-        <div className="min-h-[110px] flex flex-col justify-between bg-linear-to-br from-red-50 to-rose-50 dark:from-red-950/30 dark:to-rose-950/30 rounded-xl p-5 shadow-sm border border-red-200 dark:border-red-800/50 hover:shadow-md transition-shadow">
-          <div className="flex items-center gap-2 mb-3">
-            <div className="w-8 h-8 rounded-lg bg-red-100 dark:bg-red-900/50 flex items-center justify-center">
-              <svg
-                className="w-4 h-4 text-red-600 dark:text-red-300"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M20 12H4"
-                />
-              </svg>
-            </div>
-            <div className="text-xs text-red-700 dark:text-red-300 font-semibold uppercase tracking-wider">
-              Deduction
-            </div>
+
+        {/* Deduction Card */}
+        <div className="min-h-[100px] flex flex-col justify-between bg-white dark:bg-zinc-800 rounded-lg p-4 border border-red-200 dark:border-red-800">
+          <div className="text-xs font-medium text-red-700 dark:text-red-400 mb-2">
+            Deduction
           </div>
-          <div className="text-2xl font-bold text-red-700 dark:text-red-300">
-            {formatCurrency(totalDeduction)}
+          <div className="text-xl font-semibold text-red-700 dark:text-red-400">
+            -{formatCurrency(totalDeduction)}
           </div>
         </div>
-        <div className="min-h-[110px] flex flex-col justify-between bg-linear-to-br from-emerald-500 to-teal-600 rounded-xl p-5 shadow-lg hover:shadow-xl transition-shadow relative overflow-hidden">
-          <div className="absolute top-0 right-0 w-24 h-24 bg-white/10 rounded-full -mr-12 -mt-12"></div>
-          <div className="relative">
-            <div className="flex items-center gap-2 mb-3">
-              <div className="w-8 h-8 rounded-lg bg-white/20 flex items-center justify-center">
-                <svg
-                  className="w-4 h-4 text-white"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
-                  />
-                </svg>
-              </div>
-              <div className="text-xs text-white/90 font-semibold uppercase tracking-wider">
-                Net Payable
-              </div>
-            </div>
-            <div className="text-2xl font-bold text-white">
-              {formatCurrency(totalNetSalary)}
-            </div>
+
+        {/* Net Salary Card */}
+        <div className="min-h-[100px] flex flex-col justify-between bg-blue-600 dark:bg-blue-700 rounded-lg p-4 border border-blue-700 dark:border-blue-600">
+          <div className="text-xs font-medium text-white/90 mb-2">
+            Net Payable
+          </div>
+          <div className="text-xl font-semibold text-white">
+            {formatCurrency(totalNetSalary)}
           </div>
         </div>
       </div>
     );
   }, [items]);
 
-  // Get unique months and years from items for filter options
+  // Get unique years from items and generate months up to current month
   const availableMonthsYears = useMemo(() => {
-    if (!items || items.length === 0) return { months: [], years: [] };
+    const currentDate = new Date();
+    const currentMonth = currentDate.getMonth() + 1; // 1-12
+    const currentYear = currentDate.getFullYear();
 
-    const monthsSet = new Set();
+    // Get unique years from items
     const yearsSet = new Set();
+    if (items && items.length > 0) {
+      items.forEach((item) => {
+        if (item.effectiveDate) {
+          const date = new Date(item.effectiveDate);
+          yearsSet.add(date.getFullYear());
+        }
+      });
+    }
 
-    items.forEach((item) => {
-      if (item.effectiveDate) {
-        const date = new Date(item.effectiveDate);
-        monthsSet.add(date.getMonth() + 1);
-        yearsSet.add(date.getFullYear());
+    // Always include current year
+    yearsSet.add(currentYear);
+
+    const years = Array.from(yearsSet).sort((a, b) => b - a);
+
+    // Generate months: if selected year is current year, show up to current month
+    // Otherwise show all 12 months
+    let months = [];
+    if (selectedYear) {
+      const year = parseInt(selectedYear);
+      if (year === currentYear) {
+        // Only show months up to current month for current year
+        months = Array.from({ length: currentMonth }, (_, i) => i + 1);
+      } else {
+        // Show all 12 months for past years
+        months = Array.from({ length: 12 }, (_, i) => i + 1);
       }
-    });
+    }
 
-    return {
-      months: Array.from(monthsSet).sort((a, b) => a - b),
-      years: Array.from(yearsSet).sort((a, b) => b - a),
-    };
-  }, [items]);
+    return { months, years };
+  }, [items, selectedYear]);
 
   const monthNames = [
     "January",
@@ -617,76 +673,127 @@ export default function SalaryCompensationsPage() {
 
   return (
     <div className="max-w-full">
-      {/* Page Header */}
+      {/* Professional Page Header */}
       <div className="mb-6">
-        <h1 className="text-3xl font-bold text-zinc-900 dark:text-white mb-2">
-          Salary Compensations
-        </h1>
-        <p className="text-zinc-600 dark:text-zinc-300">
-          Manage employee salary records, bonuses, and deductions
-        </p>
-      </div>
-
-      {/* Filters and Auto-Calculate Button */}
-      <div className="mb-6 flex flex-col sm:flex-row gap-4 justify-between items-start sm:items-center bg-white dark:bg-zinc-800/50 p-4 rounded-xl border border-zinc-200 dark:border-zinc-700/50 shadow-sm">
-        {/* Month/Year Filter */}
-        <div className="flex gap-3 items-center flex-wrap">
-          <div className="flex items-center gap-2">
-            <svg
-              className="w-5 h-5 text-zinc-500 dark:text-zinc-300"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"
-              />
-            </svg>
-            <span className="text-sm font-medium text-zinc-700 dark:text-zinc-200">
-              Filter by:
-            </span>
+        <div className="flex items-start justify-between flex-wrap gap-4">
+          <div>
+            <h1 className="text-2xl md:text-3xl font-semibold text-zinc-900 dark:text-zinc-100 mb-1.5">
+              Salary Compensations
+            </h1>
+            <p className="text-sm text-zinc-600 dark:text-zinc-400">
+              Manage employee salary records, bonuses, and deductions
+            </p>
           </div>
 
-          <select
-            value={selectedYear}
-            onChange={(e) => {
-              setSelectedYear(e.target.value);
-              if (!e.target.value) setSelectedMonth("");
-            }}
-            className="px-4 py-2.5 border border-zinc-300 dark:border-zinc-600 rounded-lg bg-white dark:bg-zinc-700 text-zinc-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-violet-500 font-medium shadow-sm hover:border-zinc-400 dark:hover:border-zinc-500 transition-colors"
-          >
-            <option value="">All Years</option>
-            {availableMonthsYears.years.map((year) => (
-              <option key={year} value={year}>
-                {year}
-              </option>
-            ))}
-          </select>
+          {items && items.length > 0 && (
+            <div className="flex items-center gap-2 px-3 py-1.5 bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-lg">
+              <span className="text-xs font-medium text-zinc-600 dark:text-zinc-400">
+                Total Records:
+              </span>
+              <span className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">
+                {items.length}
+              </span>
+            </div>
+          )}
+        </div>
+      </div>
 
-          <select
-            value={selectedMonth}
-            onChange={(e) => setSelectedMonth(e.target.value)}
-            disabled={!selectedYear}
-            className="px-4 py-2.5 border border-zinc-300 dark:border-zinc-600 rounded-lg bg-white dark:bg-zinc-700 text-zinc-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-violet-500 disabled:opacity-50 disabled:cursor-not-allowed font-medium shadow-sm hover:border-zinc-400 dark:hover:border-zinc-500 transition-colors"
-          >
-            <option value="">All Months</option>
-            {availableMonthsYears.months.map((month) => (
-              <option key={month} value={month}>
-                {monthNames[month - 1]}
-              </option>
-            ))}
-          </select>
+      {/* Professional Filters and Actions */}
+      <div className="mb-6 bg-white dark:bg-zinc-800 rounded-lg border border-zinc-200 dark:border-zinc-700 p-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-center">
+          <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+            <span className="text-sm font-medium text-zinc-700 dark:text-zinc-300 shrink-0">
+              Filter by:
+            </span>
 
-          {(selectedMonth || selectedYear) && (
+            <div className="flex gap-2 flex-wrap w-full sm:w-auto">
+              <select
+                value={selectedYear}
+                onChange={(e) => {
+                  setSelectedYear(e.target.value);
+                  if (!e.target.value) setSelectedMonth("");
+                }}
+                className="w-full sm:w-40 px-3 py-2 border border-zinc-300 dark:border-zinc-600 rounded-md bg-white dark:bg-zinc-700 text-sm text-zinc-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+              >
+                <option value="">All Years</option>
+                {availableMonthsYears.years.map((year) => (
+                  <option key={year} value={year}>
+                    {year}
+                  </option>
+                ))}
+              </select>
+
+              <select
+                value={selectedMonth}
+                onChange={(e) => setSelectedMonth(e.target.value)}
+                disabled={!selectedYear}
+                className="w-full sm:w-40 px-3 py-2 border border-zinc-300 dark:border-zinc-600 rounded-md bg-white dark:bg-zinc-700 text-sm text-zinc-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              >
+                <option value="">All Months</option>
+                {availableMonthsYears.months.map((month) => (
+                  <option key={month} value={month}>
+                    {monthNames[month - 1]}
+                  </option>
+                ))}
+              </select>
+
+              <button
+                onClick={() => {
+                  setSelectedMonth("");
+                  setSelectedYear("");
+                }}
+                className="sm:hidden inline-flex items-center gap-1 px-3 py-2 text-sm font-medium text-zinc-700 dark:text-zinc-300 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-700 rounded-md transition-colors"
+              >
+                Clear
+              </button>
+            </div>
+
             <button
               onClick={() => {
                 setSelectedMonth("");
                 setSelectedYear("");
               }}
-              className="inline-flex items-center gap-1.5 px-3 py-2 text-sm font-medium text-zinc-600 dark:text-zinc-300 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-700 rounded-lg transition-colors"
+              className="hidden sm:inline-flex items-center gap-1.5 px-3 py-2 text-sm font-medium text-zinc-700 dark:text-zinc-300 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-700 rounded-md transition-colors"
+            >
+              Clear
+            </button>
+          </div>
+
+          <div className="flex flex-col sm:flex-row sm:justify-end gap-3">
+            <button
+              onClick={handleAutoCalculateAll}
+              disabled={isCalculating || !items || items.length === 0}
+              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-zinc-400 text-white text-sm font-medium rounded-md transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+            >
+              {isCalculating ? (
+                <>
+                  <Loader size="sm" />
+                  <span>Calculating...</span>
+                </>
+              ) : (
+                <>
+                  <svg
+                    className="w-4 h-4"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"
+                    />
+                  </svg>
+                  <span>Recalculate</span>
+                </>
+              )}
+            </button>
+
+            <button
+              onClick={handleExportToExcel}
+              disabled={!filtered || filtered.length === 0}
+              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-700 disabled:bg-zinc-400 text-white text-sm font-medium rounded-md transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
             >
               <svg
                 className="w-4 h-4"
@@ -698,44 +805,13 @@ export default function SalaryCompensationsPage() {
                   strokeLinecap="round"
                   strokeLinejoin="round"
                   strokeWidth={2}
-                  d="M6 18L18 6M6 6l12 12"
+                  d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
                 />
               </svg>
-              Clear
+              <span>Export</span>
             </button>
-          )}
+          </div>
         </div>
-
-        {/* Auto-Calculate Button */}
-        <button
-          onClick={handleAutoCalculateAll}
-          disabled={isCalculating || !items || items.length === 0}
-          className="inline-flex items-center gap-2.5 px-5 py-2.5 bg-linear-to-r from-violet-600 to-purple-600 dark:from-violet-500 dark:to-purple-500 text-white rounded-lg hover:from-violet-700 hover:to-purple-700 dark:hover:from-violet-600 dark:hover:to-purple-600 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed disabled:from-zinc-400 disabled:to-zinc-400 shadow-lg shadow-violet-500/25 dark:shadow-violet-500/20 hover:shadow-xl hover:shadow-violet-500/30 hover:scale-[1.02] font-medium"
-        >
-          {isCalculating ? (
-            <>
-              <Loader size="sm" />
-              <span>Calculating...</span>
-            </>
-          ) : (
-            <>
-              <svg
-                className="w-5 h-5"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"
-                />
-              </svg>
-              <span>Recalculate All Deductions</span>
-            </>
-          )}
-        </button>
       </div>
 
       <TableArchive
@@ -758,12 +834,12 @@ export default function SalaryCompensationsPage() {
 
       {/* Confirmation Modal */}
       {showConfirmModal && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-fadeIn">
-          <div className="bg-white dark:bg-zinc-800 rounded-2xl shadow-2xl max-w-lg w-full p-8 transform transition-all animate-scaleIn border border-zinc-200 dark:border-zinc-700">
-            <div className="flex items-start gap-4 mb-6">
-              <div className="w-14 h-14 rounded-2xl bg-linear-to-br from-violet-100 to-purple-100 dark:from-violet-900/50 dark:to-purple-900/50 flex items-center justify-center shrink-0 shadow-lg shadow-violet-500/10 dark:shadow-violet-500/5">
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white dark:bg-zinc-800 rounded-lg shadow-lg max-w-lg w-full p-6 border border-zinc-200 dark:border-zinc-700">
+            <div className="flex items-start gap-4 mb-5">
+              <div className="w-12 h-12 rounded-lg bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center shrink-0">
                 <svg
-                  className="w-7 h-7 text-violet-600 dark:text-violet-300"
+                  className="w-6 h-6 text-blue-600 dark:text-blue-400"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -777,26 +853,26 @@ export default function SalaryCompensationsPage() {
                 </svg>
               </div>
               <div className="flex-1">
-                <h3 className="text-2xl font-bold text-zinc-900 dark:text-white mb-2">
+                <h3 className="text-lg font-semibold text-zinc-900 dark:text-white mb-1">
                   Recalculate Deductions
                 </h3>
-                <p className="text-zinc-600 dark:text-zinc-300 text-sm">
+                <p className="text-sm text-zinc-600 dark:text-zinc-400">
                   Auto-calculate salary deductions for all records
                 </p>
               </div>
             </div>
 
-            <div className="bg-violet-50 dark:bg-violet-950/40 border border-violet-200 dark:border-violet-800/60 rounded-xl p-4 mb-6">
-              <p className="text-zinc-700 dark:text-zinc-200 leading-relaxed">
+            <div className="bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800 rounded-lg p-4 mb-4">
+              <p className="text-sm text-zinc-700 dark:text-zinc-300">
                 This will recalculate deductions for{" "}
-                <span className="font-bold text-violet-700 dark:text-violet-300">
+                <span className="font-semibold text-blue-700 dark:text-blue-400">
                   {items?.length || 0} records
                 </span>{" "}
                 based on current leave and attendance data.
               </p>
             </div>
 
-            <div className="bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/60 rounded-xl p-4 mb-6">
+            <div className="bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 rounded-lg p-4 mb-5">
               <div className="flex items-start gap-3">
                 <svg
                   className="w-5 h-5 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5"
@@ -811,7 +887,7 @@ export default function SalaryCompensationsPage() {
                     d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
                   />
                 </svg>
-                <p className="text-sm text-amber-800 dark:text-amber-200 leading-relaxed">
+                <p className="text-sm text-amber-800 dark:text-amber-200">
                   This action will update all records and cannot be undone.
                   Ensure leave and attendance data is accurate before
                   proceeding.
@@ -822,13 +898,13 @@ export default function SalaryCompensationsPage() {
             <div className="flex gap-3">
               <button
                 onClick={() => setShowConfirmModal(false)}
-                className="flex-1 px-5 py-3 bg-zinc-100 dark:bg-zinc-700 text-zinc-700 dark:text-zinc-200 rounded-xl hover:bg-zinc-200 dark:hover:bg-zinc-600 transition-all font-semibold border border-zinc-200 dark:border-zinc-600"
+                className="flex-1 px-4 py-2 bg-white dark:bg-zinc-700 text-zinc-700 dark:text-zinc-200 rounded-md hover:bg-zinc-50 dark:hover:bg-zinc-600 transition-colors font-medium border border-zinc-300 dark:border-zinc-600"
               >
                 Cancel
               </button>
               <button
                 onClick={proceedWithCalculation}
-                className="flex-1 px-5 py-3 bg-linear-to-r from-violet-600 to-purple-600 dark:from-violet-500 dark:to-purple-500 text-white rounded-xl hover:from-violet-700 hover:to-purple-700 dark:hover:from-violet-600 dark:hover:to-purple-600 transition-all font-semibold shadow-lg shadow-violet-500/30 hover:shadow-xl hover:shadow-violet-500/40"
+                className="flex-1 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md transition-colors font-medium"
               >
                 Continue
               </button>
@@ -839,12 +915,12 @@ export default function SalaryCompensationsPage() {
 
       {/* Delete Confirmation Modal */}
       {showDeleteModal && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-fadeIn">
-          <div className="bg-white dark:bg-zinc-800 rounded-2xl shadow-2xl max-w-lg w-full p-8 transform transition-all animate-scaleIn border border-zinc-200 dark:border-zinc-700">
-            <div className="flex items-start gap-4 mb-6">
-              <div className="w-14 h-14 rounded-2xl bg-linear-to-br from-red-100 to-rose-100 dark:from-red-900/50 dark:to-rose-900/50 flex items-center justify-center shrink-0 shadow-lg shadow-red-500/10 dark:shadow-red-500/5">
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white dark:bg-zinc-800 rounded-lg shadow-lg max-w-lg w-full p-6 border border-zinc-200 dark:border-zinc-700">
+            <div className="flex items-start gap-4 mb-5">
+              <div className="w-12 h-12 rounded-lg bg-red-100 dark:bg-red-900/30 flex items-center justify-center shrink-0">
                 <svg
-                  className="w-7 h-7 text-red-600 dark:text-red-300"
+                  className="w-6 h-6 text-red-600 dark:text-red-400"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -858,21 +934,23 @@ export default function SalaryCompensationsPage() {
                 </svg>
               </div>
               <div className="flex-1">
-                <h3 className="text-2xl font-bold text-zinc-900 dark:text-white mb-2">
+                <h3 className="text-lg font-semibold text-zinc-900 dark:text-white mb-1">
                   Delete Salary Record
                 </h3>
-                <p className="text-zinc-600 dark:text-zinc-300 text-sm">
+                <p className="text-sm text-zinc-600 dark:text-zinc-400">
                   Permanently remove this compensation record
                 </p>
               </div>
             </div>
 
-            <p className="text-zinc-700 dark:text-zinc-200 mb-6 leading-relaxed">
-              Are you sure you want to delete this salary compensation record?
-              This action cannot be undone.
-            </p>
+            <div className="bg-zinc-50 dark:bg-zinc-800/50 border border-zinc-200 dark:border-zinc-600 rounded-lg p-4 mb-4">
+              <p className="text-sm text-zinc-700 dark:text-zinc-300">
+                Are you sure you want to delete this salary compensation record?
+                This action cannot be undone.
+              </p>
+            </div>
 
-            <div className="bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-800/60 rounded-xl p-4 mb-6">
+            <div className="bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-800 rounded-lg p-4 mb-5">
               <div className="flex items-start gap-3">
                 <svg
                   className="w-5 h-5 text-red-600 dark:text-red-400 shrink-0 mt-0.5"
@@ -887,7 +965,7 @@ export default function SalaryCompensationsPage() {
                     d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
                   />
                 </svg>
-                <p className="text-sm text-red-800 dark:text-red-200 leading-relaxed">
+                <p className="text-sm text-red-800 dark:text-red-200">
                   This will permanently remove the salary compensation record
                   and cannot be recovered.
                 </p>
@@ -900,13 +978,13 @@ export default function SalaryCompensationsPage() {
                   setShowDeleteModal(false);
                   setDeleteItemId(null);
                 }}
-                className="flex-1 px-5 py-3 bg-zinc-100 dark:bg-zinc-700 text-zinc-700 dark:text-zinc-200 rounded-xl hover:bg-zinc-200 dark:hover:bg-zinc-600 transition-all font-semibold border border-zinc-200 dark:border-zinc-600"
+                className="flex-1 px-4 py-2 bg-white dark:bg-zinc-700 text-zinc-700 dark:text-zinc-200 rounded-md hover:bg-zinc-50 dark:hover:bg-zinc-600 transition-colors font-medium border border-zinc-300 dark:border-zinc-600"
               >
                 Cancel
               </button>
               <button
                 onClick={proceedWithDelete}
-                className="flex-1 px-5 py-3 bg-linear-to-r from-red-600 to-rose-600 dark:from-red-500 dark:to-rose-500 text-white rounded-xl hover:from-red-700 hover:to-rose-700 dark:hover:from-red-600 dark:hover:to-rose-600 transition-all font-semibold shadow-lg shadow-red-500/30 hover:shadow-xl hover:shadow-red-500/40"
+                className="flex-1 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-md transition-colors font-medium"
               >
                 Delete
               </button>

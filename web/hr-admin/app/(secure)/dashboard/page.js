@@ -61,7 +61,7 @@ const Dashboard = () => {
           getEmployeeStats(),
           getAttendanceStats(),
           getAttendanceOverview({ end: todayStr }),
-          getRecentAttendances({ date: todayStr, limit: 10 }),
+          getRecentAttendances({ date: todayStr, limit: 100 }),
         ]);
 
         setStats({
@@ -79,9 +79,7 @@ const Dashboard = () => {
             : { labels: [], datasets: { onTime: [], late: [], remote: [] } }
         );
 
-        setAttendanceRows(
-          recentResponse?.success ? recentResponse.data : []
-        );
+        setAttendanceRows(recentResponse?.success ? recentResponse.data : []);
       } catch (error) {
         console.error("Error fetching dashboard data:", error);
       } finally {
@@ -92,7 +90,7 @@ const Dashboard = () => {
     fetchDashboardData();
   }, [user, authLoading, router]);
 
-  if (authLoading || (user?.role === "employee")) {
+  if (authLoading || user?.role === "employee") {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
