@@ -25,13 +25,16 @@ export default function Header({ onOpen }) {
   return (
     <header className="h-16 bg-white dark:bg-zinc-950 border-b border-zinc-200 dark:border-zinc-800 flex items-center px-4 lg:px-8 justify-between sticky top-0 z-20">
       <div className="flex items-center gap-2 w-full">
-        <button
-          className="lg:hidden p-1 mr-2"
-          onClick={onOpen}
-          aria-label="Open sidebar"
-        >
-          <Menu className="w-6 h-6 text-zinc-700 dark:text-zinc-200" />
-        </button>
+        {/* Only show menu button if onOpen is provided (not for employees) */}
+        {onOpen && (
+          <button
+            className="lg:hidden p-1 mr-2"
+            onClick={onOpen}
+            aria-label="Open sidebar"
+          >
+            <Menu className="w-6 h-6 text-zinc-700 dark:text-zinc-200" />
+          </button>
+        )}
 
         {/* Search bar */}
         <div className="flex-1 flex justify-center"></div>
