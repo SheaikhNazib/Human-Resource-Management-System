@@ -115,6 +115,117 @@ export async function getAttendanceStats() {
   }
 }
 
+// Get attendance overview (aggregated) for a date range (defaults last 7 days)
+export async function getAttendanceOverview({ start, end } = {}) {
+  try {
+    const now = new Date();
+    const endDate = end ? new Date(end) : now;
+    const startDate = start
+      ? new Date(start)
+      : new Date(Date.now() - 6 * 24 * 60 * 60 * 1000);
+
+    const pad = (n) => String(n).padStart(2, "0");
+    const fmt = (d) =>
+      `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+
+    const startStr = fmt(startDate);
+    const endStr = fmt(endDate);
+
+    // Fetch attendance rows between start and end (use high limit to get all)
+    const response = await fetchFromApi(
+      `${Api_path.ATTENDANCE.LIST}?start=${startStr}&end=${endStr}&limit=1000`
+    );
+    const body = response?.data ?? response;
+    const rows = Array.isArray(body)
+      ? body
+      : Array.isArray(body?.data)
+      ? body.data
+      : Array.isArray(body?.data?.data)
+      ? body.data.data
+      : [];
+
+    // Build labels array (inclusive)
+    const labels = [];
+    for (
+      let d = new Date(startDate);
+      d <= endDate;
+      d.setDate(d.getDate() + 1)
+    ) {
+      labels.push(fmt(new Date(d)));
+    }
+
+    // Simple on-time threshold (HH:MM:SS)
+    const onTimeThreshold = "09:30:00";
+
+    const onTime = labels.map(
+      (lbl) =>
+        rows.filter(
+          (r) =>
+            r.date === lbl &&
+            r.checkIn &&
+            r.checkIn <= onTimeThreshold &&
+            (r.onsite_or_remote === true || r.onsite_or_remote === "office")
+        ).length
+    );
+
+    const late = labels.map(
+      (lbl) =>
+        rows.filter(
+          (r) => r.date === lbl && r.checkIn && r.checkIn > onTimeThreshold
+        ).length
+    );
+
+    const remote = labels.map(
+      (lbl) =>
+        rows.filter(
+          (r) =>
+            r.date === lbl &&
+            (r.onsite_or_remote === false || r.onsite_or_remote === "remote")
+        ).length
+    );
+
+    return {
+      success: true,
+      data: { labels, datasets: { onTime, late, remote } },
+    };
+  } catch (error) {
+    console.error("getAttendanceOverview error:", error);
+    return {
+      success: false,
+      error: error.message,
+      data: { labels: [], datasets: { onTime: [], late: [], remote: [] } },
+    };
+  }
+}
+
+// Get recent attendance rows for a specific date (defaults to today)
+export async function getRecentAttendances({ date, limit = 10 } = {}) {
+  try {
+    const now = new Date();
+    const pad = (n) => String(n).padStart(2, "0");
+    const fmt = (d) =>
+      `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+    const dstr = date ? date : fmt(now);
+
+    const response = await fetchFromApi(
+      `${Api_path.ATTENDANCE.LIST}?date=${dstr}&limit=${limit}`
+    );
+    const body = response?.data ?? response;
+    const rows = Array.isArray(body)
+      ? body
+      : Array.isArray(body?.data)
+      ? body.data
+      : Array.isArray(body?.data?.data)
+      ? body.data.data
+      : [];
+
+    return { success: true, data: rows };
+  } catch (error) {
+    console.error("getRecentAttendances error:", error);
+    return { success: false, error: error.message, data: [] };
+  }
+}
+
 // Create a new attendance
 export async function createAttendance(attendanceData) {
   try {
