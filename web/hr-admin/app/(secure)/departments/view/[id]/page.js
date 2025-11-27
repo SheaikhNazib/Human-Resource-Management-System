@@ -2,6 +2,7 @@ import React from "react";
 import { fetchFromApi } from "@/lib/axios";
 import { Api_path } from "@/constant/api-path";
 import Link from "next/link";
+import EmployeesTable from "./EmployeesTable";
 
 export default async function DepartmentDetailPage({ params } = {}) {
   // In Next.js 15+, params is a Promise and must be awaited
@@ -85,6 +86,19 @@ export default async function DepartmentDetailPage({ params } = {}) {
     } catch (err) {
       console.error("Error fetching employees for department:", err);
     }
+
+    // Transform employees data for TableArchive (flatten complex fields)
+    const employeesData = employees.map((emp) => ({
+      id: emp.id,
+      name:
+        emp.name ||
+        `${emp.first_name || ""} ${emp.last_name || ""}`.trim() ||
+        "—",
+      role: emp.role || "Employee",
+      jobTitle: emp?.emp_job_title?.name || "-",
+      email: emp.work_email || emp.personal_email || "-",
+      mobile: emp.mobile || emp.office_phone || "-",
+    }));
 
     return (
       <div className="w-full max-w-7xl mx-auto px-6 sm:px-8 lg:px-12 py-10">
@@ -200,64 +214,7 @@ export default async function DepartmentDetailPage({ params } = {}) {
           </div>
           {/* Employees list section */}
           <div className="px-8 pb-10 sm:px-10 sm:py-10 border-t border-zinc-100 dark:border-zinc-800">
-            <div className="flex items-center justify-between mb-6">
-              <h3 className="text-lg font-semibold text-zinc-900 dark:text-zinc-100">
-                Employees
-              </h3>
-              <div className="text-sm text-zinc-500">
-                {employees.length} found
-              </div>
-            </div>
-
-            {employees.length === 0 ? (
-              <div className="text-zinc-600 dark:text-zinc-400 italic">
-                No employees in this department.
-              </div>
-            ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                {employees.map((emp) => {
-                  const fullName =
-                    emp.name ||
-                    `${emp.first_name || ""} ${emp.last_name || ""}`.trim();
-                  return (
-                    <Link
-                      key={emp.id}
-                      href={`/employees/${emp.id}/view`}
-                      className="block bg-white dark:bg-zinc-900 rounded-lg shadow-sm border border-zinc-200 dark:border-zinc-700 p-4 hover:shadow-md hover:bg-zinc-50 dark:hover:bg-zinc-800 cursor-pointer transition-shadow"
-                    >
-                      <div className="flex items-start justify-between gap-4">
-                        <div className="flex-1">
-                          <div className="text-sm text-zinc-500">
-                            {emp.role || "Employee"}
-                          </div>
-                          <div className="text-lg font-medium text-zinc-900 dark:text-zinc-100">
-                            {fullName || "—"}
-                          </div>
-                          <div className="text-sm text-zinc-600 dark:text-zinc-400">
-                            {emp?.emp_job_title?.name || "-"}
-                          </div>
-                        </div>
-                      </div>
-
-                      <div className="mt-3 text-sm text-zinc-600 dark:text-zinc-400 space-y-1">
-                        <div>
-                          <strong className="text-zinc-700 dark:text-zinc-200 mr-2">
-                            Email:
-                          </strong>
-                          {emp.work_email || emp.personal_email || "-"}
-                        </div>
-                        <div>
-                          <strong className="text-zinc-700 dark:text-zinc-200 mr-2">
-                            Mobile:
-                          </strong>
-                          {emp.mobile || emp.office_phone || "-"}
-                        </div>
-                      </div>
-                    </Link>
-                  );
-                })}
-              </div>
-            )}
+            <EmployeesTable employees={employeesData} />
           </div>
         </div>
       </div>
