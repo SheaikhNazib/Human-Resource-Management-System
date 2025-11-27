@@ -16,55 +16,69 @@ import { useLeavePolicy } from "@/hooks/useLeavePolicy";
  */
 const LeavesPanel = ({ employeeId, isActive, employee }) => {
   const { leaves: allLeaves, loading, error } = useLeaves();
-  const [employeeLeaves, setEmployeeLeaves] = useState([]);
   const [hasLoaded, setHasLoaded] = useState(false);
-  const [summary, setSummary] = useState({
-    total: 0,
-    approved: 0,
-    pending: 0,
-    denied: 0,
-    unpaid: 0,
-  });
 
-  // Calculate leave policy based on employee's hire date
-  const leavePolicy = useLeavePolicy(employee?.hire_date, employeeLeaves);
-
-  useEffect(() => {
-    if (!allLeaves.length) return;
-
-    // Filter leaves for this employee (always keep cache updated)
-    const filtered = allLeaves.filter((leave) => {
-      // Handle various employee ID formats
-      const leaveEmpId =
-        leave.employeeId || leave.employee_id || leave.employee;
-      // Skip if no employee ID found
+  // Memoize filtered leaves to avoid recalculation on every render
+  const employeeLeaves = React.useMemo(() => {
+    if (!allLeaves.length) return [];
+    
+    return allLeaves.filter((leave) => {
+      const leaveEmpId = leave.employeeId || leave.employee_id || leave.employee;
       if (!leaveEmpId) return false;
       return String(leaveEmpId) === String(employeeId);
     });
+  }, [allLeaves, employeeId]);
 
-    // Calculate summary
-    const newSummary = {
-      total: filtered.length,
-      approved: filtered.filter(
-        (l) => String(l.status).toLowerCase() === "approved"
-      ).length,
-      pending: filtered.filter(
-        (l) => String(l.status).toLowerCase() === "pending"
-      ).length,
-      denied: filtered.filter((l) =>
-        ["denied", "rejected"].includes(String(l.status).toLowerCase())
-      ).length,
-      unpaid: filtered.filter(
-        (l) => String(l.status).toLowerCase() === "unpaid approved"
-      ).length,
+  // Memoize summary calculation
+  const summary = React.useMemo(() => {
+    if (!employeeLeaves.length) {
+      return {
+        total: 0,
+        approved: 0,
+        pending: 0,
+        denied: 0,
+        unpaid: 0,
+      };
+    }
+
+    const summary = {
+      total: employeeLeaves.length,
+      approved: 0,
+      pending: 0,
+      denied: 0,
+      unpaid: 0,
     };
 
-    setEmployeeLeaves(filtered);
-    setSummary(newSummary);
-    if (filtered.length > 0 || !loading) {
+    for (const leave of employeeLeaves) {
+      const status = String(leave.status).toLowerCase();
+      if (status === "approved") {
+        summary.approved++;
+      } else if (status === "pending") {
+        summary.pending++;
+      } else if (status === "denied" || status === "rejected") {
+        summary.denied++;
+      } else if (status === "unpaid approved") {
+        summary.unpaid++;
+      }
+    }
+
+    return summary;
+  }, [employeeLeaves]);
+
+  // Calculate leave policy based on employee's hire date (only for approved leaves)
+  const approvedLeaves = React.useMemo(() => {
+    return employeeLeaves.filter(
+      (l) => String(l.status).toLowerCase() === "approved" || String(l.status).toLowerCase() === "unpaid approved"
+    );
+  }, [employeeLeaves]);
+
+  const leavePolicy = useLeavePolicy(employee?.hire_date, approvedLeaves);
+
+  useEffect(() => {
+    if ((employeeLeaves.length > 0 || !loading) && !hasLoaded) {
       setHasLoaded(true);
     }
-  }, [allLeaves, employeeId, loading]);
+  }, [employeeLeaves.length, loading, hasLoaded]);
 
   if (!isActive) {
     // Keep component mounted but hidden to preserve cached data
