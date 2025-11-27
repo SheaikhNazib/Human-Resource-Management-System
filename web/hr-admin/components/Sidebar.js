@@ -38,22 +38,27 @@ export default function Sidebar({ open, onClose }) {
     // Set only the matching parent menu open (ensure single-open behavior)
     setOpenMenus(newOpen);
   }, [pathname]);
-  const navLinks = [
+
+  // Define all navigation links
+  const allNavLinks = [
     {
       href: "/dashboard",
       label: "Dashboard",
       icon: LayoutDashboard,
+      allowedRoles: ["super_admin", "admin", "accountant", "hr", "hr_manager", "manager", "employee"],
     },
 
     {
       href: "/departments",
       label: "Departments",
       icon: Building2,
+      allowedRoles: ["super_admin", "admin", "hr", "hr_manager", "manager"],
     },
 
     {
       label: "Employee Management",
       icon: IdCardLanyard,
+      allowedRoles: ["super_admin", "admin", "hr", "hr_manager", "manager"],
       children: [
         { href: "/employees", label: "Employees", icon: Users },
         { href: "/attendance", label: "Attendance", icon: CalendarCheck },
@@ -70,6 +75,7 @@ export default function Sidebar({ open, onClose }) {
     {
       label: "Salary Compensation",
       icon: DollarSign,
+      allowedRoles: ["super_admin", "admin", "accountant"],
       children: [
         {
           href: "/salary-compensations/salary-list",
@@ -83,6 +89,7 @@ export default function Sidebar({ open, onClose }) {
       href: "/tasks",
       label: "Tasks",
       icon: Calendar,
+      allowedRoles: ["super_admin", "admin", "hr", "employee"],
     },
 
     // Admin access - only visible to super_admin
@@ -91,6 +98,7 @@ export default function Sidebar({ open, onClose }) {
           {
             label: "Admin access",
             icon: Wallet,
+            allowedRoles: ["super_admin"],
             children: [
               {
                 href: "/admin-access-management/add-user",
@@ -107,6 +115,12 @@ export default function Sidebar({ open, onClose }) {
         ]
       : []),
   ];
+
+  // Filter navigation links based on user role
+  const navLinks = allNavLinks.filter((item) => {
+    if (!user?.role) return false;
+    return item.allowedRoles?.includes(user.role) ?? true;
+  });
 
   // Shared classes for consistency between top-level and nested items
   const baseItemClass =
