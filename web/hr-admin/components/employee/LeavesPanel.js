@@ -1,9 +1,10 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { Calendar, AlertCircle } from "lucide-react";
+import { Calendar, AlertCircle, Plus } from "lucide-react";
 import LeaveItem from "./LeaveItem";
 import LeaveSummaryCard from "./LeaveSummaryCard";
+import LeaveRequestModal from "./LeaveRequestModal";
 import { useLeaves } from "@/actions/leaves/business";
 import { useLeavePolicy } from "@/hooks/useLeavePolicy";
 
@@ -13,11 +14,13 @@ import { useLeavePolicy } from "@/hooks/useLeavePolicy";
  * @param {string|number} props.employeeId - Employee ID
  * @param {boolean} props.isActive - Whether this tab is currently active
  * @param {Object} props.employee - Employee data with hire_date
+ * @param {boolean} props.canRequestLeave - Whether the user can request leave (for employee dashboard)
  */
-const LeavesPanel = ({ employeeId, isActive, employee }) => {
+const LeavesPanel = ({ employeeId, isActive, employee, canRequestLeave = false }) => {
   const { leaves: allLeaves, loading, error, refetch } = useLeaves();
   const [hasLoaded, setHasLoaded] = useState(false);
   const [timedOut, setTimedOut] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   // Memoize filtered leaves to avoid recalculation on every render
   const employeeLeaves = React.useMemo(() => {
@@ -112,15 +115,6 @@ const LeavesPanel = ({ employeeId, isActive, employee }) => {
     return <ErrorState message={msg} onRetry={() => refetch && refetch()} />;
   }
 
-  if (employeeLeaves.length === 0 && hasLoaded) {
-    return (
-      <EmptyState
-        message="No leave records found for this employee"
-        icon={Calendar}
-      />
-    );
-  }
-
   // Show cached data even if currently loading (for refresh scenarios)
   if (employeeLeaves.length === 0 && !hasLoaded) {
     return <LoadingSkeleton />;
@@ -168,20 +162,55 @@ const LeavesPanel = ({ employeeId, isActive, employee }) => {
 
         {/* Leave List Header */}
         <div className="mb-4 flex items-center justify-between">
-          <h2 className="text-2xl font-bold text-gray-900">Leave History</h2>
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-zinc-100">Leave History</h2>
+          {canRequestLeave && (
+            <button
+              onClick={() => setIsModalOpen(true)}
+              className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition-colors shadow-lg hover:shadow-xl"
+            >
+              <Plus className="w-5 h-5" />
+              Request Leave
+            </button>
+          )}
         </div>
 
-        {/* Leave Items */}
-        <div className="space-y-4">
-          {employeeLeaves.map((leave) => (
-            <LeaveItem
-              key={leave.id}
-              leave={leave}
-              inferLeaveType={leavePolicy.inferLeaveType}
-            />
-          ))}
-        </div>
+        {/* Leave Items or Empty State */}
+        {employeeLeaves.length === 0 ? (
+          <div className="bg-gray-50 dark:bg-zinc-900/50 border border-gray-200 dark:border-zinc-800 rounded-lg p-8 text-center">
+            <div className="w-16 h-16 bg-gray-200 dark:bg-zinc-700 rounded-full flex items-center justify-center mx-auto mb-4">
+              <Calendar className="w-8 h-8 text-gray-600 dark:text-zinc-400" />
+            </div>
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-zinc-100 mb-2">
+              No Leave Records
+            </h3>
+            <p className="text-gray-600 dark:text-zinc-400">
+              This employee has not submitted any leave requests yet.
+            </p>
+          </div>
+        ) : (
+          <div className="space-y-4">
+            {employeeLeaves.map((leave) => (
+              <LeaveItem
+                key={leave.id}
+                leave={leave}
+                inferLeaveType={leavePolicy.inferLeaveType}
+              />
+            ))}
+          </div>
+        )}
       </div>
+
+      {/* Leave Request Modal */}
+      {canRequestLeave && (
+        <LeaveRequestModal
+          isOpen={isModalOpen}
+          onClose={() => setIsModalOpen(false)}
+          employeeId={employeeId}
+          onSuccess={() => {
+            refetch && refetch();
+          }}
+        />
+      )}
     </div>
   );
 };
