@@ -28,7 +28,7 @@ export class EmpSalaryCompensationsController {
 
 
   @Get()
-  @RequireRoles(Roles.SUPER_ADMIN, Roles.HR_MANAGER, Roles.MANAGER, Roles.EMPLOYEE)
+  @RequireRoles(Roles.SUPER_ADMIN, Roles.HR_MANAGER, Roles.MANAGER, Roles.ACCOUNTANT)
   @ApiOperation({ summary: 'Get all employee salary compensations' })
   @ApiResponse({ status: 200, description: 'List of salary compensations' })
   findAll() {
@@ -37,7 +37,7 @@ export class EmpSalaryCompensationsController {
 
 
   @Get(':id')
-  @RequireRoles(Roles.SUPER_ADMIN, Roles.HR_MANAGER, Roles.MANAGER, Roles.EMPLOYEE)
+  @RequireRoles(Roles.SUPER_ADMIN, Roles.HR_MANAGER, Roles.MANAGER, Roles.ACCOUNTANT)
   @ApiOperation({ summary: 'Get a salary compensation by ID' })
   @ApiParam({ name: 'id', type: Number })
   @ApiResponse({ status: 200, description: 'Salary compensation detail' })
@@ -47,7 +47,7 @@ export class EmpSalaryCompensationsController {
 
 
   @Patch(':id')
-  @RequireRoles(Roles.SUPER_ADMIN, Roles.HR_MANAGER, Roles.MANAGER)
+  @RequireRoles(Roles.SUPER_ADMIN, Roles.HR_MANAGER, Roles.MANAGER, Roles.ACCOUNTANT)
   @ApiOperation({ summary: 'Update a salary compensation' })
   @ApiParam({ name: 'id', type: Number })
   @ApiBody({ type: UpdateEmpSalaryCompensationDto })
