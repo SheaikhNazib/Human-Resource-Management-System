@@ -102,12 +102,25 @@ export default function AddUserPage() {
     const toastId = toast.loading("Creating user...");
 
     try {
-      const response = await createUser(formData);
+      // Ensure data types are correct for backend
+      const userData = {
+        email: formData.email,
+        password: formData.password,
+        role: formData.role,
+        isActive: formData.isActive,
+        emp_department: parseInt(formData.emp_department, 10),
+        emp_job_title: parseInt(formData.emp_job_title, 10),
+      };
+
+      console.log("Sending user data:", userData);
+      const response = await createUser(userData);
+      console.log("Create user response:", response);
 
       if (response.success) {
-        toast.success("User created successfully", { id: toastId });
+        toast.success("User and employee created successfully", { id: toastId });
         router.push("/admin-access-management/user-role");
       } else {
+        console.error("User creation failed:", response);
         toast.error(response.error || "Failed to create user", { id: toastId });
       }
     } catch (error) {

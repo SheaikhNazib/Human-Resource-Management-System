@@ -25,6 +25,12 @@ function SecureLayoutContent({ children }) {
   // Role-based route protection
   useEffect(() => {
     if (!loading && isAuthenticated && user) {
+      // Define allowed routes for employee role
+      const employeeAllowedRoutes = [
+        '/employee-dashboard',
+        '/tasks',
+      ];
+
       // Define allowed routes for accountant role
       const accountantAllowedRoutes = [
         '/dashboard',
@@ -43,6 +49,7 @@ function SecureLayoutContent({ children }) {
         '/attendance-records',
         '/leaves',
         '/performance',
+        '/tasks',
       ];
 
       // Define allowed routes for manager role
@@ -54,7 +61,20 @@ function SecureLayoutContent({ children }) {
         '/attendance-records',
         '/leaves',
         '/performance',
+        '/tasks',
       ];
+
+      // Check if user is employee and trying to access unauthorized route
+      if (user.role === 'employee') {
+        const isAllowedRoute = employeeAllowedRoutes.some((route) => 
+          pathname.startsWith(route)
+        );
+
+        if (!isAllowedRoute) {
+          console.log('Employee accessing unauthorized route, redirecting to employee dashboard');
+          router.push('/employee-dashboard');
+        }
+      }
 
       // Check if user is accountant and trying to access unauthorized route
       if (user.role === 'accountant') {
