@@ -422,7 +422,7 @@ export default function TableArchive({
   createButtonText = "Add New",
   createButtonHref = "",
   createButtonOnClick = null,
-  createButtonClassName = "px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors flex items-center gap-2",
+  createButtonClassName = "px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2",
   onRefresh = null,
   showSearch = true,
   showCreateButton = true,
@@ -484,7 +484,7 @@ export default function TableArchive({
       {/* Header Section */}
       {title && (
         <div className="mb-6">
-          <div className="p-4 bg-indigo-600 rounded-t-xl">
+          <div className="p-4 bg-blue-600 rounded-t-xl">
             <h1 className="text-xl font-semibold text-white">
               {title}
               {pagination && (
@@ -528,7 +528,7 @@ export default function TableArchive({
                   <input
                     type="search"
                     placeholder={searchPlaceholder}
-                    className="w-full pl-10 pr-4 py-2 border border-zinc-200 dark:border-zinc-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:bg-zinc-800 dark:text-white"
+                    className="w-full pl-10 pr-4 py-2 border border-zinc-200 dark:border-zinc-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-zinc-800 dark:text-white"
                     value={searchTerm}
                     onChange={(e) => onSearchChange(e.target.value)}
                   />
@@ -544,7 +544,7 @@ export default function TableArchive({
               {onRefresh && showRefreshButton && (
                 <button
                   onClick={onRefresh}
-                  className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors flex items-center gap-2"
+                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2"
                   disabled={loading}
                 >
                   <svg
@@ -624,7 +624,7 @@ export default function TableArchive({
                       type="checkbox"
                       checked={selectAll}
                       onChange={handleSelectAll}
-                      className="rounded border-zinc-300 text-indigo-600 focus:ring-indigo-500"
+                      className="rounded border-zinc-300 text-blue-600 focus:ring-blue-500"
                     />
                   </th>
                 )}
@@ -655,7 +655,7 @@ export default function TableArchive({
                     className="py-12 text-center"
                   >
                     <div className="flex flex-col items-center justify-center gap-2">
-                      <div className="h-8 w-8 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin"></div>
+                      <div className="h-8 w-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
                       <span className="text-zinc-500 dark:text-zinc-400">
                         Loading...
                       </span>
@@ -707,7 +707,7 @@ export default function TableArchive({
                           type="checkbox"
                           checked={selectedRows.has(ri)}
                           onChange={() => handleSelectRow(ri, row)}
-                          className="rounded border-zinc-300 text-indigo-600 focus:ring-indigo-500"
+                          className="rounded border-zinc-300 text-blue-600 focus:ring-blue-500"
                         />
                       </td>
                     )}
@@ -744,7 +744,7 @@ export default function TableArchive({
                 <select
                   value={pagination.limit || 20}
                   onChange={(e) => onLimitChange?.(Number(e.target.value))}
-                  className="border border-zinc-200 dark:border-zinc-700 rounded px-2 py-1 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  className="border border-zinc-200 dark:border-zinc-700 rounded px-2 py-1 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
                   <option value={10}>10</option>
                   <option value={20}>20</option>

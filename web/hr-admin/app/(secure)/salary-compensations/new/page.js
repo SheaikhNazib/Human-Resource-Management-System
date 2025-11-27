@@ -187,7 +187,7 @@ const AddSalaryCompensationPage = () => {
     <div className="pt-0 px-4 md:px-6 lg:px-8 max-w-4xl mx-auto">
       <div className="mb-6">
         <div className="rounded-lg overflow-hidden">
-          <div className="p-4 bg-indigo-600 rounded-t-xl">
+          <div className="p-4 bg-blue-600 rounded-t-xl">
             <div className="flex items-center justify-between gap-4">
               <div>
                 <h1 className="text-2xl md:text-3xl font-bold text-white">
