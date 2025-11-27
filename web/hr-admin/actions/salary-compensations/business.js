@@ -1,17 +1,22 @@
-import { useState, useEffect, useCallback } from 'react';
-import { getSalaryCompensationsList, deleteSalaryCompensation as deleteSalaryCompensationAction } from './server-actions';
+import { useState, useEffect, useCallback } from "react";
+import {
+  getSalaryCompensationsList,
+  deleteSalaryCompensation as deleteSalaryCompensationAction,
+} from "./server-actions";
 
-export const useSalaryCompensations = () => {
+export const useSalaryCompensations = (filters = {}) => {
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [metaData, setMetaData] = useState(null);
 
   const fetchItems = useCallback(async () => {
     setLoading(true);
     try {
-      const response = await getSalaryCompensationsList();
+      const response = await getSalaryCompensationsList(filters);
       if (response.success) {
         setItems(Array.isArray(response.data) ? response.data : []);
+        setMetaData(response.metaData || null);
       } else {
         setError(response.error);
       }
@@ -20,7 +25,13 @@ export const useSalaryCompensations = () => {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [
+    filters.page,
+    filters.limit,
+    filters.date,
+    filters.sortBy,
+    filters.sortOrder,
+  ]);
 
   useEffect(() => {
     fetchItems();
@@ -40,5 +51,12 @@ export const useSalaryCompensations = () => {
     }
   };
 
-  return { items, loading, error, refetch: fetchItems, deleteSalaryCompensation };
+  return {
+    items,
+    loading,
+    error,
+    metaData,
+    refetch: fetchItems,
+    deleteSalaryCompensation,
+  };
 };
