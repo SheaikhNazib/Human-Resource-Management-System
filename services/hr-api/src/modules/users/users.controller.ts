@@ -59,10 +59,10 @@ export class UsersController {
                     success: false, data: null, message: 'Job title not found!'
                 });
             }
-            const employeeData = createEmployeeObjectForUser({ ...createDto, emp_department: department.id, emp_job_title: jobTitle.id });
+            const hashPassword = await bcrypt.hash(createDto.password, 10);
+            const employeeData = createEmployeeObjectForUser({ ...createDto, password: hashPassword, emp_department: department.id, emp_job_title: jobTitle.id });
 
-            createDto.password = await bcrypt.hash(createDto.password, 10);
-            const createdUser = await this.usersService.create(createDto);
+            const createdUser = await this.usersService.create({ ...createDto, password: hashPassword });
             await this.employeesService.create(employeeData);
 
             return res.status(HttpStatus.CREATED).json({
