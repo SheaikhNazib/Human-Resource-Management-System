@@ -31,7 +31,7 @@ export class EmpAttendancesController {
   }
 
   @Post('bulk')
-  @RequireRoles(Roles.SUPER_ADMIN, Roles.HR_MANAGER, Roles.MANAGER)
+  @RequireRoles(Roles.SUPER_ADMIN, Roles.HR_MANAGER, Roles.MANAGER, Roles.ACCOUNTANT)
   @ApiOperation({ summary: 'Bulk create employee attendances' })
   @ApiBody({ type: BulkCreateEmpAttendanceDto })
   @ApiResponse({ status: 201, description: 'Attendances created successfully' })
@@ -68,7 +68,7 @@ export class EmpAttendancesController {
   }
 
   @Get()
-  @RequireRoles(Roles.SUPER_ADMIN, Roles.HR_MANAGER, Roles.MANAGER)
+  @RequireRoles(Roles.SUPER_ADMIN, Roles.HR_MANAGER, Roles.MANAGER, Roles.ACCOUNTANT)
   @ApiOperation({ summary: 'Get all employee attendances' })
   @ApiResponse({ status: 200, description: 'List of attendances' })
   @ApiQuery({ name: 'page', type: Number, required: false, example: 1 })
@@ -92,7 +92,7 @@ export class EmpAttendancesController {
   }
 
   @Get('total-attendance-count')
-  @RequireRoles(Roles.SUPER_ADMIN, Roles.HR_MANAGER, Roles.MANAGER)
+  @RequireRoles(Roles.SUPER_ADMIN, Roles.HR_MANAGER, Roles.MANAGER, Roles.ACCOUNTANT)
   @ApiQuery({ name: 'date', type: String, required: false, example: '2025-11-26', description: 'Date in YYYY-MM-DD format. If not provided, uses current date.' })
   @ApiOperation({ summary: 'Get total attendance count for a specific date' })
   @ApiResponse({ status: 200, description: 'Total attendance count for the specified date' })
@@ -114,7 +114,7 @@ export class EmpAttendancesController {
   }
 
   @Get('attendance-overview')
-  @RequireRoles(Roles.SUPER_ADMIN, Roles.HR_MANAGER, Roles.MANAGER)
+  @RequireRoles(Roles.SUPER_ADMIN, Roles.HR_MANAGER, Roles.MANAGER, Roles.ACCOUNTANT)
   @ApiOperation({ summary: 'Get attendance overview statistics (On Time, Late, Remote counts)' })
   @ApiQuery({ name: 'startDate', type: String, required: true, example: getDateExamples().startDate, description: 'Start date in YYYY-MM-DD format' })
   @ApiQuery({ name: 'endDate', type: String, required: true, example: getDateExamples().endDate, description: 'End date in YYYY-MM-DD format' })
@@ -146,7 +146,7 @@ export class EmpAttendancesController {
   }
 
   @Get(':id')
-  @RequireRoles(Roles.SUPER_ADMIN, Roles.HR_MANAGER, Roles.MANAGER)
+  @RequireRoles(Roles.SUPER_ADMIN, Roles.HR_MANAGER, Roles.MANAGER, Roles.ACCOUNTANT)
   @ApiOperation({ summary: 'Get attendance by id' })
   @ApiParam({ name: 'id', type: Number })
   @ApiResponse({ status: 200, description: 'Attendance found' })
@@ -155,7 +155,7 @@ export class EmpAttendancesController {
   }
 
   @Patch(':id')
-  @RequireRoles(Roles.SUPER_ADMIN, Roles.HR_MANAGER, Roles.MANAGER)
+  @RequireRoles(Roles.SUPER_ADMIN, Roles.HR_MANAGER, Roles.MANAGER, Roles.ACCOUNTANT)
   @ApiOperation({ summary: 'Update attendance by id' })
   @ApiParam({ name: 'id', type: Number })
   @ApiBody({ type: UpdateEmpAttendanceDto })

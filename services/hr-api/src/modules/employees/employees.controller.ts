@@ -25,7 +25,7 @@ export class EmployeesController {
   ) { }
 
   @Post()
-  @RequireRoles(Roles.SUPER_ADMIN, Roles.HR_MANAGER, Roles.MANAGER)
+  @RequireRoles(Roles.SUPER_ADMIN, Roles.HR_MANAGER, Roles.MANAGER, Roles.ACCOUNTANT)
   @ApiOperation({ summary: 'Create employee' })
   @ApiBody({ type: CreateEmployeeDto })
   @ApiResponse({ status: 201, description: 'Employee created successfully.' })
@@ -77,7 +77,7 @@ export class EmployeesController {
   }
 
   @Post('bulk-create')
-  @RequireRoles(Roles.SUPER_ADMIN, Roles.HR_MANAGER, Roles.MANAGER)
+  @RequireRoles(Roles.SUPER_ADMIN, Roles.HR_MANAGER, Roles.MANAGER, Roles.ACCOUNTANT)
   @ApiOperation({ summary: 'Bulk create employees' })
   @ApiBody({ type: [CreateEmployeeDto] })
   @ApiResponse({ status: 201, description: 'Employee created successfully.' })
@@ -164,7 +164,7 @@ export class EmployeesController {
   }
 
   @Get()
-  @RequireRoles(Roles.SUPER_ADMIN, Roles.HR_MANAGER, Roles.MANAGER)
+  @RequireRoles(Roles.SUPER_ADMIN, Roles.HR_MANAGER, Roles.MANAGER, Roles.ACCOUNTANT)
   @ApiOperation({ summary: 'Get all employees' })
   @ApiResponse({ status: 200, description: 'List of employees.' })
   async findAll(
@@ -194,7 +194,7 @@ export class EmployeesController {
   }
 
   @Get(':id')
-  @RequireRoles(Roles.SUPER_ADMIN, Roles.HR_MANAGER, Roles.MANAGER, Roles.EMPLOYEE)
+  @RequireRoles(Roles.SUPER_ADMIN, Roles.HR_MANAGER, Roles.MANAGER, Roles.ACCOUNTANT, Roles.EMPLOYEE)
   @ApiOperation({ summary: 'Get employee by ID' })
   @ApiParam({ name: 'id', type: Number })
   @ApiResponse({ status: 200, description: 'Employee details.' })
@@ -218,7 +218,7 @@ export class EmployeesController {
   }
 
   @Patch(':id')
-  @RequireRoles(Roles.SUPER_ADMIN, Roles.HR_MANAGER, Roles.MANAGER)
+  @RequireRoles(Roles.SUPER_ADMIN, Roles.HR_MANAGER, Roles.MANAGER, Roles.ACCOUNTANT)
   @ApiOperation({ summary: 'Update employee' })
   @ApiParam({ name: 'id', type: Number })
   @ApiBody({ type: UpdateEmployeeDto })

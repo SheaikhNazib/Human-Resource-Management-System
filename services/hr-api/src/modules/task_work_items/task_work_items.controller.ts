@@ -11,7 +11,7 @@ import { Roles } from 'src/common/guards/roles.enum';
 
 @ApiTags('TaskWorkItems')
 @UseGuards(JwtAuthGuard, RolesGuard)
-@RequireRoles(Roles.SUPER_ADMIN, Roles.HR_MANAGER, Roles.MANAGER, Roles.EMPLOYEE)
+@RequireRoles(Roles.SUPER_ADMIN, Roles.HR_MANAGER, Roles.MANAGER, Roles.ACCOUNTANT, Roles.EMPLOYEE)
 @ApiBearerAuth('JWT-auth')
 @Controller('task-work-items')
 export class TaskWorkItemsController {

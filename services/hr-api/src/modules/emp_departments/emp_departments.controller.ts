@@ -17,7 +17,7 @@ export class EmpDepartmentsController {
   constructor(private readonly empDepartmentsService: EmpDepartmentsService) {}
 
   @Post()
-  @RequireRoles(Roles.SUPER_ADMIN, Roles.HR_MANAGER, Roles.MANAGER)
+  @RequireRoles(Roles.SUPER_ADMIN, Roles.HR_MANAGER, Roles.MANAGER, Roles.ACCOUNTANT)
   @ApiOperation({ summary: 'Create department' })
   @ApiBody({ type: CreateEmpDepartmentDto })
   @ApiResponse({ status: 201, description: 'Department created' })
@@ -26,7 +26,7 @@ export class EmpDepartmentsController {
   }
 
   @Get()
-  @RequireRoles(Roles.SUPER_ADMIN, Roles.HR_MANAGER, Roles.MANAGER, Roles.EMPLOYEE)
+  @RequireRoles(Roles.SUPER_ADMIN, Roles.HR_MANAGER, Roles.MANAGER, Roles.ACCOUNTANT, Roles.EMPLOYEE)
   @ApiQuery({ name: 'page', type: Number, required: false, example: 1 })
   @ApiQuery({ name: 'limit', type: Number, required: false, example: 10 })
   @ApiQuery({ name: 'sortBy', type: String, required: false, enum: ['createdAt', 'updatedAt'], example: 'createdAt' })
@@ -48,7 +48,7 @@ export class EmpDepartmentsController {
   }
 
   @Get(':id')
-  @RequireRoles(Roles.SUPER_ADMIN, Roles.HR_MANAGER, Roles.MANAGER, Roles.EMPLOYEE)
+  @RequireRoles(Roles.SUPER_ADMIN, Roles.HR_MANAGER, Roles.MANAGER, Roles.ACCOUNTANT, Roles.EMPLOYEE)
   @ApiOperation({ summary: 'Get department by id' })
   @ApiParam({ name: 'id', type: Number })
   @ApiResponse({ status: 200, description: 'Department found' })
@@ -57,7 +57,7 @@ export class EmpDepartmentsController {
   }
 
   @Patch(':id')
-  @RequireRoles(Roles.SUPER_ADMIN, Roles.HR_MANAGER, Roles.MANAGER)
+  @RequireRoles(Roles.SUPER_ADMIN, Roles.HR_MANAGER, Roles.MANAGER, Roles.ACCOUNTANT)
   @ApiOperation({ summary: 'Update department by id' })
   @ApiParam({ name: 'id', type: Number })
   @ApiBody({ type: UpdateEmpDepartmentDto })
