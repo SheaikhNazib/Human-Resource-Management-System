@@ -45,7 +45,9 @@ export default function Header({ onOpen }) {
           <>
             <div className="hidden sm:flex flex-col items-end">
               <span className="text-zinc-700 dark:text-zinc-300 text-sm font-medium">
-                {user.email || user.work_email || user.personal_email}
+                {user.first_name && user.last_name
+                  ? `${user.first_name} ${user.last_name}`
+                  : user.name || user.email || user.work_email || user.personal_email}
               </span>
               <span className="text-zinc-500 dark:text-zinc-400 text-xs capitalize">
                 {user.role ? user.role.replace('_', ' ') : 'User'}

@@ -41,11 +41,20 @@ export default function Sidebar({ open, onClose }) {
 
   // Define all navigation links
   const allNavLinks = [
+    // Employee Dashboard - only for employees
+    {
+      href: "/employee-dashboard",
+      label: "My Dashboard",
+      icon: LayoutDashboard,
+      allowedRoles: ["employee"],
+    },
+    
+    // Admin Dashboard - for all except employees
     {
       href: "/dashboard",
       label: "Dashboard",
       icon: LayoutDashboard,
-      allowedRoles: ["super_admin", "admin", "accountant", "hr", "hr_manager", "manager", "employee"],
+      allowedRoles: ["super_admin", "admin", "accountant", "hr", "hr_manager", "manager"],
     },
 
     {
