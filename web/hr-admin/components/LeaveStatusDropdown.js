@@ -4,13 +4,16 @@ import React, { useState, useRef, useEffect } from "react";
 const LeaveStatusDropdown = ({ currentStatus, onStatusChange, leaveId, disabled = false }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [isUpdating, setIsUpdating] = useState(false);
+  const [dropdownPosition, setDropdownPosition] = useState({ top: 0, left: 0, openUpward: false });
   const dropdownRef = useRef(null);
+  const menuRef = useRef(null);
 
   const statusOptions = [
     { value: "pending", label: "Pending", color: "bg-yellow-100 text-yellow-700 hover:bg-yellow-200" },
     { value: "approved", label: "Approved", color: "bg-green-100 text-green-700 hover:bg-green-200" },
+    { value: "unpaid approved", label: "Unpaid Approved", color: "bg-amber-100 text-amber-800 hover:bg-amber-200" },
     { value: "rejected", label: "Rejected", color: "bg-red-100 text-red-700 hover:bg-red-200" },
-    { value: "cancelled", label: "Cancelled", color: "bg-gray-100 text-gray-700 hover:bg-gray-200" },
+
   ];
 
   const currentStatusObj = statusOptions.find(
@@ -31,6 +34,25 @@ const LeaveStatusDropdown = ({ currentStatus, onStatusChange, leaveId, disabled 
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
     };
+  }, [isOpen]);
+
+  useEffect(() => {
+    if (isOpen && dropdownRef.current) {
+      const rect = dropdownRef.current.getBoundingClientRect();
+      const menuHeight = 200; // Approximate height of dropdown menu
+      const viewportHeight = window.innerHeight;
+      const spaceBelow = viewportHeight - rect.bottom;
+      const spaceAbove = rect.top;
+      
+      // Determine if dropdown should open upward
+      const openUpward = spaceBelow < menuHeight && spaceAbove > spaceBelow;
+      
+      setDropdownPosition({
+        top: openUpward ? rect.top + window.scrollY - menuHeight - 8 : rect.bottom + window.scrollY + 8,
+        left: rect.left + window.scrollX,
+        openUpward
+      });
+    }
   }, [isOpen]);
 
   const handleStatusChange = async (newStatus) => {
@@ -98,10 +120,14 @@ const LeaveStatusDropdown = ({ currentStatus, onStatusChange, leaveId, disabled 
       </button>
 
       {isOpen && !disabled && !isUpdating && (
-        <div className="fixed z-9999 mt-2 w-40 rounded-lg shadow-xl bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 overflow-hidden" 
+        <div 
+          ref={menuRef}
+          className="fixed z-9999 w-40 rounded-lg shadow-xl bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 overflow-hidden" 
           style={{
-            top: dropdownRef.current?.getBoundingClientRect().bottom + window.scrollY + 8 + 'px',
-            left: dropdownRef.current?.getBoundingClientRect().left + window.scrollX + 'px'
+            top: `${dropdownPosition.top}px`,
+            left: `${dropdownPosition.left}px`,
+            maxHeight: '240px',
+            overflowY: 'auto'
           }}>
           <div className="py-1">
             {statusOptions.map((option) => (
@@ -155,6 +181,12 @@ const StatusIcon = ({ status }) => {
           <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
         </svg>
       );
+    case "unpaid approved":
+      return (
+        <svg className={iconClass} fill="currentColor" viewBox="0 0 20 20">
+          <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+        </svg>
+      );
     case "rejected":
       return (
         <svg className={iconClass} fill="currentColor" viewBox="0 0 20 20">
@@ -178,6 +210,8 @@ const getTextColor = (status) => {
       return "text-yellow-700 dark:text-yellow-300";
     case "approved":
       return "text-green-700 dark:text-green-300";
+    case "unpaid approved":
+      return "text-amber-700 dark:text-amber-300";
     case "rejected":
       return "text-red-700 dark:text-red-300";
     case "cancelled":

@@ -21,6 +21,8 @@ export default function SalaryCompensationsPage() {
   const [attendances, setAttendances] = useState([]);
   const [isCalculating, setIsCalculating] = useState(false);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [deleteItemId, setDeleteItemId] = useState(null);
   const [selectedMonth, setSelectedMonth] = useState("");
   const [selectedYear, setSelectedYear] = useState("");
   const router = useRouter();
@@ -58,13 +60,19 @@ export default function SalaryCompensationsPage() {
   }
 
   async function handleDelete(id) {
-    const confirmed = confirm("Are you sure you want to delete this salary compensation record?");
-    if (!confirmed) return;
+    setDeleteItemId(id);
+    setShowDeleteModal(true);
+  }
 
-    const result = await deleteSalaryCompensation(id);
+  async function proceedWithDelete() {
+    if (!deleteItemId) return;
+
+    setShowDeleteModal(false);
+    const result = await deleteSalaryCompensation(deleteItemId);
     if (!result.success) {
-      alert(result.error || "Delete failed");
+      toast.error(result.error || "Delete failed");
     }
+    setDeleteItemId(null);
   }
 
   async function handleAutoCalculateAll() {
@@ -347,34 +355,6 @@ export default function SalaryCompensationsPage() {
         </div>
       ),
     },
-    {
-      header: "Status",
-      accessor: "status",
-      render: (item) => {
-        const payableDate = item.payableDate ? new Date(item.payableDate) : null;
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
-        
-        let status = "Pending";
-        let colorClass = "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400";
-        
-        if (payableDate) {
-          if (payableDate <= today) {
-            status = "Paid";
-            colorClass = "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400";
-          } else {
-            status = "Scheduled";
-            colorClass = "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400";
-          }
-        }
-        
-        return (
-          <span className={`px-2 py-1 rounded-full text-xs font-medium ${colorClass}`}>
-            {status}
-          </span>
-        );
-      },
-    },
   ];
 
   const renderActions = (item) => {
@@ -590,6 +570,51 @@ export default function SalaryCompensationsPage() {
                 className="flex-1 px-4 py-2.5 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-lg hover:from-purple-700 hover:to-blue-700 transition-all font-medium shadow-md hover:shadow-lg"
               >
                 Continue
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {showDeleteModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white dark:bg-zinc-800 rounded-xl shadow-2xl max-w-md w-full p-6 transform transition-all">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-12 h-12 rounded-full bg-gradient-to-br from-red-100 to-red-100 dark:from-red-900 dark:to-red-900 flex items-center justify-center">
+                <span className="text-2xl">🗑️</span>
+              </div>
+              <h3 className="text-xl font-bold text-zinc-800 dark:text-zinc-100">
+                Delete Salary Record
+              </h3>
+            </div>
+            
+            <p className="text-zinc-600 dark:text-zinc-300 mb-6">
+              Are you sure you want to delete this salary compensation record? This action cannot be undone.
+            </p>
+
+            <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-700 rounded-lg p-3 mb-6">
+              <p className="text-sm text-red-800 dark:text-red-300 flex items-start gap-2">
+                <span className="text-lg">⚠️</span>
+                <span>This will permanently remove the salary compensation record and cannot be recovered.</span>
+              </p>
+            </div>
+            
+            <div className="flex gap-3">
+              <button
+                onClick={() => {
+                  setShowDeleteModal(false);
+                  setDeleteItemId(null);
+                }}
+                className="flex-1 px-4 py-2.5 bg-zinc-200 dark:bg-zinc-700 text-zinc-800 dark:text-zinc-200 rounded-lg hover:bg-zinc-300 dark:hover:bg-zinc-600 transition-colors font-medium"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={proceedWithDelete}
+                className="flex-1 px-4 py-2.5 bg-gradient-to-r from-red-600 to-red-600 text-white rounded-lg hover:from-red-700 hover:to-red-700 transition-all font-medium shadow-md hover:shadow-lg"
+              >
+                Delete
               </button>
             </div>
           </div>

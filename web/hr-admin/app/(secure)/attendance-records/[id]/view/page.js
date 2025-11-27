@@ -153,7 +153,7 @@ const AttendanceDetailsPage = () => {
               </h2>
             </div>
             <div className="space-y-4">
-              <InfoRow label="Attendance ID" value={attendance.id} />
+              {/* <InfoRow label="Attendance ID" value={attendance.id} /> */}
               <InfoRow label="Date" value={formatDate(attendance.date)} />
               <InfoRow
                 label="Employee"

@@ -149,29 +149,6 @@ export const useLeavePolicy = (joinDate, leaves = []) => {
     const sickRemaining = Math.max(0, sickTotal - leavesByType.sick);
     const annualRemaining = Math.max(0, annualTotal - leavesByType.annual);
 
-    console.log('Leave Policy Calculation:', {
-      monthsSinceJoining,
-      monthsWorkedThisYear,
-      leavesByType,
-      totals: { casual: casualTotal, sick: sickTotal, annual: annualTotal },
-      remaining: { casual: casualRemaining, sick: sickRemaining, annual: annualRemaining },
-      allLeaves: leaves.map(l => ({
-        reason: l.reason,
-        inferredType: inferLeaveType(l.reason),
-        leave_days: l.leave_days,
-        startDate: l.startDate,
-        endDate: l.endDate,
-        status: l.status,
-        isApproved: l.status?.toLowerCase() === 'approved'
-      })),
-      approvedLeaves: leaves.filter(l => l.status?.toLowerCase() === 'approved').map(l => ({
-        reason: l.reason,
-        type: inferLeaveType(l.reason),
-        days: l.leave_days || 'missing',
-        status: l.status
-      }))
-    });
-
     return {
       casual: {
         total: casualTotal,
@@ -197,6 +174,13 @@ export const useLeavePolicy = (joinDate, leaves = []) => {
       isEligibleForSick,
       isEligibleForAnnual,
       inferLeaveType,
+      // Convenience properties for direct access
+      casualUsed: leavesByType.casual,
+      sickUsed: leavesByType.sick,
+      annualUsed: leavesByType.annual,
+      casualAllowed: casualTotal,
+      sickAllowed: sickTotal,
+      annualAllowed: annualTotal,
     };
   }, [joinDate, leaves]);
 };

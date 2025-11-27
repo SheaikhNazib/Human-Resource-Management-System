@@ -16,51 +16,69 @@ import { useLeavePolicy } from "@/hooks/useLeavePolicy";
  */
 const LeavesPanel = ({ employeeId, isActive, employee }) => {
   const { leaves: allLeaves, loading, error } = useLeaves();
-  const [employeeLeaves, setEmployeeLeaves] = useState([]);
   const [hasLoaded, setHasLoaded] = useState(false);
-  const [summary, setSummary] = useState({
-    total: 0,
-    approved: 0,
-    pending: 0,
-    denied: 0,
-  });
 
-  // Calculate leave policy based on employee's hire date
-  const leavePolicy = useLeavePolicy(employee?.hire_date, employeeLeaves);
-
-  useEffect(() => {
-    if (!allLeaves.length) return;
-
-    // Filter leaves for this employee (always keep cache updated)
-    const filtered = allLeaves.filter((leave) => {
-      // Handle various employee ID formats
-      const leaveEmpId =
-        leave.employeeId || leave.employee_id || leave.employee;
-      // Skip if no employee ID found
+  // Memoize filtered leaves to avoid recalculation on every render
+  const employeeLeaves = React.useMemo(() => {
+    if (!allLeaves.length) return [];
+    
+    return allLeaves.filter((leave) => {
+      const leaveEmpId = leave.employeeId || leave.employee_id || leave.employee;
       if (!leaveEmpId) return false;
       return String(leaveEmpId) === String(employeeId);
     });
+  }, [allLeaves, employeeId]);
 
-    // Calculate summary
-    const newSummary = {
-      total: filtered.length,
-      approved: filtered.filter(
-        (l) => String(l.status).toLowerCase() === "approved"
-      ).length,
-      pending: filtered.filter(
-        (l) => String(l.status).toLowerCase() === "pending"
-      ).length,
-      denied: filtered.filter((l) =>
-        ["denied", "rejected"].includes(String(l.status).toLowerCase())
-      ).length,
+  // Memoize summary calculation
+  const summary = React.useMemo(() => {
+    if (!employeeLeaves.length) {
+      return {
+        total: 0,
+        approved: 0,
+        pending: 0,
+        denied: 0,
+        unpaid: 0,
+      };
+    }
+
+    const summary = {
+      total: employeeLeaves.length,
+      approved: 0,
+      pending: 0,
+      denied: 0,
+      unpaid: 0,
     };
 
-    setEmployeeLeaves(filtered);
-    setSummary(newSummary);
-    if (filtered.length > 0 || !loading) {
+    for (const leave of employeeLeaves) {
+      const status = String(leave.status).toLowerCase();
+      if (status === "approved") {
+        summary.approved++;
+      } else if (status === "pending") {
+        summary.pending++;
+      } else if (status === "denied" || status === "rejected") {
+        summary.denied++;
+      } else if (status === "unpaid approved") {
+        summary.unpaid++;
+      }
+    }
+
+    return summary;
+  }, [employeeLeaves]);
+
+  // Calculate leave policy based on employee's hire date (only for approved leaves)
+  const approvedLeaves = React.useMemo(() => {
+    return employeeLeaves.filter(
+      (l) => String(l.status).toLowerCase() === "approved" || String(l.status).toLowerCase() === "unpaid approved"
+    );
+  }, [employeeLeaves]);
+
+  const leavePolicy = useLeavePolicy(employee?.hire_date, approvedLeaves);
+
+  useEffect(() => {
+    if ((employeeLeaves.length > 0 || !loading) && !hasLoaded) {
       setHasLoaded(true);
     }
-  }, [allLeaves, employeeId, loading]);
+  }, [employeeLeaves.length, loading, hasLoaded]);
 
   if (!isActive) {
     // Keep component mounted but hidden to preserve cached data
@@ -102,26 +120,31 @@ const LeavesPanel = ({ employeeId, isActive, employee }) => {
         <LeaveSummaryCard leavePolicy={leavePolicy} employee={employee} />
 
         {/* Status Summary Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
           <SummaryCard
             label="Total Requests"
             value={summary.total}
-            color="bg-blue-100 text-blue-800"
+            color="bg-blue-100 text-blue-800 dark:bg-blue-900/20 dark:text-blue-400"
           />
           <SummaryCard
             label="Approved"
             value={summary.approved}
-            color="bg-green-100 text-green-800"
+            color="bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400"
           />
           <SummaryCard
             label="Pending"
             value={summary.pending}
-            color="bg-yellow-100 text-yellow-800"
+            color="bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-400"
           />
           <SummaryCard
             label="Denied"
             value={summary.denied}
-            color="bg-red-100 text-red-800"
+            color="bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-400"
+          />
+          <SummaryCard
+            label="Unpaid Leaves"
+            value={summary.unpaid}
+            color="bg-orange-100 text-orange-800 dark:bg-orange-900/20 dark:text-orange-400"
           />
         </div>
 
@@ -160,8 +183,8 @@ const LoadingSkeleton = () => {
   return (
     <div className="max-w-6xl mx-auto px-4 py-6">
       {/* Summary skeleton */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-        {[1, 2, 3, 4].map((i) => (
+      <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
+        {[1, 2, 3, 4, 5].map((i) => (
           <div
             key={i}
             className="bg-white dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 rounded-lg p-4"
