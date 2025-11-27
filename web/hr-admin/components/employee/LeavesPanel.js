@@ -112,15 +112,6 @@ const LeavesPanel = ({ employeeId, isActive, employee }) => {
     return <ErrorState message={msg} onRetry={() => refetch && refetch()} />;
   }
 
-  if (employeeLeaves.length === 0 && hasLoaded) {
-    return (
-      <EmptyState
-        message="No leave records found for this employee"
-        icon={Calendar}
-      />
-    );
-  }
-
   // Show cached data even if currently loading (for refresh scenarios)
   if (employeeLeaves.length === 0 && !hasLoaded) {
     return <LoadingSkeleton />;
@@ -168,19 +159,33 @@ const LeavesPanel = ({ employeeId, isActive, employee }) => {
 
         {/* Leave List Header */}
         <div className="mb-4 flex items-center justify-between">
-          <h2 className="text-2xl font-bold text-gray-900">Leave History</h2>
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-zinc-100">Leave History</h2>
         </div>
 
-        {/* Leave Items */}
-        <div className="space-y-4">
-          {employeeLeaves.map((leave) => (
-            <LeaveItem
-              key={leave.id}
-              leave={leave}
-              inferLeaveType={leavePolicy.inferLeaveType}
-            />
-          ))}
-        </div>
+        {/* Leave Items or Empty State */}
+        {employeeLeaves.length === 0 ? (
+          <div className="bg-gray-50 dark:bg-zinc-900/50 border border-gray-200 dark:border-zinc-800 rounded-lg p-8 text-center">
+            <div className="w-16 h-16 bg-gray-200 dark:bg-zinc-700 rounded-full flex items-center justify-center mx-auto mb-4">
+              <Calendar className="w-8 h-8 text-gray-600 dark:text-zinc-400" />
+            </div>
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-zinc-100 mb-2">
+              No Leave Records
+            </h3>
+            <p className="text-gray-600 dark:text-zinc-400">
+              This employee has not submitted any leave requests yet.
+            </p>
+          </div>
+        ) : (
+          <div className="space-y-4">
+            {employeeLeaves.map((leave) => (
+              <LeaveItem
+                key={leave.id}
+                leave={leave}
+                inferLeaveType={leavePolicy.inferLeaveType}
+              />
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );

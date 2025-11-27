@@ -5,7 +5,9 @@ import { Api_path } from "@/constant/api-path";
 
 export async function getEmployeesList() {
   try {
-    const response = await fetchFromApi(Api_path.EMPLOYEE.LIST);
+    const response = await fetchFromApi(Api_path.EMPLOYEE.LIST, {
+      params: { page: 1, limit: 100 }
+    });
     console.log(
       "Raw employees response from backend:",
       JSON.stringify(response)
