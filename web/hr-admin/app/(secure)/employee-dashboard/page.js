@@ -183,6 +183,7 @@ const EmployeeDashboardPage = () => {
             employeeId={employee.id}
             isActive={activeTab === "leaves"}
             employee={employee}
+            canRequestLeave={true}
           />
         )}
       </div>
