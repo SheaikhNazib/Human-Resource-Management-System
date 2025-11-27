@@ -54,13 +54,12 @@ export class UsersController {
                     success: false, data: null, message: 'Department not found!'
                 });
             }
-            if (!jobTitle || !jobTitle.data) {
+            if (!jobTitle) {
                 return res.status(HttpStatus.BAD_REQUEST).json({
                     success: false, data: null, message: 'Job title not found!'
                 });
             }
-
-            const employeeData = createEmployeeObjectForUser({ ...createDto, emp_department: department.id, emp_job_title: jobTitle.data.id });
+            const employeeData = createEmployeeObjectForUser({ ...createDto, emp_department: department.id, emp_job_title: jobTitle.id });
 
             createDto.password = await bcrypt.hash(createDto.password, 10);
             const createdUser = await this.usersService.create(createDto);
