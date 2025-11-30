@@ -53,15 +53,6 @@ export default function TasksListPage() {
       },
     },
     {
-      header: "Description",
-      accessor: "description",
-      render: (t) => (
-        <div className="text-sm text-zinc-600 truncate max-w-xl">
-          {t.description || t.raw?.description || "—"}
-        </div>
-      ),
-    },
-    {
       header: "Start",
       accessor: "start_date_time",
       render: (t) => t.start_date_time || "—",

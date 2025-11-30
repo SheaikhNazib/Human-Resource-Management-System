@@ -46,12 +46,6 @@ export default function Sidebar({ open, onClose }) {
     },
 
     {
-      href: "/departments",
-      label: "Departments",
-      icon: Building2,
-    },
-
-    {
       label: "Employee Management",
       icon: IdCardLanyard,
       children: [
@@ -64,13 +58,6 @@ export default function Sidebar({ open, onClose }) {
         },
         { href: "/leaves", label: "Leaves", icon: FileText },
         { href: "/performance", label: "Performance", icon: Wallet },
-      ],
-    },
-
-    {
-      label: "Salary Compensation",
-      icon: DollarSign,
-      children: [
         {
           href: "/salary-compensations/salary-list",
           label: "Salary List",
@@ -79,10 +66,39 @@ export default function Sidebar({ open, onClose }) {
       ],
     },
 
+    // {
+    //   label: "Salary Compensation",
+    //   icon: DollarSign,
+    //   children: [
+    //     {
+    //       href: "/salary-compensations/salary-list",
+    //       label: "Salary List",
+    //       icon: CreditCard,
+    //     },
+    //   ],
+    // },
+
     {
-      href: "/tasks",
-      label: "Tasks",
+      label: "Task Management",
       icon: Calendar,
+      children: [
+        {
+          href: "/tasks/list",
+          label: "Task List",
+          icon: Calendar,
+        },
+        {
+          href: "/tasks",
+          label: "My Tasks",
+          icon: Calendar,
+        },
+      ],
+    },
+
+    {
+      href: "/departments",
+      label: "Departments",
+      icon: Building2,
     },
 
     // Admin access - only visible to super_admin
