@@ -8,6 +8,7 @@ export async function getLeavesList() {
     const response = await fetchFromApi(Api_path.EMPLOYEE_LEAVE.LIST);
 
     const body = response?.data ?? response;
+    console.debug("getLeavesList: raw response body:", body);
     let rawList = [];
     if (Array.isArray(body)) {
       rawList = body;
@@ -19,6 +20,8 @@ export async function getLeavesList() {
       rawList = [];
     }
 
+    console.debug("getLeavesList: rawList length:", Array.isArray(rawList) ? rawList.length : 0);
+
     const data = Array.isArray(rawList)
       ? rawList.map((item) => {
           // Extract employee ID from various possible formats
@@ -29,6 +32,11 @@ export async function getLeavesList() {
             empId = item.employee.id;
           } else {
             empId = item.employee_id || item.employeeId;
+          }
+
+          // Log a short sample to help debug missing employee ids
+          if (!empId) {
+            console.debug("getLeavesList: item missing employee id, employee field:", item.employee, "employee_id:", item.employee_id, "employeeId:", item.employeeId);
           }
 
           const firstName = item.employee?.first_name || "";

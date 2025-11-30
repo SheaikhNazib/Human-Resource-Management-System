@@ -10,6 +10,8 @@ import { Response } from 'express';
 import * as bcrypt from 'bcrypt';
 import { EmpDepartmentsService } from '../emp_departments/emp_departments.service';
 import { EmpJobTitlesService } from '../emp_job_titles/emp_job_titles.service';
+import { RequireRoles } from 'src/common/guards/roles.decorator';
+import { Roles } from 'src/common/guards/roles.enum';
 
 @ApiTags('Employees')
 @UseGuards(JwtAuthGuard, RolesGuard)
@@ -23,6 +25,7 @@ export class EmployeesController {
   ) { }
 
   @Post()
+  @RequireRoles(Roles.SUPER_ADMIN, Roles.HR_MANAGER, Roles.MANAGER, Roles.ACCOUNTANT)
   @ApiOperation({ summary: 'Create employee' })
   @ApiBody({ type: CreateEmployeeDto })
   @ApiResponse({ status: 201, description: 'Employee created successfully.' })
@@ -74,19 +77,17 @@ export class EmployeesController {
   }
 
   @Post('bulk-create')
+  @RequireRoles(Roles.SUPER_ADMIN, Roles.HR_MANAGER, Roles.MANAGER, Roles.ACCOUNTANT)
   @ApiOperation({ summary: 'Bulk create employees' })
   @ApiBody({ type: [CreateEmployeeDto] })
   @ApiResponse({ status: 201, description: 'Employee created successfully.' })
   async bulkCreate(@Body() createDtos: CreateEmployeeDto[], @Res() res: Response) {
     try {
-      // Validate input
       if (!Array.isArray(createDtos) || createDtos.length === 0) {
         return res.status(HttpStatus.BAD_REQUEST).json({
           success: false, data: null, message: 'Please provide an array of employees to create!'
         });
       }
-
-      // Check for duplicate emails within the request
       const workEmails = createDtos.map(dto => dto.work_email);
       const personalEmails = createDtos.map(dto => dto.personal_email);
       const duplicateWorkEmail = workEmails.filter((email, index) => workEmails.indexOf(email) !== index);
@@ -97,14 +98,12 @@ export class EmployeesController {
           success: false, data: null, message: `Duplicate work email found: ${duplicateWorkEmail[0]}`
         });
       }
-      
       if (duplicatePersonalEmail.length > 0) {
         return res.status(HttpStatus.BAD_REQUEST).json({
           success: false, data: null, message: `Duplicate personal email found: ${duplicatePersonalEmail[0]}`
         });
       }
 
-      // Check if emails already exist in database (batch check)
       const allEmails = [...workEmails, ...personalEmails];
       const existingEmployees = await this.employeesService.findByEmails(allEmails);
       
@@ -117,17 +116,14 @@ export class EmployeesController {
         });
       }
 
-      // Collect all unique department IDs and job title IDs
       const departmentIds = [...new Set(createDtos.map(dto => dto.emp_department))];
       const jobTitleIds = [...new Set(createDtos.map(dto => dto.emp_job_title))];
 
-      // Batch validate departments and job titles
       const [departments, jobTitles] = await Promise.all([
         this.empDepartmentsService.findByIds(departmentIds),
         this.empJobTitlesService.findByIds(jobTitleIds)
       ]);
 
-      // Check if all departments exist
       const foundDepartmentIds = departments.map(dept => dept.id);
       const missingDepartmentIds = departmentIds.filter(id => !foundDepartmentIds.includes(id));
       if (missingDepartmentIds.length > 0) {
@@ -136,7 +132,6 @@ export class EmployeesController {
         });
       }
 
-      // Check if all job titles exist
       const foundJobTitleIds = jobTitles.map(job => job.id);
       const missingJobTitleIds = jobTitleIds.filter(id => !foundJobTitleIds.includes(id));
       if (missingJobTitleIds.length > 0) {
@@ -145,19 +140,11 @@ export class EmployeesController {
         });
       }
 
-      // Hash passwords for all employees
       const employeesToCreate = await Promise.all(createDtos.map(async (dto) => {
-        const password = dto.password 
-          ? await bcrypt.hash(dto.password, 10)
-          : await bcrypt.hash('123456', 10); // Default password is 123456
-        
-        return {
-          ...dto,
-          password
-        };
+        const password = dto.password ? await bcrypt.hash(dto.password, 10) : await bcrypt.hash('123456', 10);
+        return { ...dto, password };
       }));
 
-      // Bulk create employees
       const createdEmployees = await this.employeesService.bulkCreate(employeesToCreate);
       
       if (!createdEmployees || createdEmployees.length === 0) {
@@ -170,7 +157,6 @@ export class EmployeesController {
         success: true, data: createdEmployees, message: `${createdEmployees.length} employee(s) created successfully!`
       });
     } catch (error) {
-      console.error(error);
       return res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({
         success: false, data: null, message: 'Internal server error occurred. Please try again later!'
       });
@@ -178,6 +164,7 @@ export class EmployeesController {
   }
 
   @Get()
+  @RequireRoles(Roles.SUPER_ADMIN, Roles.HR_MANAGER, Roles.MANAGER, Roles.ACCOUNTANT)
   @ApiOperation({ summary: 'Get all employees' })
   @ApiResponse({ status: 200, description: 'List of employees.' })
   async findAll(
@@ -187,7 +174,6 @@ export class EmployeesController {
     try {
       const { page = 1, limit = 10, sortBy = 'createdAt', sortOrder = 'asc', ...filters } = query;
       
-      // Build filter object, excluding pagination and sorting params
       const filterObj = Object.keys(filters).length > 0 
         ? Object.fromEntries(Object.entries(filters).filter(([_, value]) => value !== undefined && value !== null && value !== ''))
         : undefined;
@@ -208,6 +194,7 @@ export class EmployeesController {
   }
 
   @Get(':id')
+  @RequireRoles(Roles.SUPER_ADMIN, Roles.HR_MANAGER, Roles.MANAGER, Roles.ACCOUNTANT, Roles.EMPLOYEE)
   @ApiOperation({ summary: 'Get employee by ID' })
   @ApiParam({ name: 'id', type: Number })
   @ApiResponse({ status: 200, description: 'Employee details.' })
@@ -231,6 +218,7 @@ export class EmployeesController {
   }
 
   @Patch(':id')
+  @RequireRoles(Roles.SUPER_ADMIN, Roles.HR_MANAGER, Roles.MANAGER, Roles.ACCOUNTANT)
   @ApiOperation({ summary: 'Update employee' })
   @ApiParam({ name: 'id', type: Number })
   @ApiBody({ type: UpdateEmployeeDto })
@@ -255,6 +243,7 @@ export class EmployeesController {
   }
 
   @Delete(':id')
+  @RequireRoles(Roles.SUPER_ADMIN)
   @ApiOperation({ summary: 'Delete employee' })
   @ApiParam({ name: 'id', type: Number })
   @ApiResponse({ status: 200, description: 'Employee deleted successfully.' })

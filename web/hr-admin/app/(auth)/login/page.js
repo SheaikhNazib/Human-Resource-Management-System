@@ -49,12 +49,12 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-linear-to-br from-blue-50 via-white to-purple-50 dark:from-zinc-950 dark:via-zinc-900 dark:to-zinc-950 p-4">
+    <div className="min-h-screen flex items-center justify-center bg-linear-to-br from-blue-50 via-white to-blue-50 dark:from-zinc-950 dark:via-zinc-900 dark:to-zinc-950 p-4">
       <div className="w-full max-w-md">
         {/* Logo */}
         <div className="flex justify-center mb-8">
           <div className="flex items-center gap-2">
-            <div className="w-10 h-10 rounded bg-linear-to-br from-blue-600 to-purple-500 flex items-center justify-center">
+            <div className="w-10 h-10 rounded bg-linear-to-br from-blue-600 to-blue-700 flex items-center justify-center">
               <div className="w-6 h-6 bg-white rounded shadow" />
             </div>
             <span className="font-bold text-2xl tracking-tight text-zinc-900 dark:text-zinc-100">
@@ -156,7 +156,7 @@ export default function LoginPage() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-linear-to-r from-blue-600 to-purple-500 text-white font-semibold py-3 rounded-lg hover:from-blue-700 hover:to-purple-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-all shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              className="w-full bg-blue-600 text-white font-semibold py-3 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-all shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
             >
               {loading && <Loader2 className="w-5 h-5 animate-spin" />}
               {loading ? "Signing In..." : "Sign In"}

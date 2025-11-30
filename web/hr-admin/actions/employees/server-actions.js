@@ -5,7 +5,9 @@ import { Api_path } from "@/constant/api-path";
 
 export async function getEmployeesList() {
   try {
-    const response = await fetchFromApi(Api_path.EMPLOYEE.LIST);
+    const response = await fetchFromApi(Api_path.EMPLOYEE.LIST, {
+      params: { page: 1, limit: 100 }
+    });
     console.log(
       "Raw employees response from backend:",
       JSON.stringify(response)
@@ -13,15 +15,20 @@ export async function getEmployeesList() {
 
     const body = response?.data ?? response;
     let rawList = [];
+    let metaData = null;
+
     if (Array.isArray(body)) {
       rawList = body;
     } else if (Array.isArray(body.data)) {
       rawList = body.data;
+      metaData = body.metaData;
     } else if (Array.isArray(body?.data?.data)) {
       rawList = body.data.data;
+      metaData = body.data.metaData || body.metaData;
     } else {
       rawList = [];
     }
+
     const data = Array.isArray(rawList)
       ? rawList.map((item) => ({
           id: item.id,
@@ -40,9 +47,37 @@ export async function getEmployeesList() {
         }))
       : [];
 
-    return { success: true, data };
+    return { success: true, data, metaData };
   } catch (error) {
     console.error("Error fetching employees:", error);
+    return { success: false, error: error.message };
+  }
+}
+
+// Get employee statistics
+export async function getEmployeeStats() {
+  try {
+    const response = await fetchFromApi(Api_path.EMPLOYEE.LIST);
+    const body = response?.data ?? response;
+
+    let metaData = null;
+    if (body.metaData) {
+      metaData = body.metaData;
+    } else if (body?.data?.metaData) {
+      metaData = body.data.metaData;
+    }
+
+    const totalEmployees = metaData?.allTotal || 0;
+
+    return {
+      success: true,
+      data: {
+        totalEmployees,
+        metaData,
+      },
+    };
+  } catch (error) {
+    console.error("Error fetching employee stats:", error);
     return { success: false, error: error.message };
   }
 }

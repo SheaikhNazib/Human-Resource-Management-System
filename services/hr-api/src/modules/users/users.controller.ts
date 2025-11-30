@@ -9,34 +9,68 @@ import { Roles } from 'src/common/guards/roles.enum';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import * as bcrypt from 'bcrypt';
+import { EmployeesService } from '../employees/employees.service';
+import { EmpDepartmentsService } from '../emp_departments/emp_departments.service';
+import { EmpJobTitlesService } from '../emp_job_titles/emp_job_titles.service';
+import { createEmployeeObjectForUser } from '../employees/employees.function';
 
 @ApiTags('Users')
 @UseGuards(JwtAuthGuard, RolesGuard)
-@RequireRoles(Roles.SUPER_ADMIN)
 @ApiBearerAuth('JWT-auth')
 @Controller('users')
 export class UsersController {
-    constructor(private readonly usersService: UsersService) { }
+    constructor(
+        private readonly usersService: UsersService,
+        private readonly employeesService: EmployeesService,
+        private readonly empDepartmentsService: EmpDepartmentsService,
+        private readonly empJobTitlesService: EmpJobTitlesService
+    ) { }
 
     @Post()
+    @RequireRoles(Roles.SUPER_ADMIN, Roles.HR_MANAGER, Roles.MANAGER)
     @ApiOperation({ summary: 'Create user' })
     @ApiBody({ type: CreateUserDto })
     @ApiResponse({ status: 201, description: 'User created' })
     async create(@Body() createDto: CreateUserDto, @Res() res: Response) {
         try {
-            const user = await this.usersService.findOneByEmail(createDto.email);
-            if (user) {
+            const [user, employee, department, jobTitle] = await Promise.all([
+                this.usersService.findOneByEmail(createDto.email),
+                this.employeesService.findOneByEmail(createDto.email),
+                this.empDepartmentsService.findOne(createDto.emp_department),
+                this.empJobTitlesService.findOne(createDto.emp_job_title)
+            ]);
+            if(employee) {
                 return res.status(HttpStatus.BAD_REQUEST).json({
-                    success: false, data: null, message: 'User already exists!'
+                    success: false, data: null, message: 'Email already exists as an employee!'
                 });
             }
-            createDto.password = await bcrypt.hash(createDto.password, 10);
-            const createdUser = await this.usersService.create(createDto);
+            if (user) {
+                return res.status(HttpStatus.BAD_REQUEST).json({
+                    success: false, data: null, message: 'Email already exists as a user!'
+                });
+            }
+            if (!department) {
+                return res.status(HttpStatus.BAD_REQUEST).json({
+                    success: false, data: null, message: 'Department not found!'
+                });
+            }
+            if (!jobTitle) {
+                return res.status(HttpStatus.BAD_REQUEST).json({
+                    success: false, data: null, message: 'Job title not found!'
+                });
+            }
+            const hashPassword = await bcrypt.hash(createDto.password, 10);
+            const employeeData = createEmployeeObjectForUser({ ...createDto, password: hashPassword, emp_department: department.id, emp_job_title: jobTitle.id });
+
+            const createdUser = await this.usersService.create({ ...createDto, password: hashPassword });
+            await this.employeesService.create(employeeData);
+
             return res.status(HttpStatus.CREATED).json({
                 success: true, data: createdUser, message: 'User created successfully!'
             });
         }
         catch (error) {
+            console.log('abc ========> ', error);
             return res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({
                 success: false, data: null, message: 'Internal server error occurred. Please try again later!'
             });
@@ -44,6 +78,7 @@ export class UsersController {
     }
 
     @Get()
+    @RequireRoles(Roles.SUPER_ADMIN, Roles.HR_MANAGER, Roles.MANAGER)
     @ApiOperation({ summary: 'Get all users' })
     @ApiResponse({ status: 200, description: 'List of users' })
     async findAll(@Res() res: Response) {
@@ -61,6 +96,7 @@ export class UsersController {
     }
 
     @Get(':id')
+    @RequireRoles(Roles.SUPER_ADMIN, Roles.HR_MANAGER, Roles.MANAGER)
     @ApiOperation({ summary: 'Get user by id' })
     @ApiParam({ name: 'id', type: Number })
     @ApiResponse({ status: 200, description: 'User found' })
@@ -84,6 +120,7 @@ export class UsersController {
     }
 
     @Patch(':id')
+    @RequireRoles(Roles.SUPER_ADMIN, Roles.HR_MANAGER, Roles.MANAGER)
     @ApiOperation({ summary: 'Update user by id' })
     @ApiParam({ name: 'id', type: Number })
     @ApiBody({ type: UpdateUserDto })
@@ -124,6 +161,7 @@ export class UsersController {
     }
 
     @Delete(':id')
+    @RequireRoles(Roles.SUPER_ADMIN)
     @ApiOperation({ summary: 'Delete user by id' })
     @ApiParam({ name: 'id', type: Number })
     @ApiResponse({ status: 200, description: 'User deleted' })

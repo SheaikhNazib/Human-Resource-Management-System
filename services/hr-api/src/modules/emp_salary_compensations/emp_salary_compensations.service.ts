@@ -22,8 +22,53 @@ export class EmpSalaryCompensationsService {
     return this.repo.save(entity);
   }
 
-  findAll() {
-    return this.repo.find({ relations: ['employee'] });
+  async findAll(page: number, limit: number, sortBy: string, sortOrder: string = 'asc', date?: string): Promise<any> {
+    // ASC = newest first (DESC order), DESC = oldest first (ASC order)
+    const orderDirection = sortOrder.toLowerCase() === 'asc' ? 'DESC' : 'ASC';
+    
+    let queryBuilder = this.repo.createQueryBuilder('emp_salary_compensations')
+      .leftJoinAndSelect('emp_salary_compensations.employee', 'employee');
+    
+    if (date) {
+      // Parse the date to get year and month
+      const dateObj = new Date(date);
+      const year = dateObj.getFullYear();
+      const month = dateObj.getMonth() + 1; // getMonth() returns 0-11, so add 1
+      
+      // Calculate start and end of the month
+      const startDate = new Date(year, month - 1, 1);
+      const endDate = new Date(year, month, 0, 23, 59, 59, 999);
+      
+      // Filter by payable_date within the month range (PostgreSQL compatible)
+      queryBuilder.where(
+        'emp_salary_compensations.payable_date >= :startDate AND emp_salary_compensations.payable_date <= :endDate',
+        { startDate, endDate }
+      );
+    }
+    
+    // Get total count
+    const allTotal = await queryBuilder.getCount();
+    
+    // Apply ordering
+    queryBuilder = queryBuilder.orderBy(`emp_salary_compensations.${sortBy}`, orderDirection);
+    
+    // Apply pagination
+    const totalPages = Math.ceil(allTotal / limit);
+    queryBuilder = queryBuilder
+      .skip((page - 1) * limit)
+      .take(limit);
+    
+    const data = await queryBuilder.getMany();
+    
+    return {
+      metaData: {
+        page: +page || 1,
+        limit: +limit || 10,
+        allTotal: +allTotal || 0,
+        totalPages: +totalPages || 0,
+      },
+      data,
+    };
   }
 
   findOne(id: number) {

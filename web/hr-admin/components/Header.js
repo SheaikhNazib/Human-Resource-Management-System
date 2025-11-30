@@ -25,13 +25,16 @@ export default function Header({ onOpen }) {
   return (
     <header className="h-16 bg-white dark:bg-zinc-950 border-b border-zinc-200 dark:border-zinc-800 flex items-center px-4 lg:px-8 justify-between sticky top-0 z-20">
       <div className="flex items-center gap-2 w-full">
-        <button
-          className="lg:hidden p-1 mr-2"
-          onClick={onOpen}
-          aria-label="Open sidebar"
-        >
-          <Menu className="w-6 h-6 text-zinc-700 dark:text-zinc-200" />
-        </button>
+        {/* Only show menu button if onOpen is provided (not for employees) */}
+        {onOpen && (
+          <button
+            className="lg:hidden p-1 mr-2"
+            onClick={onOpen}
+            aria-label="Open sidebar"
+          >
+            <Menu className="w-6 h-6 text-zinc-700 dark:text-zinc-200" />
+          </button>
+        )}
 
         {/* Search bar */}
         <div className="flex-1 flex justify-center"></div>
@@ -45,7 +48,9 @@ export default function Header({ onOpen }) {
           <>
             <div className="hidden sm:flex flex-col items-end">
               <span className="text-zinc-700 dark:text-zinc-300 text-sm font-medium">
-                {user.email || user.work_email || user.personal_email}
+                {user.first_name && user.last_name
+                  ? `${user.first_name} ${user.last_name}`
+                  : user.name || user.email || user.work_email || user.personal_email}
               </span>
               <span className="text-zinc-500 dark:text-zinc-400 text-xs capitalize">
                 {user.role ? user.role.replace('_', ' ') : 'User'}

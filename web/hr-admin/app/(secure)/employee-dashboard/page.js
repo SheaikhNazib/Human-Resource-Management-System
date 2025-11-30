@@ -1,52 +1,63 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { useParams, useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { getEmployeeById } from "@/actions/employees/server-actions";
+import { useAuthContext } from "@/contexts/AuthContext";
 import {
   AlertCircle,
   User,
   Briefcase,
   Calendar,
   Edit,
-  ChevronLeft,
 } from "lucide-react";
 import Loader from "@/components/ui/Loader";
-import { toMessage } from "@/lib/utils";
 import { toast } from "sonner";
 import TabBar from "@/components/employee/TabBar";
 import AboutPanel from "@/components/employee/AboutPanel";
 import TasksPanel from "@/components/employee/TasksPanel";
 import LeavesPanel from "@/components/employee/LeavesPanel";
-import { UserCircle, ClipboardList, CalendarDays } from "lucide-react";
 
 const TABS = [
-  { id: "about", label: "About", icon: UserCircle },
-  { id: "tasks", label: "My Tasks", icon: ClipboardList },
-  { id: "leaves", label: "Leaves", icon: CalendarDays },
+  { id: "about", label: "About", icon: User },
+  { id: "tasks", label: "My Tasks", icon: Briefcase },
+  { id: "leaves", label: "Leaves", icon: Calendar },
 ];
 
-const EmployeeDetailsPage = () => {
-  const params = useParams();
+const EmployeeDashboardPage = () => {
   const router = useRouter();
-  const searchParams = useSearchParams();
+  const { user, loading: authLoading } = useAuthContext();
   const [employee, setEmployee] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [activeTab, setActiveTab] = useState(
-    searchParams.get("tab") || "about"
-  );
+  const [activeTab, setActiveTab] = useState("about");
   const [visitedTabs, setVisitedTabs] = useState(new Set(["about"]));
 
   useEffect(() => {
     const fetchEmployee = async () => {
-      if (!params.id) return;
+      // Wait for auth to load
+      if (authLoading) return;
+
+      // Check if user is an employee
+      if (!user || user.role !== "employee") {
+        toast.error("Access denied. This page is only for employees.");
+        router.push("/dashboard");
+        return;
+      }
+
+      // Get employee ID from user
+      const employeeId = user.id;
+      if (!employeeId) {
+        setError("Employee ID not found");
+        setLoading(false);
+        return;
+      }
 
       setLoading(true);
       setError(null);
 
       try {
-        const response = await getEmployeeById(params.id);
+        const response = await getEmployeeById(employeeId);
 
         if (response.success) {
           setEmployee(response.data);
@@ -63,23 +74,11 @@ const EmployeeDetailsPage = () => {
     };
 
     fetchEmployee();
-  }, [params.id]);
-
-  useEffect(() => {
-    // Sync URL with active tab
-    const tabFromUrl = searchParams.get("tab");
-    if (tabFromUrl && TABS.some((t) => t.id === tabFromUrl)) {
-      setActiveTab(tabFromUrl);
-    }
-  }, [searchParams]);
+  }, [user, authLoading, router]);
 
   const handleTabChange = (tabId) => {
     setActiveTab(tabId);
     setVisitedTabs((prev) => new Set([...prev, tabId]));
-    // Update URL without full page reload
-    const url = new URL(window.location.href);
-    url.searchParams.set("tab", tabId);
-    window.history.pushState({}, "", url.toString());
   };
 
   const getInitials = () => {
@@ -89,13 +88,13 @@ const EmployeeDetailsPage = () => {
     return `${first[0] || ""}${last[0] || ""}`.toUpperCase() || "?";
   };
 
-  if (loading) {
+  if (authLoading || loading) {
     return (
       <div className="min-h-screen bg-gray-50 dark:bg-zinc-950 flex items-center justify-center">
         <div className="text-center">
           <Loader size={48} />
           <p className="mt-4 text-gray-600 dark:text-zinc-400 font-medium">
-            Loading employee details...
+            Loading your dashboard...
           </p>
         </div>
       </div>
@@ -113,13 +112,13 @@ const EmployeeDetailsPage = () => {
             Error
           </h2>
           <p className="text-gray-600 dark:text-zinc-400 mb-6">
-            {error || "Employee not found"}
+            {error || "Unable to load your profile"}
           </p>
           <button
-            onClick={() => router.push("/employees")}
+            onClick={() => router.push("/dashboard")}
             className="px-6 py-3 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition-all"
           >
-            Back to Employees
+            Go to Dashboard
           </button>
         </div>
       </div>
@@ -156,28 +155,6 @@ const EmployeeDetailsPage = () => {
                 </span>
               </div>
             </div>
-            <div className="flex items-center gap-3 flex-wrap">
-              <button
-                onClick={() => router.push("/employees")}
-                className="inline-flex items-center gap-2 h-10 px-3 bg-transparent border border-zinc-200 dark:border-zinc-700 text-zinc-700 dark:text-zinc-200 rounded-md hover:bg-zinc-50 dark:hover:bg-zinc-800 transition"
-                aria-label="Back to employees list"
-                title="Back to employees"
-              >
-                <ChevronLeft className="w-4 h-4" />
-                <span className="text-sm">Back to List</span>
-              </button>
-
-              <button
-                onClick={() => router.push(`/employees/${employee.id}/edit`)}
-                className="inline-flex items-center gap-2 h-10 px-4 bg-blue-600 text-white rounded-md font-semibold hover:bg-blue-700 transition-shadow shadow-md"
-                aria-label="Edit employee profile"
-                title="Edit profile"
-              >
-                <span className="sr-only">Edit employee</span>
-                <Edit className="w-4 h-4" />
-                <span className="text-sm">Edit Profile</span>
-              </button>
-            </div>
           </div>
         </div>
       </div>
@@ -189,38 +166,29 @@ const EmployeeDetailsPage = () => {
       <div className="bg-gray-50 dark:bg-zinc-950 min-h-screen">
         {/* About tab - always rendered since it's the default */}
         {activeTab === "about" && (
-          <div className="animate-tabFadeIn">
-            <AboutPanel employee={employee} loading={false} error={null} />
-          </div>
+          <AboutPanel employee={employee} loading={false} error={null} />
         )}
 
         {/* Tasks tab - only mount after first visit, then keep mounted but hidden */}
         {visitedTabs.has("tasks") && (
-          <div
-            className={activeTab === "tasks" ? "animate-tabFadeIn" : "hidden"}
-          >
-            <TasksPanel
-              employeeId={employee.id}
-              isActive={activeTab === "tasks"}
-            />
-          </div>
+          <TasksPanel
+            employeeId={employee.id}
+            isActive={activeTab === "tasks"}
+          />
         )}
 
         {/* Leaves tab - only mount after first visit, then keep mounted but hidden */}
         {visitedTabs.has("leaves") && (
-          <div
-            className={activeTab === "leaves" ? "animate-tabFadeIn" : "hidden"}
-          >
-            <LeavesPanel
-              employeeId={employee.id}
-              isActive={activeTab === "leaves"}
-              employee={employee}
-            />
-          </div>
+          <LeavesPanel
+            employeeId={employee.id}
+            isActive={activeTab === "leaves"}
+            employee={employee}
+            canRequestLeave={true}
+          />
         )}
       </div>
     </div>
   );
 };
 
-export default EmployeeDetailsPage;
+export default EmployeeDashboardPage;

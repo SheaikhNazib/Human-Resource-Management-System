@@ -6,9 +6,12 @@ import { CreateTaskWorkItemDto } from './dto/create.dto';
 import { UpdateTaskWorkItemDto } from './dto/update.dto';
 import { JwtAuthGuard } from 'src/common/guards/jwt-auth.guard';
 import { RolesGuard } from 'src/common/guards/roles.guard';
+import { RequireRoles } from 'src/common/guards/roles.decorator';
+import { Roles } from 'src/common/guards/roles.enum';
 
 @ApiTags('TaskWorkItems')
 @UseGuards(JwtAuthGuard, RolesGuard)
+@RequireRoles(Roles.SUPER_ADMIN, Roles.HR_MANAGER, Roles.MANAGER, Roles.ACCOUNTANT, Roles.EMPLOYEE)
 @ApiBearerAuth('JWT-auth')
 @Controller('task-work-items')
 export class TaskWorkItemsController {
