@@ -12,6 +12,7 @@ import {
   DollarSign,
   CreditCard,
   ChevronDown,
+  CheckSquare,
 } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
@@ -98,13 +99,13 @@ export default function Sidebar({ open, onClose }) {
         {
           href: "/tasks/list",
           label: "Task List",
-          icon: Calendar,
+          icon: CheckSquare,
         },
-        {
-          href: "/tasks",
-          label: "My Tasks",
-          icon: Calendar,
-        },
+        // {
+        //   href: "/tasks",
+        //   label: "My Tasks",
+        //   icon: CheckSquare,
+        // },
       ],
     },
 
