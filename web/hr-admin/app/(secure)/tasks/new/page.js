@@ -5,6 +5,7 @@ import { Formik, Form, Field, ErrorMessage } from "formik";
 import * as Yup from "yup";
 import { createTaskClient } from '@/actions/tasks/business';
 import { useEmployees } from '@/actions/employees/business';
+import { Calendar, Users, CheckCircle, FileText, Clock } from 'lucide-react';
 
 const validationSchema = Yup.object().shape({
   title: Yup.string().required("Title is required"),
@@ -22,14 +23,19 @@ export default function NewTaskPage() {
 
   return (
     <div className="max-w-4xl mx-auto">
-      <div className="bg-white dark:bg-zinc-900 rounded-xl shadow-lg overflow-hidden">
+      <div className="bg-white dark:bg-zinc-900 rounded-xl shadow-xl overflow-hidden border border-zinc-200 dark:border-zinc-800">
         <div className="flex items-center justify-between p-6 bg-indigo-600">
-          <div>
-            <h1 className="text-2xl font-semibold text-white">Create Task</h1>
-            <p className="text-sm text-indigo-100 mt-1">Fill out the details below to create a new task.</p>
+          <div className="flex items-center gap-3">
+            <div className="p-2 bg-white/20 rounded-lg">
+              <CheckCircle className="w-6 h-6 text-white" />
+            </div>
+            <div>
+              <h1 className="text-2xl font-bold text-white">Create New Task</h1>
+              <p className="text-sm text-indigo-100 mt-1">Fill out the details below to create a new task.</p>
+            </div>
           </div>
-          <div className="text-right">
-            <div className="text-xs text-indigo-100">Quick Tips</div>
+          <div className="text-right hidden sm:block">
+            <div className="text-xs text-indigo-100 uppercase tracking-wide">Quick Tips</div>
             <div className="text-sm text-white/90">Assign employees and set realistic estimates</div>
           </div>
         </div>
@@ -67,76 +73,101 @@ export default function NewTaskPage() {
         }}
       >
           {({ isSubmitting, values, setFieldValue }) => (
-            <Form className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-              <div className="lg:col-span-2 space-y-6">
-                <section className="bg-zinc-50 dark:bg-zinc-800 p-4 rounded-lg">
-                  <h3 className="text-lg font-medium mb-2">Basic Information</h3>
-                  <div className="space-y-4">
-                    <div>
-                      <label className="block text-sm font-medium text-zinc-700">Title <span className="text-red-500">*</span></label>
-                      <Field name="title" className="mt-1 w-full border rounded px-3 py-2 bg-white dark:bg-zinc-900" />
-                      <div className="text-red-500 text-sm"><ErrorMessage name="title" /></div>
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-zinc-700">Description</label>
-                      <Field as="textarea" name="description" className="mt-1 w-full border rounded px-3 py-2 bg-white dark:bg-zinc-900" rows={4} />
-                      <div className="text-red-500 text-sm"><ErrorMessage name="description" /></div>
-                    </div>
+            <Form className="space-y-8">
+              <section className="bg-zinc-50 dark:bg-zinc-800 p-6 rounded-xl border border-zinc-200 dark:border-zinc-700 shadow-sm">
+                <div className="flex items-center gap-3 mb-6">
+                  <div className="p-2 bg-indigo-100 dark:bg-indigo-900 rounded-lg">
+                    <FileText className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
                   </div>
-                </section>
-
-                <section className="bg-zinc-50 dark:bg-zinc-800 p-4 rounded-lg">
-                  <h3 className="text-lg font-medium mb-2">Scheduling</h3>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-sm font-medium text-zinc-700">Start Date <span className="text-red-500">*</span></label>
-                      <Field type="date" name="start_date_time" className="mt-1 w-full border rounded px-3 py-2 bg-white dark:bg-zinc-900" />
-                      <div className="text-red-500 text-sm"><ErrorMessage name="start_date_time" /></div>
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-zinc-700">End Date <span className="text-red-500">*</span></label>
-                      <Field type="date" name="end_date_time" className="mt-1 w-full border rounded px-3 py-2 bg-white dark:bg-zinc-900" />
-                      <div className="text-red-500 text-sm"><ErrorMessage name="end_date_time" /></div>
-                    </div>
+                  <h3 className="text-xl font-semibold text-zinc-900 dark:text-zinc-100">Basic Information</h3>
+                </div>
+                <div className="space-y-6">
+                  <div>
+                    <label className="block text-sm font-semibold text-zinc-700 dark:text-zinc-300 mb-2">Task Title <span className="text-red-500">*</span></label>
+                    <Field name="title" className="w-full border border-zinc-300 dark:border-zinc-600 rounded-lg px-4 py-3 bg-white dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all duration-200" placeholder="Enter task title..." />
+                    <div className="text-red-500 text-sm mt-1"><ErrorMessage name="title" /></div>
                   </div>
 
-                  <div className="mt-4 grid grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-sm font-medium text-zinc-700">Estimated Time</label>
-                      <Field name="estimated_time" className="mt-1 w-full border rounded px-3 py-2 bg-white dark:bg-zinc-900" placeholder="e.g. 5h" />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-zinc-700">Status</label>
-                      <Field as="select" name="task_status" className="mt-1 w-full border rounded px-3 py-2 bg-white dark:bg-zinc-900">
-                        <option value={1}>Open</option>
-                        <option value={2}>In Progress</option>
-                        <option value={3}>Done</option>
-                      </Field>
+                  <div>
+                    <label className="block text-sm font-semibold text-zinc-700 dark:text-zinc-300 mb-2">Description</label>
+                    <Field as="textarea" name="description" className="w-full border border-zinc-300 dark:border-zinc-600 rounded-lg px-4 py-3 bg-white dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all duration-200 resize-none" rows={4} placeholder="Describe the task details..." />
+                    <div className="text-red-500 text-sm mt-1"><ErrorMessage name="description" /></div>
+                  </div>
+                </div>
+              </section>
+
+              <section className="bg-zinc-50 dark:bg-zinc-800 p-6 rounded-xl border border-zinc-200 dark:border-zinc-700 shadow-sm">
+                <div className="flex items-center gap-3 mb-6">
+                  <div className="p-2 bg-green-100 dark:bg-green-900 rounded-lg">
+                    <Calendar className="w-5 h-5 text-green-600 dark:text-green-400" />
+                  </div>
+                  <h3 className="text-xl font-semibold text-zinc-900 dark:text-zinc-100">Scheduling & Timeline</h3>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <label className="block text-sm font-semibold text-zinc-700 dark:text-zinc-300 mb-2">Start Date <span className="text-red-500">*</span></label>
+                    <Field type="date" name="start_date_time" className="w-full border border-zinc-300 dark:border-zinc-600 rounded-lg px-4 py-3 bg-white dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100 focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all duration-200" />
+                    <div className="text-red-500 text-sm mt-1"><ErrorMessage name="start_date_time" /></div>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-semibold text-zinc-700 dark:text-zinc-300 mb-2">End Date <span className="text-red-500">*</span></label>
+                    <Field type="date" name="end_date_time" className="w-full border border-zinc-300 dark:border-zinc-600 rounded-lg px-4 py-3 bg-white dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100 focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all duration-200" />
+                    <div className="text-red-500 text-sm mt-1"><ErrorMessage name="end_date_time" /></div>
+                  </div>
+                </div>
+
+                <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <label className="block text-sm font-semibold text-zinc-700 dark:text-zinc-300 mb-2">Estimated Time</label>
+                    <div className="relative">
+                      <Clock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-zinc-400" />
+                      <Field name="estimated_time" className="w-full pl-10 border border-zinc-300 dark:border-zinc-600 rounded-lg px-4 py-3 bg-white dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100 focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all duration-200" placeholder="e.g. 5h 30m" />
                     </div>
                   </div>
-                </section>
-              </div>
-
-              <aside className="space-y-6">
-                <section className="bg-white dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 p-4 rounded-lg shadow-sm">
-                  <h4 className="text-md font-medium mb-2">Assign Employees</h4>
-                  <p className="text-xs text-zinc-500 mb-3">Search and add employees to this task.</p>
-                  <AssignedEmployeesSelect
-                    employees={employees}
-                    value={values.assigned_employees}
-                    onChange={(val) => setFieldValue('assigned_employees', val)}
-                  />
-                </section>
-
-                <section className="bg-white dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 p-4 rounded-lg shadow-sm">
-                  <h4 className="text-md font-medium mb-2">Actions</h4>
-                  <div className="flex flex-col gap-3">
-                    <button type="submit" disabled={isSubmitting} className="w-full px-4 py-2 bg-indigo-600 text-white rounded">{isSubmitting ? 'Saving...' : 'Create Task'}</button>
-                    <button type="button" onClick={() => router.back()} className="w-full px-4 py-2 border rounded">Cancel</button>
+                  <div>
+                    <label className="block text-sm font-semibold text-zinc-700 dark:text-zinc-300 mb-2">Status</label>
+                    <Field as="select" name="task_status" className="w-full border border-zinc-300 dark:border-zinc-600 rounded-lg px-4 py-3 bg-white dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100 focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all duration-200">
+                      <option value={1}>Open</option>
+                      <option value={2}>In Progress</option>
+                      <option value={3}>Done</option>
+                    </Field>
                   </div>
-                </section>
-              </aside>
+                </div>
+              </section>
+
+              <section className="bg-zinc-50 dark:bg-zinc-800 p-6 rounded-xl border border-zinc-200 dark:border-zinc-700 shadow-sm">
+                <div className="flex items-center gap-3 mb-6">
+                  <div className="p-2 bg-blue-100 dark:bg-blue-900 rounded-lg">
+                    <Users className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+                  </div>
+                  <h4 className="text-xl font-semibold text-zinc-900 dark:text-zinc-100">Assign Employees</h4>
+                </div>
+                <p className="text-sm text-zinc-600 dark:text-zinc-400 mb-4">Search and add team members to this task.</p>
+                <AssignedEmployeesSelect
+                  employees={employees}
+                  value={values.assigned_employees}
+                  onChange={(val) => setFieldValue('assigned_employees', val)}
+                />
+              </section>
+
+              <section className="bg-zinc-50 dark:bg-zinc-800 p-6 rounded-xl border border-zinc-200 dark:border-zinc-700 shadow-sm">
+                <h4 className="text-xl font-semibold text-zinc-900 dark:text-zinc-100 mb-6">Actions</h4>
+                <div className="flex flex-col sm:flex-row gap-4">
+                  <button type="submit" disabled={isSubmitting} className="flex-1 px-6 py-3 bg-indigo-600 text-white rounded-lg font-semibold hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 shadow-lg hover:shadow-xl">
+                    {isSubmitting ? (
+                      <div className="flex items-center justify-center gap-2">
+                        <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                        Creating Task...
+                      </div>
+                    ) : (
+                      'Create Task'
+                    )}
+                  </button>
+                  <button type="button" onClick={() => router.back()} className="flex-1 px-6 py-3 border-2 border-zinc-300 dark:border-zinc-600 text-zinc-700 dark:text-zinc-300 rounded-lg font-semibold hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-all duration-200">
+                    Cancel
+                  </button>
+                </div>
+              </section>
             </Form>
           )}
       </Formik>
@@ -168,14 +199,18 @@ export default function NewTaskPage() {
     }, []);
 
   const filtered = React.useMemo(() => {
-    if (!query) return employees;
-    const q = query.toLowerCase();
-    return employees.filter((e) => {
-      const name = (e.firstName ? `${e.firstName} ${e.lastName || ''}` : e.name || '').toLowerCase();
-      const email = (e.email || '').toLowerCase();
-      return name.includes(q) || email.includes(q) || String(e.id).includes(q);
-    });
-  }, [employees, query]);
+    let filteredEmployees = employees;
+    if (query) {
+      const q = query.toLowerCase();
+      filteredEmployees = employees.filter((e) => {
+        const name = (e.firstName ? `${e.firstName} ${e.lastName || ''}` : e.name || '').toLowerCase();
+        const email = (e.email || '').toLowerCase();
+        return name.includes(q) || email.includes(q) || String(e.id).includes(q);
+      });
+    }
+    // Exclude already selected employees
+    return filteredEmployees.filter((e) => !value.includes(e.id));
+  }, [employees, query, value]);
 
   function add(id) {
     if (value.includes(id)) return;

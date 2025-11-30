@@ -10,9 +10,16 @@ export default function TasksListPage() {
   const router = useRouter();
 
   const filtered = useMemo(() => {
-    if (!query) return tasks;
+    // Sort tasks by start_date_time descending (latest first)
+    const sortedTasks = [...tasks].sort((a, b) => {
+      const dateA = new Date(a.start_date_time || 0);
+      const dateB = new Date(b.start_date_time || 0);
+      return dateB - dateA;
+    });
+
+    if (!query) return sortedTasks;
     const q = query.toLowerCase();
-    return tasks.filter(
+    return sortedTasks.filter(
       (t) =>
         (t.title || "").toLowerCase().includes(q) ||
         (t.description || "").toLowerCase().includes(q) ||
@@ -51,15 +58,6 @@ export default function TasksListPage() {
           </button>
         );
       },
-    },
-    {
-      header: "Description",
-      accessor: "description",
-      render: (t) => (
-        <div className="text-sm text-zinc-600 truncate max-w-xl">
-          {t.description || t.raw?.description || "—"}
-        </div>
-      ),
     },
     {
       header: "Start",
