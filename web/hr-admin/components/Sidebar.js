@@ -12,6 +12,7 @@ import {
   DollarSign,
   CreditCard,
   ChevronDown,
+  CheckSquare,
 } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
@@ -58,13 +59,6 @@ export default function Sidebar({ open, onClose }) {
     },
 
     {
-      href: "/departments",
-      label: "Departments",
-      icon: Building2,
-      allowedRoles: ["super_admin", "admin", "hr", "hr_manager", "manager"],
-    },
-
-    {
       label: "Employee Management",
       icon: IdCardLanyard,
       allowedRoles: ["super_admin", "admin", "hr", "hr_manager", "manager"],
@@ -78,14 +72,6 @@ export default function Sidebar({ open, onClose }) {
         },
         { href: "/leaves", label: "Leaves", icon: FileText },
         { href: "/performance", label: "Performance", icon: Wallet },
-      ],
-    },
-
-    {
-      label: "Salary Compensation",
-      icon: DollarSign,
-      allowedRoles: ["super_admin", "admin", "accountant"],
-      children: [
         {
           href: "/salary-compensations/salary-list",
           label: "Salary List",
@@ -94,11 +80,39 @@ export default function Sidebar({ open, onClose }) {
       ],
     },
 
+    // {
+    //   label: "Salary Compensation",
+    //   icon: DollarSign,
+    //   children: [
+    //     {
+    //       href: "/salary-compensations/salary-list",
+    //       label: "Salary List",
+    //       icon: CreditCard,
+    //     },
+    //   ],
+    // },
+
     {
-      href: "/tasks",
-      label: "Tasks",
+      label: "Task Management",
       icon: Calendar,
-      allowedRoles: ["super_admin", "admin", "hr", "hr_manager", "manager", "employee"],
+      children: [
+        {
+          href: "/tasks/list",
+          label: "Task List",
+          icon: CheckSquare,
+        },
+        // {
+        //   href: "/tasks",
+        //   label: "My Tasks",
+        //   icon: CheckSquare,
+        // },
+      ],
+    },
+
+    {
+      href: "/departments",
+      label: "Departments",
+      icon: Building2,
     },
 
     // Admin access - only visible to super_admin
