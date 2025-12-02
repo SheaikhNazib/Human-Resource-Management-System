@@ -83,7 +83,7 @@ export const AuthProvider = ({ children }) => {
           window.location.href = '/login';
         }
       }
-    }, 30 * 60 * 1000); // Check every 30 minutes
+    }, 60 * 60 * 1000); // Check every 60 minutes
 
     return () => clearInterval(intervalId);
   }, [isAuthenticated]);
