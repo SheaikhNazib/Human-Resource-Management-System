@@ -10,6 +10,7 @@ import {
   Briefcase,
   Calendar,
   Edit,
+  Clock,
 } from "lucide-react";
 import Loader from "@/components/ui/Loader";
 import { toast } from "sonner";
@@ -17,11 +18,13 @@ import TabBar from "@/components/employee/TabBar";
 import AboutPanel from "@/components/employee/AboutPanel";
 import TasksPanel from "@/components/employee/TasksPanel";
 import LeavesPanel from "@/components/employee/LeavesPanel";
+import AttendancePanel from "@/components/employee/AttendancePanel";
 
 const TABS = [
   { id: "about", label: "About", icon: User },
   { id: "tasks", label: "My Tasks", icon: Briefcase },
   { id: "leaves", label: "Leaves", icon: Calendar },
+  { id: "attendance", label: "Attendance", icon: Clock },
 ];
 
 const EmployeeDashboardPage = () => {
@@ -184,6 +187,15 @@ const EmployeeDashboardPage = () => {
             isActive={activeTab === "leaves"}
             employee={employee}
             canRequestLeave={true}
+          />
+        )}
+
+        {/* Attendance tab - only mount after first visit, then keep mounted but hidden */}
+        {visitedTabs.has("attendance") && (
+          <AttendancePanel
+            employeeId={employee.id}
+            isActive={activeTab === "attendance"}
+            employee={employee}
           />
         )}
       </div>

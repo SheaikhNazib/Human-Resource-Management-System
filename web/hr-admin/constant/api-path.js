@@ -37,6 +37,8 @@ export const Api_path = {
     DELETE: (id) => `/api/v1/emp-attendances/${id}`,
     GET_ONE: (id) => `/api/v1/emp-attendances/${id}`,
     TOTAL_COUNT: "/api/v1/emp-attendances/total-attendance-count",
+    MY_ATTENDANCE: "/api/v1/emp-attendances/my-attendance",
+    ATTENDANCE_OVERVIEW: "/api/v1/emp-attendances/attendance-overview",
   },
 
   TASK: {
