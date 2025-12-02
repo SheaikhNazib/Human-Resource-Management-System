@@ -12,6 +12,7 @@ import { EmpDepartmentsService } from '../emp_departments/emp_departments.servic
 import { EmpJobTitlesService } from '../emp_job_titles/emp_job_titles.service';
 import { RequireRoles } from '../../common/guards/roles.decorator';
 import { Roles } from '../../common/guards/roles.enum';
+import { MailService } from '../email/mail.service';
 
 @ApiTags('Employees')
 @UseGuards(JwtAuthGuard, RolesGuard)
