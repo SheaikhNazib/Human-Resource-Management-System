@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useEmployees } from "@/actions/employees/business";
 import TableArchive from "@/components/core/TableArchive";
@@ -7,6 +7,9 @@ import TableArchive from "@/components/core/TableArchive";
 export default function EmployeesPage() {
   const { employees, loading, error, refetch, deleteEmployee } = useEmployees();
   const [query, setQuery] = useState("");
+  // Pagination state (client-side)
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(10);
   const router = useRouter();
 
   function handleView(id) {
@@ -36,6 +39,18 @@ export default function EmployeesPage() {
         (e.department || "").toLowerCase().includes(q)
     );
   }, [employees, query]);
+
+  // Reset to first page whenever the filter/search changes
+  useEffect(() => {
+    setPage(1);
+  }, [query]);
+
+  // Apply client-side pagination to the filtered results
+  const totalItems = filtered.length;
+  const paginated = useMemo(() => {
+    const start = (page - 1) * limit;
+    return filtered.slice(start, start + limit);
+  }, [filtered, page, limit]);
 
   const columns = [
     {
@@ -153,7 +168,7 @@ export default function EmployeesPage() {
       <TableArchive
         title="Employees"
         columns={columns}
-        data={filtered}
+        data={paginated}
         loading={loading}
         error={error}
         emptyMessage="No employees found."
@@ -166,6 +181,12 @@ export default function EmployeesPage() {
         showRefreshButton={true}
         actionsRender={renderActions}
         className="max-w-full"
+        pagination={{ total: totalItems, skip: (page - 1) * limit, limit }}
+        onPageChange={(p) => setPage(p)}
+        onLimitChange={(newLimit) => {
+          setLimit(newLimit);
+          setPage(1);
+        }}
       />
     </div>
   );

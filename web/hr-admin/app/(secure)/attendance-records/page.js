@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAttendances } from "@/actions/attendances/business";
 import TableArchive from "@/components/core/TableArchive";
@@ -8,6 +8,9 @@ export default function AttendancePage() {
     const { attendances, loading, error, refetch, deleteAttendance } = useAttendances();
     const [query, setQuery] = useState("");
     const [selectedDate, setSelectedDate] = useState("");
+    // Pagination state (client-side)
+    const [page, setPage] = useState(1);
+    const [limit, setLimit] = useState(10);
     const router = useRouter();
 
     // Convert 24-hour time to 12-hour format with AM/PM
@@ -63,6 +66,17 @@ export default function AttendancePage() {
             return matchesQuery && matchesDate;
         });
     }, [attendances, query, selectedDate]);
+
+    // Reset page when filters/search change
+    useEffect(() => {
+        setPage(1);
+    }, [query, selectedDate]);
+
+    const totalItems = filtered.length;
+    const paginated = useMemo(() => {
+        const start = (page - 1) * limit;
+        return filtered.slice(start, start + limit);
+    }, [filtered, page, limit]);
 
     const columns = [
         {
@@ -135,7 +149,7 @@ export default function AttendancePage() {
             <TableArchive
                 title="Attendance Records"
                 columns={columns}
-                data={filtered}
+                data={paginated}
                 loading={loading}
                 error={error}
                 emptyMessage="No attendance records found."
@@ -166,6 +180,12 @@ export default function AttendancePage() {
                 showRefreshButton={true}
                 actionsRender={renderActions}
                 className="max-w-full"
+                pagination={{ total: totalItems, skip: (page - 1) * limit, limit }}
+                onPageChange={(p) => setPage(p)}
+                onLimitChange={(newLimit) => {
+                    setLimit(newLimit);
+                    setPage(1);
+                }}
             />
         </div>
     );

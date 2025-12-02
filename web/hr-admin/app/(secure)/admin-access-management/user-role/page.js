@@ -1,11 +1,12 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { getUsersList, updateUser } from "@/actions/users";
 import { toast } from "sonner";
 import { Users, UserPlus, Shield, Mail, Loader2, CheckCircle, XCircle } from "lucide-react";
 import Link from "next/link";
+import PaginationControls from '@/components/core/PaginationControls';
 
 const ROLE_OPTIONS = [
   { value: "hr_manager", label: "HR Manager" },
@@ -28,9 +29,23 @@ export default function UserRolePage() {
   const [loading, setLoading] = useState(true);
   const [updatingUserId, setUpdatingUserId] = useState(null);
 
+  // Pagination (client-side)
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(10);
+
   useEffect(() => {
     fetchUsers();
   }, []);
+
+  // Reset to first page when the users list changes (e.g., after fetch)
+  useEffect(() => {
+    setPage(1);
+  }, [users]);
+
+  const paginatedUsers = useMemo(() => {
+    const start = (page - 1) * limit;
+    return users.slice(start, start + limit);
+  }, [users, page, limit]);
 
   const fetchUsers = async () => {
     setLoading(true);
@@ -146,7 +161,7 @@ export default function UserRolePage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-zinc-200">
-                {users.map((user) => {
+                {paginatedUsers.map((user) => {
                   const isSuperAdmin = user.role === "super_admin";
                   const isUpdating = updatingUserId === user.id;
 
@@ -219,6 +234,37 @@ export default function UserRolePage() {
                 })}
               </tbody>
             </table>
+          </div>
+        </div>
+      )}
+
+      {/* Pagination controls for user list */}
+      {users.length > 0 && (
+        <div className="mt-4 px-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2 text-sm">
+              <span className="text-zinc-600">Rows per page:</span>
+              <select
+                value={limit}
+                onChange={(e) => {
+                  setLimit(Number(e.target.value));
+                  setPage(1);
+                }}
+                className="border border-zinc-200 rounded px-2 py-1 bg-white text-zinc-900 focus:outline-none"
+              >
+                <option value={10}>10</option>
+                <option value={20}>20</option>
+                <option value={50}>50</option>
+                <option value={100}>100</option>
+              </select>
+            </div>
+
+            <PaginationControls
+              currentPage={page}
+              totalItems={users.length}
+              perPage={limit}
+              onPageChange={(p) => setPage(p)}
+            />
           </div>
         </div>
       )}
