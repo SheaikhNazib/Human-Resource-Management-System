@@ -4,118 +4,35 @@ import React, { useEffect, useState } from "react";
 import { Clock, Calendar, CheckCircle, XCircle, AlertCircle, Filter } from "lucide-react";
 import Loader from "@/components/ui/Loader";
 import { toast } from "sonner";
+import { getMyAttendance } from "@/actions/attendances/server-actions";
 
 const AttendancePanel = ({ employeeId, isActive, employee }) => {
   const [attendanceData, setAttendanceData] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  const [selectedMonth, setSelectedMonth] = useState("all");
-  const [selectedYear, setSelectedYear] = useState("all");
+  const today = new Date();
+  const firstDayOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+  const [startDate, setStartDate] = useState(firstDayOfMonth.toISOString().split('T')[0]);
+  const [endDate, setEndDate] = useState(today.toISOString().split('T')[0]);
 
   useEffect(() => {
-    if (isActive && employeeId) {
+    if (isActive) {
       fetchAttendanceData();
     }
-  }, [isActive, employeeId, selectedMonth, selectedYear]);
+  }, [isActive, startDate, endDate]);
 
   const fetchAttendanceData = async () => {
     setLoading(true);
     setError(null);
     
     try {
-      // TODO: Replace with actual API call
-      // const response = await getEmployeeAttendance(employeeId, selectedMonth, selectedYear);
-      // Placeholder data for demonstration
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      const mockData = [
-        {
-          id: 1,
-          date: "2025-12-02",
-          checkIn: "09:00 AM",
-          checkOut: "05:30 PM",
-          status: "present",
-          hoursWorked: 8.5,
-        },
-        {
-          id: 2,
-          date: "2025-12-01",
-          checkIn: "09:15 AM",
-          checkOut: "05:45 PM",
-          status: "present",
-          hoursWorked: 8.5,
-        },
-        {
-          id: 3,
-          date: "2025-11-30",
-          checkIn: null,
-          checkOut: null,
-          status: "absent",
-          hoursWorked: 0,
-        },
-        {
-          id: 4,
-          date: "2025-11-29",
-          checkIn: "09:30 AM",
-          checkOut: "05:00 PM",
-          status: "present",
-          hoursWorked: 7.5,
-        },
-        {
-          id: 5,
-          date: "2025-11-28",
-          checkIn: "10:00 AM",
-          checkOut: "06:00 PM",
-          status: "late",
-          hoursWorked: 8.0,
-        },
-        {
-          id: 6,
-          date: "2024-12-15",
-          checkIn: "09:00 AM",
-          checkOut: "05:30 PM",
-          status: "present",
-          hoursWorked: 8.5,
-        },
-        {
-          id: 7,
-          date: "2024-11-20",
-          checkIn: "09:15 AM",
-          checkOut: "05:45 PM",
-          status: "present",
-          hoursWorked: 8.5,
-        },
-        {
-          id: 8,
-          date: "2024-10-10",
-          checkIn: "10:30 AM",
-          checkOut: "06:30 PM",
-          status: "late",
-          hoursWorked: 8.0,
-        },
-        {
-          id: 9,
-          date: "2023-12-01",
-          checkIn: "09:00 AM",
-          checkOut: "05:00 PM",
-          status: "present",
-          hoursWorked: 8.0,
-        },
-      ];
-      
-      // Filter data based on selected month and year
-      const filteredData = mockData.filter(record => {
-        const recordDate = new Date(record.date);
-        const recordMonth = recordDate.getMonth() + 1;
-        const recordYear = recordDate.getFullYear();
-        
-        const monthMatch = selectedMonth === "all" || recordMonth === selectedMonth;
-        const yearMatch = selectedYear === "all" || recordYear === selectedYear;
-        
-        return monthMatch && yearMatch;
-      });
-      
-      setAttendanceData(filteredData);
+      const response = await getMyAttendance(startDate, endDate);
+      if (response.success) {
+        setAttendanceData(Array.isArray(response.data) ? response.data : []);
+      } else {
+        setError(response.error);
+        toast.error("Failed to load attendance records");
+      }
     } catch (err) {
       setError(err.message || "Failed to fetch attendance data");
       toast.error("Failed to load attendance records");
@@ -123,25 +40,6 @@ const AttendancePanel = ({ employeeId, isActive, employee }) => {
       setLoading(false);
     }
   };
-
-  const months = [
-    { value: "all", label: "All Months" },
-    { value: 1, label: "January" },
-    { value: 2, label: "February" },
-    { value: 3, label: "March" },
-    { value: 4, label: "April" },
-    { value: 5, label: "May" },
-    { value: 6, label: "June" },
-    { value: 7, label: "July" },
-    { value: 8, label: "August" },
-    { value: 9, label: "September" },
-    { value: 10, label: "October" },
-    { value: 11, label: "November" },
-    { value: 12, label: "December" },
-  ];
-
-  const currentYear = new Date().getFullYear();
-  const years = ["all", ...Array.from({ length: 5 }, (_, i) => currentYear - i)];
 
   const getStatusIcon = (status) => {
     switch (status) {
@@ -195,10 +93,10 @@ const AttendancePanel = ({ employeeId, isActive, employee }) => {
         <div className="px-6 py-4 border-b border-gray-100 dark:border-zinc-800">
           <h2 className="text-2xl font-bold text-gray-900 dark:text-zinc-100 flex items-center gap-2">
             <Clock className="w-6 h-6 text-blue-600" />
-            Attendance Records
+            My Attendance Records
           </h2>
           <p className="text-gray-600 dark:text-zinc-400 mt-1">
-            View attendance history for {employee?.first_name} {employee?.last_name}
+            View your attendance history
           </p>
         </div>
 
@@ -206,30 +104,26 @@ const AttendancePanel = ({ employeeId, isActive, employee }) => {
         <div className="px-6 py-4 border-b border-gray-100 dark:border-zinc-800 bg-gray-50 dark:bg-zinc-800/50">
           <div className="flex items-center gap-4">
             <Filter className="w-5 h-5 text-gray-600 dark:text-zinc-400" />
-            <span className="text-sm font-medium text-gray-700 dark:text-zinc-300">Filter by:</span>
+            <span className="text-sm font-medium text-gray-700 dark:text-zinc-300">Filter by date range:</span>
             <div className="flex items-center gap-3">
-              <select
-                value={selectedMonth}
-                onChange={(e) => setSelectedMonth(e.target.value === "all" ? "all" : parseInt(e.target.value))}
-                className="px-3 py-2 border border-gray-300 dark:border-zinc-600 rounded-lg bg-white dark:bg-zinc-700 text-gray-900 dark:text-zinc-100 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              >
-                {months.map((month) => (
-                  <option key={month.value} value={month.value}>
-                    {month.label}
-                  </option>
-                ))}
-              </select>
-              <select
-                value={selectedYear}
-                onChange={(e) => setSelectedYear(e.target.value === "all" ? "all" : parseInt(e.target.value))}
-                className="px-3 py-2 border border-gray-300 dark:border-zinc-600 rounded-lg bg-white dark:bg-zinc-700 text-gray-900 dark:text-zinc-100 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              >
-                {years.map((year) => (
-                  <option key={year} value={year}>
-                    {year === "all" ? "All Years" : year}
-                  </option>
-                ))}
-              </select>
+              <div className="flex items-center gap-2">
+                <label className="text-sm text-gray-600 dark:text-zinc-400">Start Date:</label>
+                <input
+                  type="date"
+                  value={startDate}
+                  onChange={(e) => setStartDate(e.target.value)}
+                  className="px-3 py-2 border border-gray-300 dark:border-zinc-600 rounded-lg bg-white dark:bg-zinc-700 text-gray-900 dark:text-zinc-100 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                />
+              </div>
+              <div className="flex items-center gap-2">
+                <label className="text-sm text-gray-600 dark:text-zinc-400">End Date:</label>
+                <input
+                  type="date"
+                  value={endDate}
+                  onChange={(e) => setEndDate(e.target.value)}
+                  className="px-3 py-2 border border-gray-300 dark:border-zinc-600 rounded-lg bg-white dark:bg-zinc-700 text-gray-900 dark:text-zinc-100 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                />
+              </div>
             </div>
           </div>
         </div>
@@ -240,16 +134,7 @@ const AttendancePanel = ({ employeeId, isActive, employee }) => {
             <div className="px-6 py-12 text-center">
               <Calendar className="w-12 h-12 text-gray-400 dark:text-zinc-600 mx-auto mb-4" />
               <p className="text-gray-600 dark:text-zinc-400 text-lg">
-                {selectedMonth === "all" && selectedYear === "all"
-                  ? "No attendance records found"
-                  : `No attendance records found for ${
-                      selectedMonth === "all" 
-                        ? `year ${selectedYear}` 
-                        : selectedYear === "all"
-                        ? months.find(m => m.value === selectedMonth)?.label
-                        : `${months.find(m => m.value === selectedMonth)?.label} ${selectedYear}`
-                    }`
-                }
+                No attendance records found for the selected date range ({startDate} to {endDate})
               </p>
             </div>
           ) : (
