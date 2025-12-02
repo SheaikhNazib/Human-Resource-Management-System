@@ -19,6 +19,7 @@ import AboutPanel from "@/components/employee/AboutPanel";
 import TasksPanel from "@/components/employee/TasksPanel";
 import LeavesPanel from "@/components/employee/LeavesPanel";
 import AttendancePanel from "@/components/employee/AttendancePanel";
+import EmployeeAttendancePanel from "@/components/employee/EmployeeAttendancePanel";
 import { UserCircle, ClipboardList, CalendarDays, Clock } from "lucide-react";
 
 const TABS = [
@@ -226,7 +227,7 @@ const EmployeeDetailsPage = () => {
           <div
             className={activeTab === "attendance" ? "animate-tabFadeIn" : "hidden"}
           >
-            <AttendancePanel
+            <EmployeeAttendancePanel
               employeeId={employee.id}
               isActive={activeTab === "attendance"}
               employee={employee}

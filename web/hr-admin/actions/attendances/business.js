@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { getAttendancesList, deleteAttendance as deleteAttendanceAction } from './server-actions';
+import { getAttendancesList, deleteAttendance as deleteAttendanceAction, getEmployeeAttendances } from './server-actions';
 
 export const useAttendances = () => {
   const [attendances, setAttendances] = useState([]);
@@ -41,4 +41,35 @@ export const useAttendances = () => {
   };
 
   return { attendances, loading, error, refetch: fetchAttendances, deleteAttendance };
+};
+
+export const useEmployeeAttendances = (employeeId) => {
+  const [attendances, setAttendances] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  const fetchAttendances = useCallback(async () => {
+    if (!employeeId) return;
+    
+    setLoading(true);
+    setError(null);
+    try {
+      const response = await getEmployeeAttendances(employeeId);
+      if (response.success) {
+        setAttendances(Array.isArray(response.data) ? response.data : []);
+      } else {
+        setError(response.error);
+      }
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  }, [employeeId]);
+
+  useEffect(() => {
+    fetchAttendances();
+  }, [fetchAttendances]);
+
+  return { attendances, loading, error, refetch: fetchAttendances };
 };

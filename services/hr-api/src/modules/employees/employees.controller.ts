@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Param, Delete, Patch, UseGuards, Query, Res, HttpStatus } from '@nestjs/common';
+import { Controller, Get, Post, Body, Param, Delete, Patch, UseGuards, Query, Res, HttpStatus, Req } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBody, ApiParam, ApiBearerAuth } from '@nestjs/swagger';
 import { EmployeesService } from './employees.service';
 import { CreateEmployeeDto } from './dto/create.dto';
@@ -13,6 +13,7 @@ import { EmpJobTitlesService } from '../emp_job_titles/emp_job_titles.service';
 import { RequireRoles } from '../../common/guards/roles.decorator';
 import { Roles } from '../../common/guards/roles.enum';
 import { MailService } from '../email/mail.service';
+import { UsersService } from '../users/users.service';
 
 @ApiTags('Employees')
 @UseGuards(JwtAuthGuard, RolesGuard)
@@ -24,6 +25,7 @@ export class EmployeesController {
     private readonly empDepartmentsService: EmpDepartmentsService,
     private readonly empJobTitlesService: EmpJobTitlesService,
     private readonly mailService: MailService,
+    private readonly usersService: UsersService,
   ) { }
 
   @Post()
@@ -183,8 +185,9 @@ export class EmployeesController {
     }
   }
 
+  // ==================== GET Endpoints ====================
   @Get()
-  @RequireRoles(Roles.SUPER_ADMIN, Roles.HR_MANAGER, Roles.MANAGER, Roles.ACCOUNTANT)
+  @RequireRoles(Roles.SUPER_ADMIN, Roles.HR_MANAGER, Roles.MANAGER, Roles.ACCOUNTANT, Roles.EMPLOYEE)
   @ApiOperation({ summary: 'Get all employees' })
   @ApiResponse({ status: 200, description: 'List of employees.' })
   async findAll(
@@ -207,6 +210,44 @@ export class EmployeesController {
       });
     }
     catch (error) {
+      return res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({
+        success: false, data: null, message: 'Internal server error occurred. Please try again later!'
+      });
+    }
+  }
+
+  @Get('my-profile')
+  @RequireRoles(Roles.EMPLOYEE, Roles.SUPER_ADMIN, Roles.HR_MANAGER, Roles.MANAGER, Roles.ACCOUNTANT)
+  @ApiOperation({ summary: 'Get my profile' })
+  @ApiResponse({ status: 200, description: 'Profile fetched successfully.' })
+  async getMyProfile(@Req() req: any, @Res() res: Response) {
+    try {
+      const user = req.user;
+      if (!user || !user.id) {
+        return res.status(HttpStatus.UNAUTHORIZED).json({
+          success: false, data: null, message: 'User not found in token!'
+        });
+      }
+
+      // Only employees can view their own profile via this endpoint
+      if (user.role !== Roles.EMPLOYEE) {
+        return res.status(HttpStatus.FORBIDDEN).json({
+          success: false, data: null, message: 'This endpoint is for employees only!'
+        });
+      }
+
+      const employee = await this.employeesService.findOne(user.id);
+      if (!employee) {
+        return res.status(HttpStatus.NOT_FOUND).json({
+          success: false, data: null, message: 'Employee profile not found!'
+        });
+      }
+
+      return res.status(HttpStatus.OK).json({
+        success: true, data: employee, message: 'Profile fetched successfully!'
+      });
+    } catch (error) {
+      console.error(error);
       return res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({
         success: false, data: null, message: 'Internal server error occurred. Please try again later!'
       });
@@ -237,6 +278,90 @@ export class EmployeesController {
     }
   }
 
+  // ==================== PATCH Endpoints ====================
+  @Patch('my-profile')
+  @RequireRoles(Roles.EMPLOYEE, Roles.SUPER_ADMIN, Roles.HR_MANAGER, Roles.MANAGER, Roles.ACCOUNTANT)
+  @ApiOperation({ summary: 'Update my profile' })
+  @ApiBody({ type: UpdateEmployeeDto })
+  @ApiResponse({ status: 200, description: 'Profile updated successfully.' })
+  async updateMyProfile(@Req() req: any, @Body() updateDto: UpdateEmployeeDto, @Res() res: Response) {
+    try {
+      const user = req.user;
+      if (!user || !user.id) {
+        return res.status(HttpStatus.UNAUTHORIZED).json({
+          success: false, data: null, message: 'User not found in token!'
+        });
+      }
+
+      // Only employees can update their own profile via this endpoint
+      if (user.role !== Roles.EMPLOYEE) {
+        return res.status(HttpStatus.FORBIDDEN).json({
+          success: false, data: null, message: 'This endpoint is for employees only!'
+        });
+      }
+
+      // Filter out fields that employees shouldn't be able to update
+      // Only allow updating: name, first_name, last_name, mobile, office_phone, address, full_address, password
+      const filteredUpdateDto: Partial<UpdateEmployeeDto> = {};
+      if (updateDto.name !== undefined) filteredUpdateDto.name = updateDto.name;
+      if (updateDto.first_name !== undefined) filteredUpdateDto.first_name = updateDto.first_name;
+      if (updateDto.last_name !== undefined) filteredUpdateDto.last_name = updateDto.last_name;
+      if (updateDto.mobile !== undefined) filteredUpdateDto.mobile = updateDto.mobile;
+      if (updateDto.office_phone !== undefined) filteredUpdateDto.office_phone = updateDto.office_phone;
+      if (updateDto.address !== undefined) filteredUpdateDto.address = updateDto.address;
+      if (updateDto.full_address !== undefined) filteredUpdateDto.full_address = updateDto.full_address;
+
+      // Handle password update if provided
+      let hashedPassword: string | undefined;
+      if (updateDto.password) {
+        hashedPassword = await bcrypt.hash(updateDto.password, 10);
+        filteredUpdateDto.password = hashedPassword;
+      }
+
+      const updatedEmployee = await this.employeesService.update(user.id, filteredUpdateDto);
+      if (!updatedEmployee || !updatedEmployee.data) {
+        return res.status(HttpStatus.NOT_FOUND).json({
+          success: false, data: null, message: 'Employee profile not found!'
+        });
+      }
+
+      // Update corresponding user entity if exists (by email match)
+      try {
+        const employee = updatedEmployee.data;
+        // Check both work_email and personal_email to find matching user
+        let existingUser = null;
+        if (employee.work_email) {
+          existingUser = await this.usersService.findOneByEmail(employee.work_email);
+        }
+        if (!existingUser && employee.personal_email) {
+          existingUser = await this.usersService.findOneByEmail(employee.personal_email);
+        }
+        
+        if (existingUser) {
+          const userUpdateData: any = {};
+          if (hashedPassword) {
+            userUpdateData.password = hashedPassword;
+          }
+          if (Object.keys(userUpdateData).length > 0) {
+            await this.usersService.update(existingUser.id, userUpdateData);
+          }
+        }
+      } catch (userUpdateError) {
+        console.error('Failed to update user entity:', userUpdateError);
+        // Continue even if user update fails
+      }
+
+      return res.status(HttpStatus.OK).json({
+        success: true, data: updatedEmployee.data, message: 'Profile updated successfully!'
+      });
+    } catch (error) {
+      console.error(error);
+      return res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({
+        success: false, data: null, message: 'Internal server error occurred. Please try again later!'
+      });
+    }
+  }
+
   @Patch(':id')
   @RequireRoles(Roles.SUPER_ADMIN, Roles.HR_MANAGER, Roles.MANAGER, Roles.ACCOUNTANT)
   @ApiOperation({ summary: 'Update employee' })
@@ -245,17 +370,58 @@ export class EmployeesController {
   @ApiResponse({ status: 200, description: 'Employee updated successfully.' })
   async update(@Param('id') id: number, @Body() updateDto: UpdateEmployeeDto, @Res() res: Response) {
     try {
+      // Handle password update if provided
+      let hashedPassword: string | undefined;
+      if (updateDto.password) {
+        hashedPassword = await bcrypt.hash(updateDto.password, 10);
+        updateDto.password = hashedPassword;
+      }
+
       const updatedEmployee = await this.employeesService.update(id, updateDto);
-      if (!updatedEmployee) {
+      if (!updatedEmployee || !updatedEmployee.data) {
         return res.status(HttpStatus.NOT_FOUND).json({
           success: false, data: null, message: 'Employee not found!'
         });
       }
+
+      // Update corresponding user entity if exists (by email match)
+      try {
+        const employee = updatedEmployee.data;
+        // Check both work_email and personal_email to find matching user
+        let existingUser = null;
+        if (employee.work_email) {
+          existingUser = await this.usersService.findOneByEmail(employee.work_email);
+        }
+        if (!existingUser && employee.personal_email) {
+          existingUser = await this.usersService.findOneByEmail(employee.personal_email);
+        }
+        
+        if (existingUser) {
+          const userUpdateData: any = {};
+          if (hashedPassword) {
+            userUpdateData.password = hashedPassword;
+          }
+          // Update user email if employee email was updated
+          if (updateDto.work_email && existingUser.email !== updateDto.work_email) {
+            userUpdateData.email = updateDto.work_email;
+          } else if (updateDto.personal_email && existingUser.email !== updateDto.personal_email) {
+            userUpdateData.email = updateDto.personal_email;
+          }
+          if (Object.keys(userUpdateData).length > 0) {
+            await this.usersService.update(existingUser.id, userUpdateData);
+          }
+        }
+      } catch (userUpdateError) {
+        console.error('Failed to update user entity:', userUpdateError);
+        // Continue even if user update fails
+      }
+
       return res.status(HttpStatus.OK).json({
-        success: true, data: updatedEmployee, message: 'Employee updated successfully!'
+        success: true, data: updatedEmployee.data, message: 'Employee updated successfully!'
       });
     }
     catch (error) {
+      console.error(error);
       return res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({
         success: false, data: null, message: 'Internal server error occurred. Please try again later!'
       });
