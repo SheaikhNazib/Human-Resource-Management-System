@@ -22,6 +22,7 @@ export class EmployeesController {
     private readonly employeesService: EmployeesService,
     private readonly empDepartmentsService: EmpDepartmentsService,
     private readonly empJobTitlesService: EmpJobTitlesService,
+    private readonly mailService: MailService,
   ) { }
 
   @Post()
@@ -56,15 +57,33 @@ export class EmployeesController {
         });
       }
 
-      if (createDto.password) createDto.password = await bcrypt.hash(createDto.password, 10);
-      else createDto.password = await bcrypt.hash('123456', 10); // Default password is 123456
-      
+      let plainPassword = createDto.password;
+      if (!plainPassword) {
+        // Generate a random 10-character alphanumeric password using Math.random
+        const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+        plainPassword = Array.from({ length: 10 }, () => chars[Math.floor(Math.random() * chars.length)]).join('');
+      }
+      createDto.password = await bcrypt.hash(plainPassword, 10);
+
       const createdEmployee = await this.employeesService.create(createDto);
       if(!createdEmployee) {
         return res.status(HttpStatus.BAD_REQUEST).json({
           success: false, data: null, message: 'Employee not created! Please try again later!'
         });
       }
+
+      // Send credentials email
+      try {
+        const employeeName = `${createDto.first_name || ''} ${createDto.last_name || ''}`.trim();
+        await this.mailService.sendEmployeeCredentials(
+          createDto.personal_email,
+          employeeName,
+          plainPassword
+        );
+      } catch (mailError) {
+        console.error('Failed to send credentials email:', mailError);
+      }
+
       return res.status(HttpStatus.CREATED).json({
         success: true, data: createdEmployee, message: 'Employee created successfully!'
       });

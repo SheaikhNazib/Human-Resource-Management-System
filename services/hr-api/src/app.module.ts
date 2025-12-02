@@ -22,6 +22,7 @@ import { EmpSalaryCompensationsModule } from "./modules/emp_salary_compensations
 import { EmpPerformancesModule } from "./modules/emp_performances/emp_performances.module";
 import { UsersModule } from "./modules/users/users.module";
 import { GuardsModule } from "./common/guards/guards.module";
+import { MailModule } from "./modules/email/mail.module";
 
 @Module({
   imports: [
@@ -57,6 +58,7 @@ import { GuardsModule } from "./common/guards/guards.module";
     EmpPerformancesModule,
     UsersModule,
     GuardsModule,
+    MailModule
   ],
 })
 export class AppModule implements NestModule {
