@@ -33,13 +33,18 @@ const AddEmployeePage = () => {
       .email("Invalid email")
       .required("Personal email is required"),
     work_email: Yup.string()
-      .email("Invalid email")
-      .required("Work email is required"),
-    mobile: Yup.string().required("Mobile number is required"),
+      .required("Work email is required")
+      .nullable()
+      .transform((value, originalValue) => {
+        // Convert empty string to null for optional validation
+        return originalValue === "" || originalValue === null || originalValue === undefined ? null : value;
+      })
+      .email("Invalid email"),
+    mobile: Yup.string(),
     office_phone: Yup.string(),
-    address: Yup.string().required("Address is required"),
-    full_address: Yup.string().required("Full address is required"),
-    hire_date: Yup.date().required("Hire date is required"),
+    address: Yup.string(),
+    full_address: Yup.string(),
+    hire_date: Yup.date().nullable().required("Hire date is required"),
     leave_date: Yup.date()
       .nullable()
       .test(
@@ -60,13 +65,13 @@ const AddEmployeePage = () => {
       ),
     current_or_former_emp: Yup.boolean(),
     emp_department: Yup.number()
-      .required("Department is required")
       .positive()
-      .integer(),
+      .integer()
+      .required('Department is required'),
     emp_job_title: Yup.number()
-      .required("Job title is required")
       .positive()
-      .integer(),
+      .integer()
+      .required('Job title is required'),
   });
 
   const initialValues = {
@@ -135,15 +140,52 @@ const AddEmployeePage = () => {
 
     try {
       // Convert form values to match API expectations
-      const employeeData = {
-        ...values,
-        emp_department: parseInt(values.emp_department, 10),
-        emp_job_title: parseInt(values.emp_job_title, 10),
-        leave_date: values.leave_date || null,
+      // First, normalize empty strings -> null for optional fields so backend email/date validators don't see empty strings
+      const sanitized = Object.fromEntries(
+        Object.entries(values).map(([k, v]) => {
+          if (typeof v === "string" && v.trim() === "") return [k, null];
+          return [k, v];
+        })
+      );
+
+      // Normalize dates more strictly: convert YYYY-MM-DD to explicit UTC ISO
+      const normalizeDate = (val) => {
+        if (!val) return null;
+        // if already a Date
+        if (val instanceof Date && !isNaN(val)) return val.toISOString();
+        // if already ISO-ish, try to construct Date and return ISO
+        try {
+          // Accept YYYY-MM-DD by appending time and Z to force UTC
+          if (/^\d{4}-\d{2}-\d{2}$/.test(val)) {
+            return new Date(`${val}T00:00:00.000Z`).toISOString();
+          }
+          const d = new Date(val);
+          if (!isNaN(d)) return d.toISOString();
+        } catch (e) {
+          return null;
+        }
+        return null;
       };
 
-      console.log("Submitting employee data:", employeeData);
-      const response = await createEmployee(employeeData);
+      const employeeData = {
+        ...sanitized,
+        // ensure department/job title are integers (required fields)
+        emp_department: Number(sanitized.emp_department),
+        emp_job_title: Number(sanitized.emp_job_title),
+        // convert date-only inputs (YYYY-MM-DD) to full ISO strings, or null if empty
+        hire_date: normalizeDate(sanitized.hire_date),
+        leave_date: normalizeDate(sanitized.leave_date),
+        // ensure work_email is null if empty
+        work_email: sanitized.work_email || null,
+      };
+
+      // Remove null/undefined keys so backend validators don't run for absent optional fields
+      const cleanedPayload = Object.fromEntries(
+        Object.entries(employeeData).filter(([, v]) => v !== null && v !== undefined)
+      );
+
+      console.log("Submitting employee data:", cleanedPayload);
+      const response = await createEmployee(cleanedPayload);
       console.log("Create employee response:", response);
 
       if (response.success) {
@@ -325,7 +367,7 @@ const AddEmployeePage = () => {
                           htmlFor="mobile"
                           className="block text-sm font-semibold text-gray-700 mb-2"
                         >
-                          Mobile <span className="text-red-500">*</span>
+                          Mobile 
                         </label>
                         <Field name="mobile">
                           {({ field, form }) => (
@@ -514,7 +556,7 @@ const AddEmployeePage = () => {
                           htmlFor="address"
                           className="block text-sm font-semibold text-gray-700 mb-2"
                         >
-                          Address <span className="text-red-500">*</span>
+                          Address
                         </label>
                         <Field
                           type="text"
@@ -535,7 +577,7 @@ const AddEmployeePage = () => {
                           htmlFor="full_address"
                           className="block text-sm font-semibold text-gray-700 mb-2"
                         >
-                          Full Address <span className="text-red-500">*</span>
+                          Full Address
                         </label>
                         <Field
                           as="textarea"
@@ -621,7 +663,7 @@ const AddEmployeePage = () => {
                         <Field name="emp_department">
                           {({ field, form }) => (
                             <AutoComplete
-                              label="Department"
+                              label={<><span>Department </span><span className="text-red-500">*</span></>}
                               options={departments}
                               value={field.value}
                               onChange={(value) => form.setFieldValue('emp_department', value)}
@@ -639,7 +681,7 @@ const AddEmployeePage = () => {
                         <Field name="emp_job_title">
                           {({ field, form }) => (
                             <AutoComplete
-                              label="Job Title"
+                              label={<><span>Job Title </span><span className="text-red-500">*</span></>}
                               options={jobTitles}
                               value={field.value}
                               onChange={(value) => form.setFieldValue('emp_job_title', value)}
