@@ -2,6 +2,7 @@
 import React, { useState } from "react";
 import Link from "next/link";
 import { MoreVertical } from "lucide-react";
+import PaginationControls from '@/components/core/PaginationControls';
 
 /**
  * TableArchive - A reusable table component with built-in features like search, pagination,
@@ -738,9 +739,7 @@ export default function TableArchive({
             <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
               {/* Items per page */}
               <div className="flex items-center gap-2 text-sm">
-                <span className="text-zinc-600 dark:text-zinc-400">
-                  Rows per page:
-                </span>
+                <span className="text-zinc-600 dark:text-zinc-400">Rows per page:</span>
                 <select
                   value={pagination.limit || 20}
                   onChange={(e) => onLimitChange?.(Number(e.target.value))}
@@ -753,29 +752,13 @@ export default function TableArchive({
                 </select>
               </div>
 
-              {/* Page info and navigation */}
-              <div className="flex items-center gap-4">
-                <span className="text-sm text-zinc-600 dark:text-zinc-400">
-                  Page {currentPage} of {totalPages}
-                </span>
-
-                <div className="flex gap-2">
-                  <button
-                    onClick={() => onPageChange?.(currentPage - 1)}
-                    disabled={currentPage === 1}
-                    className="px-3 py-1 border border-zinc-200 dark:border-zinc-700 rounded hover:bg-zinc-100 dark:hover:bg-zinc-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-zinc-700 dark:text-zinc-300"
-                  >
-                    Previous
-                  </button>
-                  <button
-                    onClick={() => onPageChange?.(currentPage + 1)}
-                    disabled={currentPage === totalPages}
-                    className="px-3 py-1 border border-zinc-200 dark:border-zinc-700 rounded hover:bg-zinc-100 dark:hover:bg-zinc-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-zinc-700 dark:text-zinc-300"
-                  >
-                    Next
-                  </button>
-                </div>
-              </div>
+              {/* Use shared PaginationControls component */}
+              <PaginationControls
+                currentPage={currentPage}
+                totalItems={pagination.total || data.length}
+                perPage={pagination.limit || 20}
+                onPageChange={(p) => onPageChange?.(p)}
+              />
             </div>
           </div>
         )}
