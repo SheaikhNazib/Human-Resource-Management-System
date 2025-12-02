@@ -3,10 +3,10 @@ import { EmpLeavesService } from './emp_leaves.service';
 import { CreateEmpLeaveDto } from './dto/create.dto';
 import { UpdateEmpLeaveDto } from './dto/update.dto';
 import { ApiTags, ApiCreatedResponse, ApiBody, ApiBearerAuth } from '@nestjs/swagger';
-import { JwtAuthGuard } from 'src/common/guards/jwt-auth.guard';
-import { RolesGuard } from 'src/common/guards/roles.guard';
-import { RequireRoles } from 'src/common/guards/roles.decorator';
-import { Roles } from 'src/common/guards/roles.enum';
+import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
+import { RolesGuard } from '../../common/guards/roles.guard';
+import { RequireRoles } from '../../common/guards/roles.decorator';
+import { Roles } from '../../common/guards/roles.enum';
 
 @ApiTags('EmpLeaves')
 @UseGuards(JwtAuthGuard, RolesGuard)

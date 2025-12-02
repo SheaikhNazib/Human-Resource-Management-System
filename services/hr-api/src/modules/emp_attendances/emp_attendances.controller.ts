@@ -6,11 +6,11 @@ import { UpdateEmpAttendanceDto } from './dto/update.dto';
 import { EmpAttendancesService } from './emp_attendances.service';
 import { EmployeesService } from '../employees/employees.service';
 import { Response } from 'express';
-import { JwtAuthGuard } from 'src/common/guards/jwt-auth.guard';
-import { RolesGuard } from 'src/common/guards/roles.guard';
+import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
+import { RolesGuard } from '../../common/guards/roles.guard';
 import { getDateExamples } from './emp_attendances.function';
-import { Roles } from 'src/common/guards/roles.enum';
-import { RequireRoles } from 'src/common/guards/roles.decorator';
+import { Roles } from '../../common/guards/roles.enum';
+import { RequireRoles } from '../../common/guards/roles.decorator';
 
 
 @ApiTags('EmployeeAttendances')

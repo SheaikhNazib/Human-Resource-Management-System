@@ -11,11 +11,11 @@ import {
 import { AppRolesService } from "./app_roles.service";
 import { CreateAppRoleDto } from "./dto/create.dto";
 import { UpdateAppRoleDto } from "./dto/update.dto";
-import { JwtAuthGuard } from 'src/common/guards/jwt-auth.guard';
-import { RolesGuard } from 'src/common/guards/roles.guard';
+import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
+import { RolesGuard } from '../../common/guards/roles.guard';
 import { ApiBearerAuth } from '@nestjs/swagger';
-import { RequireRoles } from 'src/common/guards/roles.decorator';
-import { Roles } from 'src/common/guards/roles.enum';
+import { RequireRoles } from '../../common/guards/roles.decorator';
+import { Roles } from '../../common/guards/roles.enum';
 
 @Controller("app-roles")
 @UseGuards(JwtAuthGuard, RolesGuard)

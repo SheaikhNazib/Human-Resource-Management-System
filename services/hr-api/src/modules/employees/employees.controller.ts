@@ -4,14 +4,14 @@ import { EmployeesService } from './employees.service';
 import { CreateEmployeeDto } from './dto/create.dto';
 import { UpdateEmployeeDto } from './dto/update.dto';
 import { QueryEmployeeDto } from './dto/query.dto';
-import { JwtAuthGuard } from 'src/common/guards/jwt-auth.guard';
-import { RolesGuard } from 'src/common/guards/roles.guard';
+import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
+import { RolesGuard } from '../../common/guards/roles.guard';
 import { Response } from 'express';
 import * as bcrypt from 'bcrypt';
 import { EmpDepartmentsService } from '../emp_departments/emp_departments.service';
 import { EmpJobTitlesService } from '../emp_job_titles/emp_job_titles.service';
-import { RequireRoles } from 'src/common/guards/roles.decorator';
-import { Roles } from 'src/common/guards/roles.enum';
+import { RequireRoles } from '../../common/guards/roles.decorator';
+import { Roles } from '../../common/guards/roles.enum';
 
 @ApiTags('Employees')
 @UseGuards(JwtAuthGuard, RolesGuard)
