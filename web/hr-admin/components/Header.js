@@ -88,6 +88,15 @@ export default function Header({ onOpen }) {
                           : user.name || (user.role ? user.role.replace('_', ' ') : '')}
                       </p>
                     </div>
+                    <div>
+                      <Link
+                        href={`/user-settings/${user?.id}`}
+                        className="w-full text-left px-4 py-2 text-sm text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-700 flex items-center gap-2"
+                      >
+                        <User className="w-4 h-4" />
+                        Profile Settings
+                      </Link>
+                    </div>
                     <button
                       onClick={handleLogout}
                       className="w-full text-left px-4 py-2 text-sm text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-700 flex items-center gap-2"

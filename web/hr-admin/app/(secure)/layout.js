@@ -28,6 +28,7 @@ function SecureLayoutContent({ children }) {
       // Define allowed routes for employee role
       const employeeAllowedRoutes = [
         '/employee-dashboard',
+        '/user-settings',
       ];
 
       // Define allowed routes for accountant role
@@ -64,6 +65,11 @@ function SecureLayoutContent({ children }) {
       ];
 
       // Check if user is employee and trying to access unauthorized route
+      // Allow any authenticated user to access their own profile settings
+      if (pathname.startsWith('/user-settings')) {
+        return;
+      }
+
       if (user.role === 'employee') {
         // Special handling for task routes - only allow view pages
         if (pathname.startsWith('/tasks/')) {
