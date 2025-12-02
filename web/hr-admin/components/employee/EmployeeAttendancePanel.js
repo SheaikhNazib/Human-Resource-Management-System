@@ -11,14 +11,20 @@ const EmployeeAttendancePanel = ({ employeeId, isActive, employee }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [filterStatus, setFilterStatus] = useState("all");
+  const [hasFetched, setHasFetched] = useState(false);
 
   React.useEffect(() => {
-    if (isActive && employeeId) {
+    if (isActive && employeeId && !hasFetched) {
       fetchAttendances();
     }
   }, [isActive, employeeId]);
 
   const fetchAttendances = async () => {
+    if (loading) return; // Prevent duplicate requests
+    
+    console.log('[EmployeeAttendancePanel] Starting fetch for employee:', employeeId);
+    const startTime = Date.now();
+    
     setLoading(true);
     setError(null);
     
@@ -33,14 +39,23 @@ const EmployeeAttendancePanel = ({ employeeId, isActive, employee }) => {
       const startDateStr = fmt(startDate);
       const endDateStr = fmt(endDate);
 
+      console.log('[EmployeeAttendancePanel] Calling server action...');
       const response = await getEmployeeAttendances(employeeId, startDateStr, endDateStr);
+      
+      const duration = Date.now() - startTime;
+      console.log(`[EmployeeAttendancePanel] Response received in ${duration}ms:`, response);
+      
       if (response.success) {
         setAttendances(Array.isArray(response.data) ? response.data : []);
+        setHasFetched(true);
+        console.log('[EmployeeAttendancePanel] Attendance data set successfully');
       } else {
         setError(response.error);
         toast.error("Failed to load attendance records");
       }
     } catch (err) {
+      const duration = Date.now() - startTime;
+      console.error(`[EmployeeAttendancePanel] Error after ${duration}ms:`, err);
       setError(err.message || "Failed to fetch attendance data");
       toast.error("Failed to load attendance records");
     } finally {
