@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Param, Put, Delete, Patch, Query, HttpStatus, Res, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Body, Param, Put, Delete, Patch, Query, HttpStatus, Res, UseGuards, Req } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBody, ApiParam, ApiQuery, ApiBearerAuth } from '@nestjs/swagger';
 import { CreateEmpAttendanceDto } from './dto/create.dto';
 import { BulkCreateEmpAttendanceDto } from './dto/bulk-create.dto';
@@ -139,6 +139,47 @@ export class EmpAttendancesController {
         success: true, data: response, message: 'Attendance overview fetched successfully!'
       });
     } catch (error) {
+      return res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({
+        success: false, data: null, message: 'Internal server error occurred. Please try again later!'
+      });
+    }
+  }
+
+  @Get('my-attendance')
+  @RequireRoles(Roles.EMPLOYEE)
+  @ApiOperation({ summary: 'Get my attendance records within a date range (Employee only)' })
+  @ApiQuery({ name: 'startDate', type: String, required: true, example: getDateExamples().startDate, description: 'Start date in YYYY-MM-DD format' })
+  @ApiQuery({ name: 'endDate', type: String, required: true, example: getDateExamples().endDate, description: 'End date in YYYY-MM-DD format' })
+  @ApiResponse({ status: 200, description: 'My attendance records fetched successfully' })
+  async getMyAttendance(@Query('startDate') startDate: string, @Query('endDate') endDate: string, @Req() req: any, @Res() res: Response) {
+    try {
+      const user = req.user;
+      if (!user || !user.id) {
+        return res.status(HttpStatus.UNAUTHORIZED).json({
+          success: false, data: null, message: 'User not found in token!'
+        });
+      }
+      const start = new Date(startDate.split('T')[0]);
+      const end = new Date(endDate.split('T')[0]);
+      
+      if (isNaN(start.getTime()) || isNaN(end.getTime())) {
+        return res.status(HttpStatus.BAD_REQUEST).json({
+          success: false, data: null, message: 'Invalid date format. Please use YYYY-MM-DD format'
+        });
+      }
+      if (end.getTime() < start.getTime()) {
+        return res.status(HttpStatus.BAD_REQUEST).json({
+          success: false, data: null, message: 'endDate must be greater than or equal to startDate'
+        });
+      }
+      const response = await this.empAttendancesService.getMyAttendance(user.id, startDate, endDate);
+
+      return res.status(HttpStatus.OK).json({
+        success: true, data: response.data, metaData: response.metaData,
+        message: response.data.attendance.length > 0 ? 'My attendance fetched successfully!' : 'No attendance records found for the specified date range!'
+      });
+    } catch (error) {
+      console.error(error);
       return res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({
         success: false, data: null, message: 'Internal server error occurred. Please try again later!'
       });
