@@ -39,6 +39,7 @@ export const Api_path = {
     TOTAL_COUNT: "/api/v1/emp-attendances/total-attendance-count",
     MY_ATTENDANCE: "/api/v1/emp-attendances/my-attendance",
     ATTENDANCE_OVERVIEW: "/api/v1/emp-attendances/attendance-overview",
+    EMPLOYEE_ATTENDANCE: (employeeId) => `/api/v1/emp-attendances/employee/${employeeId}`,
   },
 
   TASK: {
