@@ -17,7 +17,7 @@ export class MailService {
       <div style="font-family: 'Segoe UI', Arial, sans-serif; background: #f6f8fa; padding: 32px;">
         <div style="max-width: 480px; margin: 0 auto; background: #fff; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.04); padding: 32px 24px;">
           <div style="text-align: center; margin-bottom: 24px;">
-            <img src="https://hrm.tutorsplan.com/logo.png" alt="TutorsPlan Logo" style="height: 48px; margin-bottom: 8px;" onerror="this.style.display='none'" />
+            <img src="https://hrm.tutorsplan.com/public/aftab-logo.png" alt="TutorsPlan Logo" style="height: 48px; margin-bottom: 8px;" onerror="this.style.display='none'" />
             <h2 style="color: #2d3748; margin: 0; font-size: 1.8rem;">Welcome to TutorsPlan!</h2>
           </div>
           <p style="font-size: 1.1rem; color: #444;">Hi <b>${name}</b>,</p>
