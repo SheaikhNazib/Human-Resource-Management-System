@@ -3,6 +3,7 @@
 import { createContext, useContext, useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { loginUser, getCurrentUser, verifyAuth } from "@/actions/auth";
+import { getEmployeeById } from "@/actions/employees/server-actions";
 
 const AuthContext = createContext({
   user: null,
@@ -93,7 +94,26 @@ export const AuthProvider = ({ children }) => {
       const response = await verifyAuth();
       if (response.success && response.authenticated) {
         setIsAuthenticated(true);
-        setUser(response.user);
+        // Normalize user object — if it's an employee without email, fetch full employee
+        try {
+          let authUser = response.user || {};
+          if (
+            authUser.role === "employee" &&
+            !authUser.email &&
+            (authUser.personal_email === undefined || authUser.work_email === undefined) &&
+            authUser.id
+          ) {
+            const empResp = await getEmployeeById(authUser.id);
+            if (empResp.success && empResp.data) {
+              // Merge employee fields so header can show emails and names
+              authUser = { ...authUser, ...empResp.data };
+            }
+          }
+          setUser(authUser);
+        } catch (err) {
+          console.error("Failed to fetch employee details during auth check:", err);
+          setUser(response.user);
+        }
       } else {
         setIsAuthenticated(false);
         setUser(null);
@@ -116,7 +136,24 @@ export const AuthProvider = ({ children }) => {
       const response = await loginUser(credentials);
       if (response.success) {
         setIsAuthenticated(true);
-        setUser(response.data.user);
+        // After login, normalize user — if logged in as employee, fetch full employee
+        try {
+          let authUser = response.data.user || {};
+          if (
+            authUser.role === "employee" &&
+            !authUser.email &&
+            authUser.id
+          ) {
+            const empResp = await getEmployeeById(authUser.id);
+            if (empResp.success && empResp.data) {
+              authUser = { ...authUser, ...empResp.data };
+            }
+          }
+          setUser(authUser);
+        } catch (err) {
+          console.error("Failed to fetch employee details after login:", err);
+          setUser(response.data.user);
+        }
         
         // Redirect based on role
         const userRole = response.data.user?.role;
@@ -177,7 +214,24 @@ export const AuthProvider = ({ children }) => {
     try {
       const response = await getCurrentUser();
       if (response.success) {
-        setUser(response.data);
+        // If the returned user is an employee missing email fields, fetch employee record
+        try {
+          let authUser = response.data || {};
+          if (
+            authUser.role === "employee" &&
+            !authUser.email &&
+            authUser.id
+          ) {
+            const empResp = await getEmployeeById(authUser.id);
+            if (empResp.success && empResp.data) {
+              authUser = { ...authUser, ...empResp.data };
+            }
+          }
+          setUser(authUser);
+        } catch (err) {
+          console.error("Failed to fetch employee details during refresh:", err);
+          setUser(response.data);
+        }
         setIsAuthenticated(true);
       } else {
         setUser(null);

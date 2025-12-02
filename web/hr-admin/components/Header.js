@@ -48,12 +48,12 @@ export default function Header({ onOpen }) {
           <>
             <div className="hidden sm:flex flex-col items-end">
               <span className="text-zinc-700 dark:text-zinc-300 text-sm font-medium">
+                {user.email || user.work_email || user.personal_email || (user.first_name && user.last_name ? `${user.first_name} ${user.last_name}` : user.name)}
+              </span>
+              <span className="text-zinc-500 dark:text-zinc-400 text-xs">
                 {user.first_name && user.last_name
                   ? `${user.first_name} ${user.last_name}`
-                  : user.name || user.email || user.work_email || user.personal_email}
-              </span>
-              <span className="text-zinc-500 dark:text-zinc-400 text-xs capitalize">
-                {user.role ? user.role.replace('_', ' ') : 'User'}
+                  : user.name || (user.role ? user.role.replace('_', ' ') : 'User')}
               </span>
             </div>
             <div className="relative">
@@ -79,13 +79,13 @@ export default function Header({ onOpen }) {
                   />
                   <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-zinc-800 rounded-lg shadow-lg border border-zinc-200 dark:border-zinc-700 py-2 z-40">
                     <div className="px-4 py-2 border-b border-zinc-200 dark:border-zinc-700">
-                      <p className="text-sm font-medium text-zinc-900 dark:text-zinc-100">
-                        {user.first_name && user.last_name
-                          ? `${user.first_name} ${user.last_name}`
-                          : user.name || "User"}
+                      <p className="text-sm font-medium text-zinc-900 dark:text-zinc-100 truncate">
+                        {user.email || user.work_email || user.personal_email || (user.first_name && user.last_name ? `${user.first_name} ${user.last_name}` : user.name || "User")}
                       </p>
                       <p className="text-xs text-zinc-500 dark:text-zinc-400 truncate">
-                        {user.email || user.work_email || user.personal_email}
+                        {user.first_name && user.last_name
+                          ? `${user.first_name} ${user.last_name}`
+                          : user.name || (user.role ? user.role.replace('_', ' ') : '')}
                       </p>
                     </div>
                     <button
