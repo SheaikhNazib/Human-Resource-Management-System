@@ -6,6 +6,7 @@ import {
 } from "@/actions/attendances/server-actions";
 import { toast } from "sonner";
 import TableArchive from "@/components/core/TableArchive";
+import PaginationControls from '@/components/core/PaginationControls';
 import { toMessage } from "@/lib/utils";
 
 export default function AttendancePage() {
@@ -77,6 +78,21 @@ export default function AttendancePage() {
         (emp.department && emp.department.toLowerCase().includes(query))
     );
   }, [employees, searchQuery]);
+
+  // Pagination (client-side) for this page — render PaginationControls separately
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(10);
+
+  // Reset page when search changes
+  useEffect(() => {
+    setPage(1);
+  }, [searchQuery]);
+
+  const totalItems = filteredEmployees.length;
+  const paginatedEmployees = useMemo(() => {
+    const start = (page - 1) * limit;
+    return filteredEmployees.slice(start, start + limit);
+  }, [filteredEmployees, page, limit]);
 
   // Human-friendly current date for display in the header
   const formattedDate = useMemo(() => {
@@ -554,7 +570,7 @@ export default function AttendancePage() {
           </div>
         }
         columns={columns}
-        data={filteredEmployees}
+        data={paginatedEmployees}
         loading={loading}
         error={error}
         emptyMessage="No employees found."
@@ -580,6 +596,37 @@ export default function AttendancePage() {
         onRefresh={fetchEmployees}
         className="max-w-full"
       />
+
+      {/* Stand-alone pagination controls for Attendance page */}
+      {totalItems > 0 && (
+        <div className="mt-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2 text-sm">
+              <span className="text-zinc-600 dark:text-zinc-400">Rows per page:</span>
+              <select
+                value={limit}
+                onChange={(e) => {
+                  setLimit(Number(e.target.value));
+                  setPage(1);
+                }}
+                className="border border-zinc-200 dark:border-zinc-700 rounded px-2 py-1 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                <option value={10}>10</option>
+                <option value={20}>20</option>
+                <option value={50}>50</option>
+                <option value={100}>100</option>
+              </select>
+            </div>
+
+            <PaginationControls
+              currentPage={page}
+              totalItems={totalItems}
+              perPage={limit}
+              onPageChange={(p) => setPage(p)}
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 }

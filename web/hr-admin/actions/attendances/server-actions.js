@@ -596,6 +596,173 @@ export async function getEmployeesWithTodayAttendance() {
   }
 }
 
+// Get my attendance records within a date range
+export async function getMyAttendance(startDate, endDate) {
+  try {
+    const response = await fetchFromApi(
+      `${Api_path.ATTENDANCE.MY_ATTENDANCE}?startDate=${startDate}&endDate=${endDate}`
+    );
+
+    const body = response?.data ?? response;
+    let data = [];
+    if (Array.isArray(body)) {
+      data = body;
+    } else if (Array.isArray(body.data)) {
+      data = body.data;
+    } else if (Array.isArray(body?.data?.data)) {
+      data = body.data.data;
+    } else if (Array.isArray(body?.data?.attendance)) {
+      data = body.data.attendance;
+    } else {
+      data = [];
+    }
+
+    // Helper to format time to 12h format
+    const formatTime12h = (time24h) => {
+      if (!time24h) return null;
+      try {
+        const [hours, minutes] = time24h.split(':');
+        const hour = parseInt(hours, 10);
+        const ampm = hour >= 12 ? 'PM' : 'AM';
+        const hour12 = hour % 12 || 12;
+        return `${hour12}:${minutes} ${ampm}`;
+      } catch {
+        return time24h;
+      }
+    };
+
+    // Process the data to match component expectations
+    const processedData = data.map(record => {
+      // Calculate status
+      let status = "absent";
+      if (record.checkIn && record.checkOut) {
+        status = "present";
+      } else if (record.checkIn) {
+        status = "present"; // Assuming if checked in, present
+      }
+
+      // Calculate hours worked
+      let hoursWorked = 0;
+      if (record.checkIn && record.checkOut) {
+        try {
+          const checkInTime = new Date(`1970-01-01T${record.checkIn}`);
+          let checkOutTime = new Date(`1970-01-01T${record.checkOut}`);
+          
+          // If checkOut is before checkIn, assume it's next day
+          if (checkOutTime < checkInTime) {
+            checkOutTime.setDate(checkOutTime.getDate() + 1);
+          }
+          
+          const diffMs = checkOutTime - checkInTime;
+          hoursWorked = Math.max(0, diffMs / (1000 * 60 * 60)); // Convert to hours
+          hoursWorked = Math.round(hoursWorked * 100) / 100; // Round to 2 decimal places
+        } catch (error) {
+          console.error("Error calculating hours worked:", error);
+          hoursWorked = 0;
+        }
+      }
+
+      return {
+        id: record.id,
+        date: record.date,
+        checkIn: formatTime12h(record.checkIn),
+        checkOut: formatTime12h(record.checkOut),
+        status,
+        hoursWorked,
+        remarks: record.remarks || "",
+        onsite_or_remote: record.onsite_or_remote,
+      };
+    });
+
+    return { success: true, data: processedData };
+  } catch (error) {
+    console.error("Error fetching my attendance:", error);
+    return { success: false, error: error.message };
+  }
+}
+
+// Get attendance records for a specific employee
+export async function getEmployeeAttendances(employeeId, startDate, endDate) {
+  try {
+    // Default to last 30 days if dates not provided
+    const now = new Date();
+    const end = endDate ? new Date(endDate) : now;
+    const start = startDate ? new Date(startDate) : new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+
+    const pad = (n) => String(n).padStart(2, "0");
+    const fmt = (d) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+
+    const startStr = fmt(start);
+    const endStr = fmt(end);
+
+    const response = await fetchFromApi(
+      `${Api_path.ATTENDANCE.EMPLOYEE_ATTENDANCE(employeeId)}?startDate=${startStr}&endDate=${endStr}`
+    );
+
+    const body = response?.data ?? response;
+    let data = [];
+    if (Array.isArray(body)) {
+      data = body;
+    } else if (Array.isArray(body.data)) {
+      data = body.data;
+    } else if (Array.isArray(body?.data?.data)) {
+      data = body.data.data;
+    } else if (Array.isArray(body?.data?.attendance)) {
+      data = body.data.attendance;
+    } else {
+      data = [];
+    }
+
+    // Process the data similar to getMyAttendance
+    const processedData = data.map(record => {
+      // Calculate status
+      let status = "absent";
+      if (record.checkIn && record.checkOut) {
+        status = "present";
+      } else if (record.checkIn) {
+        status = "present";
+      }
+
+      // Calculate hours worked
+      let hoursWorked = 0;
+      if (record.checkIn && record.checkOut) {
+        try {
+          const checkInTime = new Date(`1970-01-01T${record.checkIn}`);
+          let checkOutTime = new Date(`1970-01-01T${record.checkOut}`);
+          
+          if (checkOutTime < checkInTime) {
+            checkOutTime.setDate(checkOutTime.getDate() + 1);
+          }
+          
+          const diffMs = checkOutTime - checkInTime;
+          hoursWorked = Math.max(0, diffMs / (1000 * 60 * 60));
+          hoursWorked = Math.round(hoursWorked * 100) / 100;
+        } catch (error) {
+          console.error("Error calculating hours worked:", error);
+          hoursWorked = 0;
+        }
+      }
+
+      return {
+        id: record.id,
+        date: record.date,
+        checkIn: record.checkIn,
+        checkOut: record.checkOut,
+        status,
+        hoursWorked,
+        remarks: record.remarks || "",
+        onsite_or_remote: record.onsite_or_remote,
+        checkInIp: record.check_in_ip || "",
+        checkOutIp: record.check_out_ip || "",
+      };
+    });
+
+    return { success: true, data: processedData };
+  } catch (error) {
+    console.error("Error fetching employee attendances:", error);
+    return { success: false, error: error.message };
+  }
+}
 // Bulk create or update attendance records
 export async function bulkSaveAttendance(attendanceRecords) {
   try {

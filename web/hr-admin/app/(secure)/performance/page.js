@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { usePerformance } from "@/actions/performance";
 import TableArchive from "@/components/core/TableArchive";
@@ -8,6 +8,9 @@ export default function PerformancePage() {
   const { performances, loading, error, refetch, deletePerformance } =
     usePerformance();
   const [query, setQuery] = useState("");
+  // Pagination state (client-side)
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(10);
   const router = useRouter();
 
   function handleView(id) {
@@ -43,6 +46,17 @@ export default function PerformancePage() {
       return name.includes(q) || notes.includes(q) || score.includes(q);
     });
   }, [performances, query]);
+
+  // Reset page when search changes
+  useEffect(() => {
+    setPage(1);
+  }, [query]);
+
+  const totalItems = filtered.length;
+  const paginated = useMemo(() => {
+    const start = (page - 1) * limit;
+    return filtered.slice(start, start + limit);
+  }, [filtered, page, limit]);
 
   const columns = [
     {
@@ -154,7 +168,7 @@ export default function PerformancePage() {
       <TableArchive
         title="Employee Performance"
         columns={columns}
-        data={filtered}
+        data={paginated}
         loading={loading}
         error={error}
         emptyMessage="No performance records found."
@@ -167,6 +181,12 @@ export default function PerformancePage() {
         showRefreshButton={true}
         actionsRender={renderActions}
         className="max-w-full"
+        pagination={{ total: totalItems, skip: (page - 1) * limit, limit }}
+        onPageChange={(p) => setPage(p)}
+        onLimitChange={(newLimit) => {
+          setLimit(newLimit);
+          setPage(1);
+        }}
       />
     </div>
   );

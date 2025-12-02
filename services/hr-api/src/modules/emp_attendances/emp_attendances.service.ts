@@ -259,4 +259,34 @@ export class EmpAttendancesService {
       },
     };
   }
+
+  async getAttendanceByEmployeeId(employee: any, startDate: string, endDate: string): Promise<any> {
+    // Format dates to YYYY-MM-DD format
+    const formattedStartDate = startDate.split('T')[0];
+    const formattedEndDate = endDate.split('T')[0];
+
+    // Query builder to filter by employee ID and date range (without employee relation)
+    const queryBuilder = this.repo.createQueryBuilder('attendance')
+      .where('attendance.employee_id = :employeeId', { employeeId: employee.id })
+      .andWhere('attendance.date >= :startDate', { startDate: formattedStartDate })
+      .andWhere('attendance.date <= :endDate', { endDate: formattedEndDate })
+      .orderBy('attendance.date', 'DESC');
+
+    const [attendance, totalCount] = await Promise.all([
+      queryBuilder.getMany(),
+      queryBuilder.getCount(),
+    ]);
+
+    return {
+      data: {
+        employee, attendance,
+      },
+      metaData: {
+        employeeId: employee.id,
+        startDate: formattedStartDate,
+        endDate: formattedEndDate,
+        totalRecords: totalCount,
+      },
+    };
+  }
 }
