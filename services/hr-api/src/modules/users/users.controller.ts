@@ -2,10 +2,10 @@ import { Controller, Get, Post, Body, Param, Delete, Patch, UseGuards, Res, Http
 import { ApiTags, ApiOperation, ApiResponse, ApiBody, ApiParam, ApiBearerAuth } from '@nestjs/swagger';
 import { Response } from 'express';
 import { UsersService } from './users.service';
-import { RolesGuard } from 'src/common/guards/roles.guard';
-import { JwtAuthGuard } from 'src/common/guards/jwt-auth.guard';
-import { RequireRoles } from 'src/common/guards/roles.decorator';
-import { Roles } from 'src/common/guards/roles.enum';
+import { RolesGuard } from '../../common/guards/roles.guard';
+import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
+import { RequireRoles } from '../../common/guards/roles.decorator';
+import { Roles } from '../../common/guards/roles.enum';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import * as bcrypt from 'bcrypt';

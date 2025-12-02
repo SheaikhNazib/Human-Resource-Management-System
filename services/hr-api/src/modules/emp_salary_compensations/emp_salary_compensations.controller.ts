@@ -4,10 +4,10 @@ import { ApiTags, ApiOperation, ApiResponse, ApiBody, ApiParam, ApiBearerAuth, A
 import { CreateEmpSalaryCompensationDto } from './dto/create.dto';
 import { UpdateEmpSalaryCompensationDto } from './dto/update.dto';
 import { EmpSalaryCompensationsService } from './emp_salary_compensations.service';
-import { RolesGuard } from 'src/common/guards/roles.guard';
-import { JwtAuthGuard } from 'src/common/guards/jwt-auth.guard';
-import { RequireRoles } from 'src/common/guards/roles.decorator';
-import { Roles } from 'src/common/guards/roles.enum';
+import { RolesGuard } from '../../common/guards/roles.guard';
+import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
+import { RequireRoles } from '../../common/guards/roles.decorator';
+import { Roles } from '../../common/guards/roles.enum';
 import { Response } from 'express';
 
 @ApiTags('EmployeeSalaryCompensations')
