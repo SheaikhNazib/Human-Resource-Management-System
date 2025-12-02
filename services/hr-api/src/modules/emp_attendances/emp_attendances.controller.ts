@@ -186,6 +186,48 @@ export class EmpAttendancesController {
     }
   }
 
+  @Get('employee/:employeeId')
+  @RequireRoles(Roles.SUPER_ADMIN, Roles.HR_MANAGER, Roles.MANAGER, Roles.ACCOUNTANT)
+  @ApiOperation({ summary: 'Get attendance records by employee id within a date range' })
+  @ApiParam({ name: 'employeeId', type: Number, required: true, example: 1, description: 'Employee id' })
+  @ApiQuery({ name: 'startDate', type: String, required: true, example: getDateExamples().startDate, description: 'Start date in YYYY-MM-DD format' })
+  @ApiQuery({ name: 'endDate', type: String, required: true, example: getDateExamples().endDate, description: 'End date in YYYY-MM-DD format' })
+  @ApiResponse({ status: 200, description: 'Attendance records fetched successfully' })
+  async getAttendanceByEmployeeId(@Param('employeeId') employeeId: number, @Query('startDate') startDate: string, @Query('endDate') endDate: string, @Res() res: Response) {
+    try {
+      const employee = await this.employeesService.findOne(employeeId);
+      if (!employee) {
+        return res.status(HttpStatus.NOT_FOUND).json({
+          success: false, data: null, message: 'Employee not found!'
+        });
+      }
+      const start = new Date(startDate.split('T')[0]);
+      const end = new Date(endDate.split('T')[0]);
+      
+      if (isNaN(start.getTime()) || isNaN(end.getTime())) {
+        return res.status(HttpStatus.BAD_REQUEST).json({
+          success: false, data: null, message: 'Invalid date format. Please use YYYY-MM-DD format'
+        });
+      }
+      if (end.getTime() < start.getTime()) {
+        return res.status(HttpStatus.BAD_REQUEST).json({
+          success: false, data: null, message: 'endDate must be greater than or equal to startDate'
+        });
+      }
+      const response = await this.empAttendancesService.getAttendanceByEmployeeId(employee, startDate, endDate);
+
+      return res.status(HttpStatus.OK).json({
+        success: true, data: response.data, metaData: response.metaData,
+        message: response.data.attendance.length > 0 ? 'Attendance records fetched successfully!' : 'No attendance records found for the specified date range by employee id!'
+      });
+    } catch (error) {
+      console.error(error);
+      return res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({
+        success: false, data: null, message: 'Internal server error occurred. Please try again later!'
+      });
+    }
+  }
+
   @Get(':id')
   @RequireRoles(Roles.SUPER_ADMIN, Roles.HR_MANAGER, Roles.MANAGER, Roles.ACCOUNTANT)
   @ApiOperation({ summary: 'Get attendance by id' })
