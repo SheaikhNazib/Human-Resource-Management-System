@@ -128,7 +128,7 @@ export default function Sidebar({ open, onClose }) {
     ...(user?.role === "super_admin"
       ? [
           {
-            label: "Admin access",
+            label: "Admin Access",
             icon: Wallet,
             allowedRoles: ["super_admin"],
             children: [
