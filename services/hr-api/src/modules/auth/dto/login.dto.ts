@@ -1,7 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { IsEnum, IsNotEmpty, IsString, MinLength } from 'class-validator';
-import { EmpJobTitles } from 'src/models/emp_job_titles.entity';
-import { Roles } from 'src/common/guards/roles.enum';
+import { EmpJobTitles } from '../../../models/emp_job_titles.entity';
 
 export class LoginDto {
   @ApiProperty({ example: 'super_admin@gmail.com' })

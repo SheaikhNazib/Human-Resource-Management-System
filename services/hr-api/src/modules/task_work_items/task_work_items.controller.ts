@@ -4,10 +4,10 @@ import { ApiTags, ApiOperation, ApiResponse, ApiBody, ApiParam, ApiBearerAuth } 
 import { TaskWorkItemsService } from './task_work_items.service';
 import { CreateTaskWorkItemDto } from './dto/create.dto';
 import { UpdateTaskWorkItemDto } from './dto/update.dto';
-import { JwtAuthGuard } from 'src/common/guards/jwt-auth.guard';
-import { RolesGuard } from 'src/common/guards/roles.guard';
-import { RequireRoles } from 'src/common/guards/roles.decorator';
-import { Roles } from 'src/common/guards/roles.enum';
+import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
+import { RolesGuard } from '../../common/guards/roles.guard';
+import { RequireRoles } from '../../common/guards/roles.decorator';
+import { Roles } from '../../common/guards/roles.enum';
 
 @ApiTags('TaskWorkItems')
 @UseGuards(JwtAuthGuard, RolesGuard)

@@ -4,10 +4,10 @@ import { LoginDto } from './dto/login.dto';
 import { EmployeesService } from '../employees/employees.service';
 import { Response } from 'express';
 import * as bcrypt from 'bcrypt';
-import { Roles } from 'src/common/guards/roles.enum';
+import { Roles } from '../../common/guards/roles.enum';
 import { JwtService } from '@nestjs/jwt';
 import { UsersService } from '../users/users.service';
-import { Users } from 'src/models/user.entity';
+import { Users } from '../../models/user.entity';
 
 @ApiTags('Authentication')
 @Controller('auth')
