@@ -5,6 +5,7 @@ import { EmpAttendances } from '../../models/emp_attendances.entity';
 import { Employees } from '../../models/employees.entity';
 import { CreateEmpAttendanceDto } from './dto/create.dto';
 import { UpdateEmpAttendanceDto } from './dto/update.dto';
+import { EmployeesService } from '../employees/employees.service';
 
 @Injectable()
 export class EmpAttendancesService {
@@ -13,6 +14,7 @@ export class EmpAttendancesService {
     private readonly repo: Repository<EmpAttendances>,
     @InjectRepository(Employees)
     private readonly employeesRepo: Repository<Employees>,
+    private readonly employeesService: EmployeesService,
   ) {}
 
   async create(createDto: CreateEmpAttendanceDto) {
@@ -221,6 +223,39 @@ export class EmpAttendancesService {
         late: lateCount,
         remote: remoteCount,
         total: onTimeCount + lateCount + remoteCount,
+      },
+    };
+  }
+
+  async getMyAttendance(employeeId: number, startDate: string, endDate: string): Promise<any> {
+    // Format dates to YYYY-MM-DD format
+    const formattedStartDate = startDate.split('T')[0];
+    const formattedEndDate = endDate.split('T')[0];
+
+    // Get employee data once
+    const employee = await this.employeesService.findOne(employeeId);
+
+    // Query builder to filter by employee ID and date range (without employee relation)
+    const queryBuilder = this.repo.createQueryBuilder('attendance')
+      .where('attendance.employee_id = :employeeId', { employeeId })
+      .andWhere('attendance.date >= :startDate', { startDate: formattedStartDate })
+      .andWhere('attendance.date <= :endDate', { endDate: formattedEndDate })
+      .orderBy('attendance.date', 'DESC');
+
+    const [attendance, totalCount] = await Promise.all([
+      queryBuilder.getMany(),
+      queryBuilder.getCount(),
+    ]);
+
+    return {
+      data: {
+        employee, attendance,
+      },
+      metaData: {
+        employeeId,
+        startDate: formattedStartDate,
+        endDate: formattedEndDate,
+        totalRecords: totalCount,
       },
     };
   }

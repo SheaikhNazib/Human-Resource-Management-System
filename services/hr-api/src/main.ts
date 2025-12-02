@@ -18,7 +18,7 @@ import swaggerConfig from './config/swagger.config';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, {
     cors: true,
-    // logger: false, 
+    logger: false, 
   });
 
   app.use(helmet({

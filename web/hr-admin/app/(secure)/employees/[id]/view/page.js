@@ -18,12 +18,14 @@ import TabBar from "@/components/employee/TabBar";
 import AboutPanel from "@/components/employee/AboutPanel";
 import TasksPanel from "@/components/employee/TasksPanel";
 import LeavesPanel from "@/components/employee/LeavesPanel";
-import { UserCircle, ClipboardList, CalendarDays } from "lucide-react";
+import AttendancePanel from "@/components/employee/AttendancePanel";
+import { UserCircle, ClipboardList, CalendarDays, Clock } from "lucide-react";
 
 const TABS = [
   { id: "about", label: "About", icon: UserCircle },
   { id: "tasks", label: "My Tasks", icon: ClipboardList },
   { id: "leaves", label: "Leaves", icon: CalendarDays },
+  { id: "attendance", label: "Attendance", icon: Clock },
 ];
 
 const EmployeeDetailsPage = () => {
@@ -214,6 +216,19 @@ const EmployeeDetailsPage = () => {
             <LeavesPanel
               employeeId={employee.id}
               isActive={activeTab === "leaves"}
+              employee={employee}
+            />
+          </div>
+        )}
+
+        {/* Attendance tab - only mount after first visit, then keep mounted but hidden */}
+        {visitedTabs.has("attendance") && (
+          <div
+            className={activeTab === "attendance" ? "animate-tabFadeIn" : "hidden"}
+          >
+            <AttendancePanel
+              employeeId={employee.id}
+              isActive={activeTab === "attendance"}
               employee={employee}
             />
           </div>
