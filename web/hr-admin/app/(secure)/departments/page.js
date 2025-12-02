@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import TableArchive from "../../../components/core/TableArchive";
 import { useDepartments } from "@/actions/departments/business";
@@ -7,6 +7,10 @@ import Link from "next/link";
 
 export default function Page() {
   const [query, setQuery] = useState("");
+
+  // Pagination state (client-side)
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(10);
 
   const router = useRouter();
   const { departments, loading, error, refetch, deleteDepartment } =
@@ -41,6 +45,17 @@ export default function Page() {
         (d.description || "").toLowerCase().includes(q)
     );
   }, [departments, query]);
+
+  // Reset page when search changes
+  useEffect(() => {
+    setPage(1);
+  }, [query]);
+
+  const totalItems = filtered.length;
+  const paginated = useMemo(() => {
+    const start = (page - 1) * limit;
+    return filtered.slice(start, start + limit);
+  }, [filtered, page, limit]);
 
   const columns = [
     {
@@ -77,7 +92,7 @@ export default function Page() {
       <TableArchive
         title="Departments"
         columns={columns}
-        data={filtered}
+        data={paginated}
         loading={loading}
         error={error}
         emptyMessage="No departments found."
@@ -101,6 +116,12 @@ export default function Page() {
           />
         )}
         className="max-w-full"
+        pagination={{ total: totalItems, skip: (page - 1) * limit, limit }}
+        onPageChange={(p) => setPage(p)}
+        onLimitChange={(newLimit) => {
+          setLimit(newLimit);
+          setPage(1);
+        }}
       />
     </div>
   );

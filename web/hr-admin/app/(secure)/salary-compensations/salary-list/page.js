@@ -354,6 +354,21 @@ export default function SalaryCompensationsPage() {
     return result;
   }, [items, query]);
 
+  // Pagination state (client-side)
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(10);
+
+  // Reset to first page when filters/search change
+  useEffect(() => {
+    setPage(1);
+  }, [query, selectedMonth, selectedYear]);
+
+  const totalItems = filtered.length;
+  const paginated = useMemo(() => {
+    const start = (page - 1) * limit;
+    return filtered.slice(start, start + limit);
+  }, [filtered, page, limit]);
+
   const formatCurrency = (amount) => {
     if (!amount && amount !== 0) return "—";
     return new Intl.NumberFormat("en-US", {
@@ -817,7 +832,7 @@ export default function SalaryCompensationsPage() {
       <TableArchive
         title={<div className="w-full">{summaryStats}</div>}
         columns={columns}
-        data={filtered}
+        data={paginated}
         loading={loading}
         error={error}
         emptyMessage="No salary compensation records found."
@@ -830,6 +845,12 @@ export default function SalaryCompensationsPage() {
         showRefreshButton={true}
         actionsRender={renderActions}
         className="max-w-full"
+        pagination={{ total: totalItems, skip: (page - 1) * limit, limit }}
+        onPageChange={(p) => setPage(p)}
+        onLimitChange={(newLimit) => {
+          setLimit(newLimit);
+          setPage(1);
+        }}
       />
 
       {/* Confirmation Modal */}
