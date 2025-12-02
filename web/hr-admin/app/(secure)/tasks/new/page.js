@@ -1,6 +1,6 @@
 "use client";
 import React from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Formik, Form, Field, ErrorMessage } from "formik";
 import * as Yup from "yup";
 import { createTaskClient } from '@/actions/tasks/business';
@@ -19,7 +19,11 @@ const validationSchema = Yup.object().shape({
 
 export default function NewTaskPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { employees } = useEmployees();
+
+  const employeeId = searchParams.get('employeeId');
+  const initialAssigned = employeeId ? [Number(employeeId)] : [];
 
   return (
     <div className="max-w-4xl mx-auto">
@@ -48,7 +52,7 @@ export default function NewTaskPage() {
           start_date_time: "",
           end_date_time: "",
           estimated_time: "",
-          assigned_employees: [],
+          assigned_employees: initialAssigned,
           task_status: 1,
         }}
         validationSchema={validationSchema}
@@ -227,8 +231,8 @@ export default function NewTaskPage() {
     <div className="relative" ref={rootRef}>
       <div className="flex flex-wrap gap-2 items-center border rounded px-2 py-2">
         {(value || []).map((id) => {
-          const emp = employees.find((e) => e.id === id) || { id, name: `#${id}` };
-          const label = emp.firstName ? `${emp.firstName} ${emp.lastName || ''}` : emp.name || emp.email || `#${id}`;
+          const emp = employees.find((e) => e.id === id) || { id, name: `Employee #${id}` };
+          const label = (emp.first_name || emp.firstName) ? `${emp.first_name || emp.firstName} ${emp.last_name || emp.lastName || ''}`.trim() : emp.name || emp.email || `Employee #${id}`;
           return (
             <span key={id} className="bg-zinc-100 text-zinc-800 px-2 py-1 rounded flex items-center gap-2 text-sm">
               <span>{label}</span>
@@ -249,7 +253,7 @@ export default function NewTaskPage() {
       {open && filtered && filtered.length > 0 && (
         <div className="absolute z-40 mt-1 w-full bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded shadow max-h-48 overflow-auto">
           {filtered.map((e) => {
-            const label = e.firstName ? `${e.firstName} ${e.lastName || ''}` : e.name || e.email || `#${e.id}`;
+            const label = (e.first_name) ? `${e.first_name} ${e.last_name  || ''}`.trim() : e.name || e.email || `#${e.id}`;
             return (
               <button
                 key={e.id}

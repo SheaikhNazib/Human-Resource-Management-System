@@ -1,9 +1,10 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { Briefcase, AlertCircle } from "lucide-react";
+import { Briefcase, AlertCircle, Plus } from "lucide-react";
 import TaskItem from "./TaskItem";
 import { useTasks } from "@/actions/tasks/business";
+import { useRouter } from "next/navigation";
 
 /**
  * TasksPanel - Displays tasks assigned to an employee
@@ -15,6 +16,7 @@ const TasksPanel = ({ employeeId, isActive }) => {
   const { tasks: allTasks, loading, error } = useTasks();
   const [employeeTasks, setEmployeeTasks] = useState([]);
   const [hasLoaded, setHasLoaded] = useState(false);
+  const router = useRouter();
 
   useEffect(() => {
     if (!allTasks.length) return;
@@ -78,6 +80,13 @@ const TasksPanel = ({ employeeId, isActive }) => {
           <h2 className="text-2xl font-bold text-gray-900">
             My Tasks ({employeeTasks.length})
           </h2>
+          <button
+            onClick={() => router.push(`/tasks/new?employeeId=${employeeId}`)}
+            className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+          >
+            <Plus className="w-4 h-4" />
+            Add Task
+          </button>
         </div>
 
         <div className="space-y-4">
