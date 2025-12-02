@@ -1,5 +1,5 @@
 "use client";
-import React, { useMemo, useState } from "react";
+import React, { useMemo, useState, useEffect } from "react";
 import TableArchive from "@/components/core/TableArchive";
 import { useTasks } from "@/actions/tasks/business";
 import { useRouter } from "next/navigation";
@@ -7,6 +7,9 @@ import { useRouter } from "next/navigation";
 export default function TasksListPage() {
   const { tasks, loading, error, refetch, deleteTask } = useTasks();
   const [query, setQuery] = useState("");
+  // Pagination state (client-side)
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(10);
   const router = useRouter();
 
   const filtered = useMemo(() => {
@@ -26,6 +29,18 @@ export default function TasksListPage() {
         (t.estimated_time || "").toLowerCase().includes(q)
     );
   }, [tasks, query]);
+
+  // Reset to first page whenever the filter/search changes
+  useEffect(() => {
+    setPage(1);
+  }, [query]);
+
+  // Apply client-side pagination to the filtered results
+  const totalItems = filtered.length;
+  const paginated = useMemo(() => {
+    const start = (page - 1) * limit;
+    return filtered.slice(start, start + limit);
+  }, [filtered, page, limit]);
 
   function handleView(id) {
     router.push(`/tasks/${id}/view`);
@@ -140,7 +155,7 @@ export default function TasksListPage() {
       <TableArchive
         title="Tasks"
         columns={columns}
-        data={filtered}
+        data={paginated}
         loading={loading}
         error={error}
         emptyMessage="No tasks found."
@@ -153,6 +168,12 @@ export default function TasksListPage() {
         showRefreshButton={true}
         actionsRender={renderActions}
         className="max-w-full"
+        pagination={{ total: totalItems, skip: (page - 1) * limit, limit }}
+        onPageChange={(p) => setPage(p)}
+        onLimitChange={(newLimit) => {
+          setLimit(newLimit);
+          setPage(1);
+        }}
       />
     </div>
   );
