@@ -85,7 +85,15 @@ export async function getEmployeeStats() {
 // Create a new employee
 export async function createEmployee(employeeData) {
   try {
-    const payload = { ...employeeData, name: employeeData.name || "" };
+    // Ensure name is computed from first_name + last_name if not provided
+    const computedName = employeeData.name || 
+      `${employeeData.first_name || ""} ${employeeData.last_name || ""}`.trim() || 
+      "Employee";
+    
+    const payload = { ...employeeData, name: computedName };
+    
+    console.log("[DEBUG] Sending payload to API:", JSON.stringify(payload));
+    
     const response = await fetchFromApi(Api_path.EMPLOYEE.CREATE, {
       method: "POST",
       body: payload,
@@ -105,6 +113,7 @@ export async function createEmployee(employeeData) {
 
     return { success: true, data: responseData };
   } catch (error) {
+    console.error("[DEBUG] Create employee error:", error.message);
     return {
       success: false,
       error: error.message || "Failed to create employee",

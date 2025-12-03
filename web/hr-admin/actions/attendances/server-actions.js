@@ -684,6 +684,9 @@ export async function getMyAttendance(startDate, endDate) {
 // Get attendance records for a specific employee
 export async function getEmployeeAttendances(employeeId, startDate, endDate) {
   try {
+    console.log('[getEmployeeAttendances] Starting fetch for employee:', employeeId);
+    const startTime = Date.now();
+    
     // Default to last 30 days if dates not provided
     const now = new Date();
     const end = endDate ? new Date(endDate) : now;
@@ -695,6 +698,8 @@ export async function getEmployeeAttendances(employeeId, startDate, endDate) {
     const startStr = fmt(start);
     const endStr = fmt(end);
 
+    console.log('[getEmployeeAttendances] Fetching from:', `${Api_path.ATTENDANCE.EMPLOYEE_ATTENDANCE(employeeId)}?startDate=${startStr}&endDate=${endStr}`);
+    
     const response = await fetchFromApi(
       `${Api_path.ATTENDANCE.EMPLOYEE_ATTENDANCE(employeeId)}?startDate=${startStr}&endDate=${endStr}`
     );
@@ -713,19 +718,23 @@ export async function getEmployeeAttendances(employeeId, startDate, endDate) {
       data = [];
     }
 
-    // Process the data similar to getMyAttendance
-    const processedData = data.map(record => {
-      // Calculate status
-      let status = "absent";
-      if (record.checkIn && record.checkOut) {
-        status = "present";
-      } else if (record.checkIn) {
-        status = "present";
-      }
+    // Optimize data processing with early returns
+    if (data.length === 0) {
+      return { success: true, data: [] };
+    }
 
-      // Calculate hours worked
+    // Process the data with optimized calculations
+    const processedData = data.map(record => {
+      // Pre-check for time values
+      const hasCheckIn = !!record.checkIn;
+      const hasCheckOut = !!record.checkOut;
+      
+      // Calculate status efficiently
+      const status = hasCheckIn ? "present" : "absent";
+
+      // Calculate hours worked only if both times exist
       let hoursWorked = 0;
-      if (record.checkIn && record.checkOut) {
+      if (hasCheckIn && hasCheckOut) {
         try {
           const checkInTime = new Date(`1970-01-01T${record.checkIn}`);
           let checkOutTime = new Date(`1970-01-01T${record.checkOut}`);
@@ -735,10 +744,8 @@ export async function getEmployeeAttendances(employeeId, startDate, endDate) {
           }
           
           const diffMs = checkOutTime - checkInTime;
-          hoursWorked = Math.max(0, diffMs / (1000 * 60 * 60));
-          hoursWorked = Math.round(hoursWorked * 100) / 100;
-        } catch (error) {
-          console.error("Error calculating hours worked:", error);
+          hoursWorked = Math.max(0, Math.round((diffMs / (1000 * 60 * 60)) * 100) / 100);
+        } catch {
           hoursWorked = 0;
         }
       }
@@ -757,9 +764,12 @@ export async function getEmployeeAttendances(employeeId, startDate, endDate) {
       };
     });
 
+    const duration = Date.now() - startTime;
+    console.log(`[getEmployeeAttendances] Success - took ${duration}ms, records:`, processedData.length);
     return { success: true, data: processedData };
   } catch (error) {
-    console.error("Error fetching employee attendances:", error);
+    const duration = Date.now() - startTime;
+    console.error(`[getEmployeeAttendances] Error after ${duration}ms:`, error.message);
     return { success: false, error: error.message };
   }
 }
