@@ -12,7 +12,7 @@ import { EmployeesModule } from '../employees/employees.module';
     PassportModule.register({ defaultStrategy: 'jwt' }),
     JwtModule.register({
       secret: '@!$#@!**@#$%^&*()_+',
-      signOptions: { expiresIn: '1h' },
+      signOptions: { expiresIn: '1y' },
     }),
     UsersModule,
     EmployeesModule,
