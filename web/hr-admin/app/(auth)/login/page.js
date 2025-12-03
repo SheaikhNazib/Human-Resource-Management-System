@@ -54,9 +54,7 @@ export default function LoginPage() {
         {/* Logo */}
         <div className="flex justify-center mb-8">
           <div className="flex items-center gap-2">
-            <div className="w-10 h-10 rounded bg-linear-to-br from-blue-600 to-blue-700 flex items-center justify-center">
-              <div className="w-6 h-6 bg-white rounded shadow" />
-            </div>
+            <img src="/favicon.ico" alt="Logo" className="w-8 h-8 rounded" />
             <span className="font-bold text-2xl tracking-tight text-zinc-900 dark:text-zinc-100">
               HRMS
             </span>
